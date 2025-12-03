@@ -5,38 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Le Projet Overdrive</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.cdnfonts.com/css/jack-of-gears" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
 </head>
 <body>
+    <link href="https://fonts.cdnfonts.com/css/jack-of-gears" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     <header>
         <h1>Le projet overdrive</h1>
         <nav>
-            <a href="#about">A propos</a>
-            <a href="#play">Jouer</a>
+            <a href="#a_propos">A propos</a>
+            <a href="#equipe">Notre équipe</a>
             <a href="#contact">Contact</a>
         </nav>
     </header>
 
     <section id="main">
-        <img src="images/game-screenshot.png" alt="screenshot / gif du jeu">
         <h2>Plongez dans l'aventure!</h2>
-        <a href="#play" class="btn">Téléchargez et jouez</a>
+        <a href="#play" class="btn">TELECHARGER ET JOUER</a>
     </section>
 
-    <section id="a_propos">
-        <h2>A propos de notre jeu</h2>
-        <p>Notre jeu combine plusieurs styles de jeu : dans un premier temps, la base serait une <b>sandbox</b>, où le joueur construit et dévelope sa ville à l'aide de ressources récupérés dans la nature.
-            La carte serait générée procéduralement et différentes <b>salles / donjons</b> apparaiterait de facon aléatoire,
-            avec différentes mécaniques pour les résoudre (puzzle, énigmes, boss, shooter...) avec des récompenses à la clé.</p>
+    <section id="a_propos" class="a_propos">
+        <img src="placeholder.png" alt="screenshot du jeu" class="photo">
+        <div class="content">
+            <h2 class="title">A propos de notre jeu</h2>
+            <p> Notre jeu combine plusieurs styles de jeu : dans un premier temps, la base serait une <strong>sandbox</strong>, où le joueur construit et 
+                dévelope sa ville à l'aide de ressources récupérés dans la nature.La carte serait générée procéduralement et différentes <strong>salles / donjons</strong> apparaiterait de facon aléatoire,avec différentes mécaniques pour les résoudre (puzzle, énigmes, boss, shooter...) avec des récompenses à la clé.</p>
+            <p>Découvrez et participez à notre <a href="https://le-projet-overdrive.fandom.com/fr/wiki/Wiki_Le_Projet_Overdrive" target="_blank">Wiki</a> pour découvrir l'intégralité du jeu.</p>
+        </div>
+    </section>
+    <section class="equipe" id="equipe">
+        <h2>Notre équipe</h2>
+
+        <div class="team-container">
+
+            <div class="team-member">
+                <img src="img/person1.jpg" alt="">
+                <h3>Anatole Brunelle</h3>
+                <p>Game Developer and Website designer</p>
+            </div>
+
+            <div class="team-member">
+                <img src="img/person2.jpg" alt="">
+                <h3>Clément Bertrand</h3>
+                <p>2D Artist</p>
+            </div>
+
+            <div class="team-member">
+                <img src="img/person3.jpg" alt="">
+                <h3>Vasile Ionescu</h3>
+                <p>UI and UX designer</p>
+            </div>
+
+            <div class="team-member">
+                <img src="img/person4.jpg" alt="">
+                <h3>Matthieu Bourgeois</h3>
+                <p>Je sais pas ce qu'il branle</p>
+            </div>
+
+            <div class="team-member">
+                <img src="img/person5.jpg" alt="">
+                <h3>Lucas Flacelière</h3>
+                <p>Je sais pas ce qu'il branle</p>
+            </div>
+
+        </div>
     </section>
 
+    <section id="test">
+        <p>
+            En attente d'idée de texte et chose a mettre
+        </p>
+    </section>
+    <section id="test2">
+        <p>
+            En attente d'idée de texte et chose a mettre
+        </p>
+    </section>    
+    <section id="test3">
+        <p>
+            En attente d'idée de texte et chose a mettre
+        </p>
+    </section>
     <section id="contact">
+
         <h2>Contact</h2>
-        <form>
-            <input type="text" placeholder="Nom" required>
-            <input type="email" placeholder="Email" required>
-            <textarea placeholder="Message"></textarea>
-            <button type="submit">Envoyer</button>
-        </form>
+    <form action="https://getform.io/f/bvrzemlb" method="POST">
+        <input type="text" name="name" placeholder="Nom">
+        <input type="email" name="email" placeholder = "Email">
+        <input type="text" name="message" placeholder="Message">
+        <!-- honey pot pour anti spam -->
+        <input type="hidden" name="_gotcha" style="display:none !important">
+        </select>
+        <button type="submit">ENVOYER</button>
+    </form>
     </section>
 
     <footer>
