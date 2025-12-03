@@ -153,13 +153,14 @@ footer p {
     color: #ffffff
 }
 footer a {
-     color: #c97e3a; 
+     color: #d6b601; 
 }
 
 /* Liens */
 a { 
     text-decoration: none;
-    color : #0000EE; 
+    color: #8A4F1D;
+    font-weight: 600;
 }
 
 h1 {
@@ -206,7 +207,8 @@ p {
   margin-bottom: 20px;
 }
 .content a {
-  color: #1e54d3;
+  color: #8A4F1D;
+  font-weight: 600;
   font-weight: bold;
 }
 
