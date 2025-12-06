@@ -1,179 +1,125 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
 body { 
-    font-family: Arial, sans-serif;
-     line-height: 1.6;
-    background: #ffffff;
-    color: #000000;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background: #ffffff;
+  color: #000000;
 }
 
-
-header {
-    height: 110px;
-    position: sticky;
-    background: #2b2b2b;
-    color: #752d2d;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+a { 
+  text-decoration: none;
+  font-weight: 600;
+  color: #8A4F1D;
 }
 
-header h1 {
-    color: #e4c201;
-    font-size: 50px;
-    font-family: 'Jack Of Gears', sans-serif;
-    font-weight: bold;
+h1, h2 {
+  font-family: "Playfair Display", serif;
+  color: #000000;
 }
-header nav a {
-    margin-left: 1rem;
-    font-size: 18px;
-    color: #d6b601;
-    font-weight: bold;
+
+p {
+  color: #000000;
 }
-header nav a:hover { color: #bb9f00; }
+
+.entete {
+  height: 110px;
+  background: #2b2b2b;
+  color: #d6b601;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.entete h1 {
+  color: #e4c201;
+  font-size: 50px;
+  font-family: 'Jack Of Gears', sans-serif;
+}
+
+.menu a {
+  margin-left: 1rem;
+  font-size: 18px;
+  color: #d6b601;
+}
+
+.menu a:hover { 
+  color: #bb9f00; 
+}
 
 section {
-    scroll-margin-top: 200px;
-    opacity: 0;
-    animation: fadeIn 0.8s ease forwards;
-    padding: 3rem 2rem;
-    text-align: center;
-
+  scroll-margin-top: 200px;
+  opacity: 0;
+  animation: fade 0.8s ease forwards;
+  padding: 3rem 2rem;
+  text-align: center;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-#main {
-    background: url("img/placeholder.png") center/cover no-repeat;
-    height: 600px;           
-    padding: 4rem 2rem;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center; 
-    align-items: center;     
-    text-align: center;
-
-    gap: 1.5rem;
-    position: relative;
+@keyframes fade {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-#main::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35); 
-    z-index: 0;
+.accueil {
+  background: url("img/placeholder.png") center/cover no-repeat;
+  height: 600px;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  gap: 1.5rem;
+  position: relative;
 }
 
-#main h2,
-#main .btn {
-    position: relative;
-    z-index: 1;
-    color: white;               
+.accueil::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35); 
+  z-index: 0;
 }
 
-#main h2 {
+.accueil h2,
+.accueil .bouton {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+}
+
+.accueil h2 {
     font-size: 2.5rem;
     margin: 0;
 }
 
-
-.btn {
-    font-family: "Playfair Display", serif;
-    padding: 0.75rem;
-    border: none;
-    background: #5A4324; 
-    color: #fff;
-    cursor: pointer;
-    letter-spacing: 2px;
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0px;
-    margin-top: 1rem;
-    transition: 0.3s;
-    font-size : 15px
+.bouton {
+  font-family: "Playfair Display", serif;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0;
+  background: #5A4324; 
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 2px;
+  margin-top: 1rem;
+  transition: 0.3s;
+  font-size: 15px;
 }
 
-button {
-    font-family: "Playfair Display", serif;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 5px;
-    background: #5A4324; 
-    color: #fff;
-    cursor: pointer;
-    letter-spacing: 2px;
-}
-form {
-    max-width: 400px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-form input, form textarea {
-     padding: 0.5rem; border: 1px solid #ccc; border-radius: 5px; 
-
+.bouton:hover {
+  background: #4a3620;
 }
 
-
-form button {
-    font-family: "Playfair Display", serif;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 5px;
-    background: #5A4324; 
-    color: #fff;
-    cursor: pointer;
-    letter-spacing: 2px;
-    font-size : 15px;
-}
-
-footer {
-    background: #2b2b2b;
-    color: #ffffff;
-    padding: 1rem 2rem;
-    text-align: center;
-    margin-top: 2rem;
-}
-footer p {
-    color: #ffffff
-}
-footer a {
-     color: #d6b601; 
-}
-
-a { 
-    text-decoration: none;
-    color: #8A4F1D;
-    font-weight: 600;
-}
-
-h1 {
-    font-family: "Playfair Display", serif;
-    text-decoration: none;
-    color : #000000; 
-}
-
-h2 {
-    font-family: "Playfair Display", serif;
-    text-decoration: none;
-    color : #000000
-}
-
-p {
-    text-decoration : none;
-    color : #000000;
-}
-
-.a_propos {
-    background: #f2f2f2;
+.propos {
+  background: #f2f2f2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -181,106 +127,95 @@ p {
   gap: 60px;
 }
 
-.photo {
+.propos-photo {
   flex: 1;
   height: 400px;
   width: auto;
-  background-color: #c9d1d7;
+  background: #c9d1d7;
   border-radius: 10px;
 }
 
-.content {
+.propos-texte {
   flex: 1;
   font-size: 18px;
   line-height: 1.6;
 }
 
-.content h2 {
+.propos-texte h2 {
   font-size: 32px;
   margin-bottom: 20px;
 }
-.content a {
-  color: #8A4F1D;
-  font-weight: 600;
-  font-weight: bold;
+
+.equipe {
+  padding: 4rem 2rem;
 }
 
-.team {
-    padding: 4rem 2rem;
-    text-align: center;
-}
-
-.team h2 {
-    font-size: 2.5rem;
+.equipe h2 {
+    font-size: 2rem;
     margin-bottom: 2rem;
 }
 
-.team-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-}
-
-.team-member {
-    margin-top : 1rem;
-    background: #f5f5f5;
-    padding: 1.5rem;
-    width: 220px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: transform 0.3s;
-}
-.team-member h3 {
+.membre h3 {
     font-family: "Playfair Display", serif;
-}
-.team-member:hover {
-    transform: translateY(-5px);
-}
-
-.team-member img {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-}
-
-.team-member h3 {
     margin-bottom: 0.3rem;
     font-size: 1.3rem;
 }
 
-.team-member p {
+.membre p {
     color: #555;
     font-size: 0.9rem;
 }
 
+.liste-equipe {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
 
+.membre {
+  background: #f5f5f5;
+  padding: 1.5rem;
+  width: 220px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: 0.3s;
+}
 
-.wiki-section {
-    margin-top: 30px;
-    text-align: center;
-    padding: 4rem 2rem;
-    background: #f2f2f2;
+.membre:hover {
+  transform: translateY(-5px);
+}
+
+.membre img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.wiki {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f2f2f2;
 }
 
 .wiki-slider {
-    margin-top: 2rem;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  margin-top: 2rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.wiki-card-container {
-    width: 700px;
-    height: 300px;
-    overflow: hidden;
-    position: relative;
+.wiki-conteneur {
+  width: 700px;
+  height: 300px;
+  overflow: hidden;
+  position: relative;
 }
 
-.wiki-card {
+.wiki-carte {
     display: flex;
     width: 700px;
     height: 300px;
@@ -296,112 +231,136 @@ p {
     transition: opacity 0.5s, transform 0.5s;
 }
 
-.wiki-card.active {
-    opacity: 1;
-    transform: translateX(0);
+.wiki-active {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.wiki-card img {
+.wiki-carte img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 12px 0 0 12px;
 }
 
-.wiki-text {
+.wiki-texte {
     width: 50%;
     padding: 1.5rem;
     text-align: left;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
-.wiki-text h3 {
+.wiki-texte h3 {
     font-family: "Playfair Display", serif;
     margin-bottom: 1rem;
     font-size: 1.5rem;
 }
 
-.wiki-btn {
-    font-size: 2rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 1rem;
-    color: #5A4324;
-    transition: 0.2s;
+.wiki-texte p {
+    color: #000000;
 }
 
-.wiki-btn:hover {
-    color: #a27a4c;
+.wiki-bouton {
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 1rem;
+  color: #5A4324;
 }
 
-.download-section {
-    padding: 60px 20px;
-    background: #ffffff;
-    text-align: center;
+.telechargement {
+  padding: 60px 20px;
+  text-align: center;
 }
 
-.download-section h2 {
+.telechargement h2 {
     font-size: 2rem;
     margin-bottom: 30px;
     color: #000000;
 }
 
-.download-box {
-    max-width: 550px;
-    margin: auto;
-    padding: 30px;
-    background: #2b2b2b;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+.boite-telechargement {
+  max-width: 550px;
+  margin: auto;
+  padding: 30px;
+  background: #2b2b2b;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
 }
 
-.btn-download {
-    font-family: "Playfair Display", serif;
-    letter-spacing: 2px;
-    display: inline-block;
-    padding: 15px 30px;
-    margin-bottom: 25px;
-    background: #5A4324;
-    color: #fff;
-    text-decoration: none;
-    font-size: 1.4rem;
-    border-radius: 10px;
-    font-weight: bold;
-    transition: 0.3s ease;
-}
-.btn-download:hover {
-    background: #4a3620;
-    transform: translateY(-3px) scale(1.03);
+.bouton-telechargement {
+  font-family: "Playfair Display", serif;
+  display: inline-block;
+  padding: 15px 30px;
+  margin-bottom: 25px;
+  background: #5A4324;
+  color: #fff;
+  font-size: 1.4rem;
+  border-radius: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
 }
 
-.instructions-title {
-    font-weight: bold;
-    color: #ffffff;
-    margin-bottom: 10px;
-    font-size: 1.2rem;
+.infos-liste {
+  text-align: left;
+  margin: 0 auto 25px auto;
+  max-width: 420px;
+  color: #f0f0f0;
+  list-style: none;
+  padding-left: 0;
 }
 
-.instructions {
-    text-align: left;
-    margin: 0 auto 25px auto;
-    max-width: 420px;
-    color: #f0f0f0;
-    font-size: 1rem;
-    line-height: 1.6;
-    list-style: none;
-    padding-left: 0;
+.infos-liste li::before {
+  content: "▶ ";
+  color: #e4c201;
 }
 
-.instructions li::before {
-    content: "▶ ";
-    color: #e4c201;
-}
-
-.github-link {
+.github-lien {
     color: #4cc9f0;
     text-decoration: none;
     font-size: 1.1rem;
 }
-.github-link:hover {
+.github-lien:hover {
     text-decoration: underline;
+}
+
+.contact-formulaire {
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.contact-formulaire input {
+  padding: 0.5rem; 
+  border: 1px solid #ccc; 
+  border-radius: 5px;
+}
+
+.contact-formulaire button {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px;
+  background: #5A4324;
+  color: #fff;
+  letter-spacing: 2px;
+}
+
+.pied {
+  background: #2b2b2b;
+  color: #ffffff;
+  padding: 1rem 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.pied a {
+  color: #d6b601;
+}
+
+.pied p {
+    color: #ffffff
 }
