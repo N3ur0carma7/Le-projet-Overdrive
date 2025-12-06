@@ -49,7 +49,7 @@ section {
     to   { opacity: 1; transform: translateY(0); }
 }
 #main {
-    background: url("placeholder.png") center/cover no-repeat;
+    background: url("img/main_bg.png") center/cover no-repeat;
     height: 600px;              /* adjust to your preference */
     padding: 4rem 2rem;
 
