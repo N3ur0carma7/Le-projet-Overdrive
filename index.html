@@ -73,10 +73,44 @@
         </div>
     </section>
 
-    <section id="test">
-        <p>
-            En attente d'idée de texte et chose a mettre
-        </p>
+    <section id="wiki" class="wiki-section">
+        <h2>Wiki du Projet Overdrive</h2>
+
+        <div class="wiki-slider">
+
+            <button class="wiki-btn prev">&#10094;</button>
+
+            <div class="wiki-card-container">
+
+                <div class="wiki-card active">
+                    <img src="img/placeholder1.png" alt="">
+                    <div class="wiki-text">
+                        <h3>Donjon abandonné</h3>
+                        <p>Un lieu mystérieux généré aléatoirement contenant des puzzles, un boss et des récompenses uniques.</p>
+                    </div>
+                </div>
+
+                <div class="wiki-card">
+                    <img src="img/placeholder2.png" alt="">
+                    <div class="wiki-text">
+                        <h3>Ressource : Electricité</h3>
+                        <p>L'électricité est à la base de tout dans ce jeu. Que ce soit pour construir des batiments ou ameliorer ses armes, l'électricité est nécessaire.</p>
+                    </div>
+                </div>
+
+                <div class="wiki-card">
+                    <img src="img/placeholder3.png" alt="">
+                    <div class="wiki-text">
+                        <h3>Zone : Forêt corrompue</h3>
+                        <p>Une région dangereuse avec des anomalies, des pièges et des loots rares.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="wiki-btn next">&#10095;</button>
+
+        </div>
     </section>
     <section id="test2">
         <p>
@@ -103,5 +137,27 @@
     <footer>
         <p>&copy; 2025 Le Projet Overdrive | <a href="https://github.com/N3ur0carma7/Le-projet-Overdrive" target="_blank">GitHub Repo</a></p>
     </footer>
+        <!--je met le java script la car flemme de faire une autre file-->
+    <script>
+    let currentIndex = 0;
+    const cards = document.querySelectorAll(".wiki-card");
+    const nextBtn = document.querySelector(".next");
+    const prevBtn = document.querySelector(".prev");
+
+    function showCard(index) {
+        cards.forEach(card => card.classList.remove("active"));
+        cards[index].classList.add("active");
+    }
+
+    nextBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % cards.length;
+        showCard(currentIndex);
+    });
+
+    prevBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+        showCard(currentIndex);
+    });
+    </script>
 </body>
 </html>
