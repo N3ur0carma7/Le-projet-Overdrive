@@ -333,3 +333,75 @@ p {
 .wiki-btn:hover {
     color: #a27a4c;
 }
+
+.download-section {
+    padding: 60px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.download-section h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #000000;
+}
+
+.download-box {
+    max-width: 550px;
+    margin: auto;
+    padding: 30px;
+    background: #2b2b2b;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.btn-download {
+    font-family: "Playfair Display", serif;
+    letter-spacing: 2px;
+    display: inline-block;
+    padding: 15px 30px;
+    margin-bottom: 25px;
+    background: #5A4324;
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.4rem;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s ease;
+}
+.btn-download:hover {
+    background: #4a3620;
+    transform: translateY(-3px) scale(1.03);
+}
+
+.instructions-title {
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.instructions {
+    text-align: left;
+    margin: 0 auto 25px auto;
+    max-width: 420px;
+    color: #f0f0f0;
+    font-size: 1rem;
+    line-height: 1.6;
+    list-style: none;
+    padding-left: 0;
+}
+
+.instructions li::before {
+    content: "▶ ";
+    color: #e4c201;
+}
+
+.github-link {
+    color: #4cc9f0;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+.github-link:hover {
+    text-decoration: underline;
+}
