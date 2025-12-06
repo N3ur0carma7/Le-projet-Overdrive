@@ -426,3 +426,95 @@ section {
 .pied p {
     color: #ffffff
 }
+
+
+/* j'avoue ca c'est pas moi, j'avais trop la fleme :( */
+
+@media (max-width: 768px) {
+
+  .entete {
+    flex-direction: column;
+    height: auto;
+    gap: 0.8rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .entete h1 {
+    font-size: 32px;
+  }
+
+  .menu a {
+    font-size: 16px;
+    margin: 0 0.5rem;
+  }
+}
+
+
+@media (max-width: 900px) {
+
+  .propos {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .propos-photo {
+    width: 100%;
+    height: auto;
+  }
+
+  .propos-texte {
+    text-align: left;
+    font-size: 16px;
+  }
+}
+
+
+@media (max-width: 700px) {
+
+  .wiki-conteneur,
+  .wiki-carte {
+    width: 100%;
+    height: auto;
+  }
+
+  .wiki-carte {
+    position: static;
+    flex-direction: column;
+  }
+
+  .wiki-carte img {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .wiki-texte {
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .membre {
+    width: 90%;
+  }
+}
+
+
+@media (max-width: 500px) {
+
+  .bouton,
+  .bouton-telechargement {
+    font-size: 14px;
+    padding: 0.6rem 1.2rem;
+  }
+
+  section {
+    padding: 2rem 1rem;
+  }
+}
