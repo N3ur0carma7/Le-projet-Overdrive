@@ -130,20 +130,44 @@ section {
 .propos-photo {
   flex: 1;
   height: 400px;
-  width: auto;
   background: #c9d1d7;
   border-radius: 10px;
+  object-fit: cover;
 }
 
 .propos-texte {
   flex: 1;
   font-size: 18px;
   line-height: 1.6;
+  text-align: justify;
 }
 
 .propos-texte h2 {
   font-size: 32px;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.propos-texte p {
+  margin-bottom: 1rem;
+}
+
+.propos-texte ul {
+  margin: 1.5rem 0;
+  padding-left: 1.2rem;
+  text-align: left;
+}
+
+.propos-texte li {
+  list-style: none;
+  margin-bottom: 0.6rem;
+  line-height: 1.6;
+}
+
+.propos-texte li::before {
+  content: "◆ ";
+  color: #d6b601;
+  font-weight: bold;
 }
 
 .equipe {
@@ -326,27 +350,65 @@ section {
     text-decoration: underline;
 }
 
+#contact h2 {
+    margin-bottom: 10px;
+}
+
+#contact {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+#contact h2 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
 .contact-formulaire {
-  max-width: 400px;
+  max-width: 420px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
-.contact-formulaire input {
-  padding: 0.5rem; 
-  border: 1px solid #ccc; 
-  border-radius: 5px;
+.contact-formulaire input,
+.contact-formulaire textarea {
+  background: #2b2b2b;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  width: 100%;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.contact-formulaire input:focus,
+.contact-formulaire textarea:focus {
+  border-color: #2b2b2b;
+  box-shadow: 0 0 8px #2b2b2b;
+}
+
+.contact-formulaire ::placeholder {
+  color: #ffffff;
 }
 
 .contact-formulaire button {
-  padding: 0.75rem;
-  border: none;
-  border-radius: 5px;
   background: #5A4324;
   color: #fff;
+  border: none;
+  padding: 14px 0;
+  border-radius: 6px;
+  font-weight: 700;
   letter-spacing: 2px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.contact-formulaire button:hover {
+  background: #4a3620;
+  transform: scale(1.04);
 }
 
 .pied {
@@ -366,7 +428,7 @@ section {
 }
 
 
-.propos-texte {
+/* .propos-texte {
   text-align: justify;
 }
 
@@ -395,4 +457,42 @@ section {
 
 .propos-texte p {
   margin-bottom: 1rem;
+} */
+
+
+/* form input,
+form textarea {
+  background: #2b2B2b;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 12px;
+  transition: 0.2s;
+} */
+
+/* form input:focus,
+form textarea:focus {
+  border-color: #2b2B2b;
+  box-shadow: 0 0 8px #2b2b2b;
 }
+
+form button {
+  background: #00ffd5;
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+form button:hover {
+  transform: scale(1.04);
+}
+
+::placeholder {
+  color: #d6b601;
+} */
