@@ -50,13 +50,13 @@ section {
 }
 #main {
     background: url("img/main_bg.png") center/cover no-repeat;
-    height: 600px;              /* adjust to your preference */
+    height: 600px;           
     padding: 4rem 2rem;
 
     display: flex;
     flex-direction: column;
-    justify-content: center;    /* center vertically */
-    align-items: center;        /* center horizontally */
+    justify-content: center;  
+    align-items: center;        
     text-align: center;
 
     gap: 1.5rem;
@@ -67,7 +67,7 @@ section {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);  /* adjust opacity */
+    background: rgba(0, 0, 0, 0.35); 
     z-index: 0;
 }
 
@@ -75,7 +75,7 @@ section {
 #main .btn {
     position: relative;
     z-index: 1;
-    color: white;               /* readable on bg */
+    color: white;         
 }
 
 #main h2 {
