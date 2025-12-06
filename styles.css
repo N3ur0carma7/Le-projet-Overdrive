@@ -70,7 +70,7 @@ section {
 
 .accueil {
   background: url("img/placeholder.png") center/cover no-repeat;
-  height: 600px;
+  height: 75vh;
   padding: 4rem 2rem;
   display: flex;
   flex-direction: column;
@@ -363,4 +363,36 @@ section {
 
 .pied p {
     color: #ffffff
+}
+
+
+.propos-texte {
+  text-align: justify;
+}
+
+.propos-texte h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.propos-texte ul {
+  margin: 1.5rem 0;
+  padding-left: 1.2rem;
+  text-align: left;
+}
+
+.propos-texte li {
+  list-style: none;
+  margin-bottom: 0.6rem;
+  line-height: 1.6;
+}
+
+.propos-texte li::before {
+  content: "◆ ";
+  color: #d6b601;
+  font-weight: bold;
+}
+
+.propos-texte p {
+  margin-bottom: 1rem;
 }
