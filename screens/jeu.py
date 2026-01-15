@@ -2,7 +2,7 @@ import pygame
 import math
 
 def boucle_jeu(ecran, horloge, FPS):
-    # Taille de l’écran
+
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     HAUTEUR_BARRE = 100  # barre du bas
 
@@ -17,6 +17,9 @@ def boucle_jeu(ecran, horloge, FPS):
 
     TAILLE_ICONE = 64
 
+    # Dictionnaire des bâtiments placés
+    # clé : (x_case, y_case)
+    # valeur : index du bâtiment
     batiments = {}
 
     batiment_selectionne = None
@@ -178,3 +181,12 @@ def boucle_jeu(ecran, horloge, FPS):
         # Icônes
         for i, rect in enumerate(rects_icones):
             couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
+            pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
+            icone = pygame.transform.smoothscale(
+                images_batiments[i], (TAILLE_ICONE, TAILLE_ICONE)
+            )
+            ecran.blit(icone, rect)
+
+        pygame.display.flip()
+
+    return True
