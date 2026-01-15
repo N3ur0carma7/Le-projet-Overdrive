@@ -143,7 +143,7 @@ def boucle_jeu(ecran, horloge, FPS):
                     if case not in batiments:
                         batiments[case] = batiment_selectionne
 
-        # ----- RENDU -----
+        # rendu
         ecran.fill((0, 0, 0))
 
         largeur_vue = LARGEUR_ECRAN / zoom
