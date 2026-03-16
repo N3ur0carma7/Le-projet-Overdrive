@@ -1,5 +1,8 @@
 import pygame
 import math
+from core.player import Player
+from core.saves import load_save
+import os
 
 def boucle_jeu(ecran, horloge, FPS):
 
@@ -17,11 +20,15 @@ def boucle_jeu(ecran, horloge, FPS):
 
     TAILLE_ICONE = 64
 
+    player = Player()
     # Dictionnaire des bâtiments placés
     # clé : (x_case, y_case)
     # valeur : index du bâtiment
     batiments = {}
-
+    if os.path.exists("save/save.json"):
+        if not load_save(batiments, player):
+            print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
+            return False
     batiment_selectionne = None
 
     # Caméra et zoom
@@ -75,6 +82,7 @@ def boucle_jeu(ecran, horloge, FPS):
 
     # Boucle principale du jeu
     en_cours = True
+    online_status = False
     while en_cours:
         horloge.tick(FPS)
 
@@ -87,7 +95,11 @@ def boucle_jeu(ecran, horloge, FPS):
             # Menu pause
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
-                etat_pause = menu_pause(ecran, horloge, FPS)
+                if online_status:
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
+                    pass
+                else:
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
                 if etat_pause is False:
                     return False
                 elif etat_pause == "menu":

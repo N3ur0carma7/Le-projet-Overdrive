@@ -1,15 +1,17 @@
 import pygame
 from screens.menu import Bouton
+from core.player import Player
+from core.saves import save_game
 
-def menu_pause(ecran, horloge, FPS):
+def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player):
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     en_pause = True
-    etat_retour = "jeu"
 
     # boutons
     boutons = [
         Bouton("Menu principal", LARGEUR_ECRAN//2 - 120, 300, 240, 50),
-        Bouton("Quitter", LARGEUR_ECRAN//2 - 120, 400, 240, 50)
+        Bouton("Sauvegarder", LARGEUR_ECRAN//2 - 120, 400, 240, 50),
+        Bouton("Quitter", LARGEUR_ECRAN//2 - 120, 500, 240, 50)
     ]
 
     while en_pause:
@@ -24,11 +26,15 @@ def menu_pause(ecran, horloge, FPS):
                 if boutons[0].clic():
                     return "menu"
                 if boutons[1].clic():
+                    if not save_game(buildings, player, online_data):
+                        print("ERREUR CRITIQUE: Écriture du fichier save/save.json")
+                        return False
+                if boutons[2].clic():
                     return False
 
         # fond semi-transparent
         overlay = pygame.Surface((LARGEUR_ECRAN, HAUTEUR_ECRAN))
-        overlay.set_alpha(180)
+        overlay.set_alpha(25)
         overlay.fill((50, 50, 50))
         ecran.blit(overlay, (0, 0))
 

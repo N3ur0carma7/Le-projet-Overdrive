@@ -1,0 +1,33 @@
+{
+  "Player": {
+    "hp_max": 100,
+    "hp": 100,
+    "crit_chance": 20,
+    "crit_damage": 10,
+    "raw_damage": 1,
+    "defense": 0,
+    "health_regen": 1,
+    "money": 0,
+    "pos": [0, 0]
+  },
+
+  "Params": {
+    "todo":  0
+  },
+
+  "Builds": [
+
+  ],
+
+  "Online": [
+
+    {
+      "Player1": ...
+    },
+
+    {
+      "Player2": ...
+    }
+
+  ]
+}
