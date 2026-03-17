@@ -1,6 +1,5 @@
-import pygame
 import json
-from core.player import Player
+from core.Class.player import Player
 
 def save_game(buildings: dict, player: Player, online_data):
     """

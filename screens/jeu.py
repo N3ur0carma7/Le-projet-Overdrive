@@ -1,6 +1,6 @@
 import pygame
 import math
-from core.player import Player
+from core.Class.player import Player
 from core.saves import load_save
 import os
 
