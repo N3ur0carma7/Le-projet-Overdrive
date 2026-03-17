@@ -1,3 +1,5 @@
+import pygame
+
 class Batiment:
     TYPE_RESIDENTIEL = "residentiel"
     TYPE_MINE = "mine"
@@ -32,8 +34,8 @@ class Batiment:
         self.y = y
 
         # taille
-        self.largeur = 50
-        self.hauteur = 50
+        self.largeur = 175
+        self.hauteur = 175
 
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]

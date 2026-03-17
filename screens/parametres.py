@@ -1,5 +1,5 @@
 import pygame
 import math
-from screens.menu import Bouton
+from core.Class.buttons import Bouton
 
 # TO DO

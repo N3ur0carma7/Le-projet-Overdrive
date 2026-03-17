@@ -1,3 +1,4 @@
+
 import pygame
 import math
 import os
@@ -5,6 +6,7 @@ import os
 from core.Class.player import Player
 from core.Class.batiments import Batiment
 from core.saves import load_save
+from screens.GUI.menu_amelioration import afficher_menu_amelioration
 
 
 def boucle_jeu(ecran, horloge, FPS):
@@ -14,10 +16,18 @@ def boucle_jeu(ecran, horloge, FPS):
     herbe = pygame.image.load("assets/grass.png").convert()
     TAILLE_CASE = herbe.get_width()
 
-    images_batiments = [
-        pygame.image.load("assets/building1.png").convert_alpha(),
-        pygame.image.load("assets/building2.png").convert_alpha()
-    ]
+    images_batiments = {
+        Batiment.TYPE_RESIDENTIEL: {
+            1: pygame.image.load("assets/buildings/house_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/house_lvl2.png").convert_alpha(),  # Image niveau 2
+            3: pygame.image.load("assets/buildings/house_lvl3.png").convert_alpha()  # Image niveau 3
+        },
+        Batiment.TYPE_MINE: {
+            1: pygame.image.load("assets/buildings/mine_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/mine_lvl2.png").convert_alpha(),
+            3: pygame.image.load("assets/buildings/mine_lvl3.png").convert_alpha()
+        }
+    }
 
     TYPES_BATIMENTS = [
         Batiment.TYPE_RESIDENTIEL,
@@ -120,6 +130,7 @@ def boucle_jeu(ecran, horloge, FPS):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 sx, sy = pygame.mouse.get_pos()
 
+                # 1. Vérification du clic sur la barre du bas
                 clic_barre = False
                 for i, rect in enumerate(rects_icones):
                     if rect.collidepoint(sx, sy):
@@ -127,19 +138,38 @@ def boucle_jeu(ecran, horloge, FPS):
                         clic_barre = True
                         break
 
-                if not clic_barre and batiment_selectionne is not None and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
+                # 2. Si on a cliqué dans la zone de jeu (pas sur la barre)
+                if not clic_barre and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
 
+                    # Traduction des coordonnées de l'écran vers le monde avec zoom et caméra
                     mx = camera_x + sx / zoom
                     my = camera_y + sy / zoom
 
-                    mx = int(mx // TAILLE_CASE) * TAILLE_CASE
-                    my = int(my // TAILLE_CASE) * TAILLE_CASE
+                    # CAS A : On a un bâtiment en main -> On tente de le CONSTRUIRE
+                    if batiment_selectionne is not None:
+                        # On aligne sur la grille
+                        grid_x = int(mx // TAILLE_CASE) * TAILLE_CASE
+                        grid_y = int(my // TAILLE_CASE) * TAILLE_CASE
 
-                    type_batiment = TYPES_BATIMENTS[batiment_selectionne]
-                    nouveau = Batiment(type_batiment, mx, my)
+                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+                        nouveau = Batiment(type_batiment, grid_x, grid_y)
 
-                    if not collision(batiments, nouveau):
-                        batiments.append(nouveau)
+                        if not collision(batiments, nouveau):
+                            batiments.append(nouveau)
+                            # Optionnel: on peut forcer batiment_selectionne = None ici pour devoir recliquer sur l'icône à chaque fois
+
+                    # CAS B : On n'a RIEN en main -> On tente d'INTERAGIR (Améliorer)
+                    elif batiment_selectionne is None:
+                        for b in batiments:
+                            # On vérifie la collision avec les coordonnées du monde (mx, my)
+                            if b.get_rect().collidepoint(mx, my):
+                                # Le bâtiment est cliqué, on lance le menu d'amélioration !
+                                afficher_menu_amelioration(ecran, b, sx)
+                                break  # On arrête la recherche
+
+
+
+
 
         ecran.fill((0, 0, 0))
 
@@ -154,11 +184,12 @@ def boucle_jeu(ecran, horloge, FPS):
 
         # bâtiments
         for b in batiments:
-            index = TYPES_BATIMENTS.index(b.type)
+            image_a_dessiner = images_batiments[b.type][b.niveau]
+
             x = b.x - camera_x
             y = b.y - camera_y
 
-            surface_monde.blit(images_batiments[index], (x, y))
+            surface_monde.blit(image_a_dessiner, (x, y))
 
         # 👻 FANTÔME
         if batiment_selectionne is not None:
@@ -173,9 +204,9 @@ def boucle_jeu(ecran, horloge, FPS):
             type_batiment = TYPES_BATIMENTS[batiment_selectionne]
             test_batiment = Batiment(type_batiment, mx, my)
 
-            image = images_batiments[batiment_selectionne]
+            # On prend l'image du niveau 1 par défaut pour le fantôme
+            image = images_batiments[type_batiment][1]
             image_fantome = image.copy()
-            image_fantome.set_alpha(120)
 
             # collision = rouge
             if collision(batiments, test_batiment):
@@ -203,8 +234,10 @@ def boucle_jeu(ecran, horloge, FPS):
             couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
             pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
 
+            type_actuel = TYPES_BATIMENTS[i]
+            # On affiche l'image de niveau 1 dans la barre d'icônes
             icone = pygame.transform.smoothscale(
-                images_batiments[i], (TAILLE_ICONE, TAILLE_ICONE)
+                images_batiments[type_actuel][1], (TAILLE_ICONE, TAILLE_ICONE)
             )
             ecran.blit(icone, rect)
 

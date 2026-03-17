@@ -1,28 +1,9 @@
 import pygame
 import json
 import os
+from core.Class.buttons import Bouton
 
-class Bouton:
-    def __init__(self, texte, x, y, largeur, hauteur):
-        self.rect = pygame.Rect(x, y, largeur, hauteur)
-        self.texte = texte
-        self.couleur_base = (100, 100, 100)
-        self.couleur_hover = (200, 200, 80)
-        self.police = pygame.font.SysFont(None, 40)
 
-    def afficher(self, ecran):
-        souris = pygame.mouse.get_pos()
-        if self.rect.collidepoint(souris):
-            couleur = self.couleur_hover
-        else:
-            couleur = self.couleur_base
-        pygame.draw.rect(ecran, couleur, self.rect)
-        txt_surface = self.police.render(self.texte, True, (0, 0, 0))
-        txt_rect = txt_surface.get_rect(center=self.rect.center)
-        ecran.blit(txt_surface, txt_rect)
-
-    def clic(self):
-        return self.rect.collidepoint(pygame.mouse.get_pos())
 
 def menu_principal(ecran, horloge, FPS):
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
