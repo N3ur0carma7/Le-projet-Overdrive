@@ -1,40 +1,39 @@
 import pygame
 import math
-from core.Class.player import Player
-from core.saves import load_save
 import os
+
+from core.Class.player import Player
 from core.Class.batiments import Batiment
-TYPES_BATIMENTS = [
-    Batiment.TYPE_RESIDENTIEL,
-    Batiment.TYPE_MINE,
-    Batiment.TYPE_AGRICOLE
-]
+from core.saves import load_save
+
 
 def boucle_jeu(ecran, horloge, FPS):
-
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
-    HAUTEUR_BARRE = 100  # barre du bas
+    HAUTEUR_BARRE = 100
 
     herbe = pygame.image.load("assets/grass.png").convert()
     TAILLE_CASE = herbe.get_width()
 
-    # Chargement des bâtiments
     images_batiments = [
         pygame.image.load("assets/building1.png").convert_alpha(),
         pygame.image.load("assets/building2.png").convert_alpha()
     ]
 
+    TYPES_BATIMENTS = [
+        Batiment.TYPE_RESIDENTIEL,
+        Batiment.TYPE_MINE
+    ]
+
     TAILLE_ICONE = 64
 
     player = Player()
-    # Dictionnaire des bâtiments placés
-    # clé : (x_case, y_case)
-    # valeur : index du bâtiment
     batiments = []
+
     if os.path.exists("save/save.json"):
         if not load_save(batiments, player):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
+
     batiment_selectionne = None
 
     def collision(batiments, nouveau):
@@ -43,7 +42,6 @@ def boucle_jeu(ecran, horloge, FPS):
                 return True
         return False
 
-    # Caméra et zoom
     camera_x, camera_y = 0.0, 0.0
     zoom = 1.0
 
@@ -51,13 +49,12 @@ def boucle_jeu(ecran, horloge, FPS):
     ZOOM_MAX = 3.0
     VITESSE_ZOOM = 0.1
 
-    # Déplacement caméra avec bouton du milieu
     deplacement_camera = False
     derniere_souris = (0, 0)
 
-    # Création de la barre d’icônes
     rects_icones = []
     marge = 20
+
     for i in range(len(images_batiments)):
         rect = pygame.Rect(
             marge + i * (TAILLE_ICONE + marge),
@@ -67,14 +64,6 @@ def boucle_jeu(ecran, horloge, FPS):
         )
         rects_icones.append(rect)
 
-    # Convertit la position de la souris en coordonnées de case
-    def souris_vers_case(pos):
-        sx, sy = pos
-        mx = camera_x + sx / zoom
-        my = camera_y + sy / zoom
-        return int(mx // TAILLE_CASE), int(my // TAILLE_CASE)
-
-    # Dessine la grille infinie + l’herbe
     def dessiner_grille(surface):
         largeur_vue = LARGEUR_ECRAN / zoom
         hauteur_vue = (HAUTEUR_ECRAN - HAUTEUR_BARRE) / zoom
@@ -85,56 +74,38 @@ def boucle_jeu(ecran, horloge, FPS):
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
                 surface.blit(herbe, (x - camera_x, y - camera_y))
-                
 
-    # Boucle principale du jeu
     en_cours = True
-    online_status = False
+
     while en_cours:
         horloge.tick(FPS)
 
         for event in pygame.event.get():
 
-            # Quitter le jeu
             if event.type == pygame.QUIT:
                 return False
 
-            # Menu pause
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                from screens.pause import menu_pause
-                if online_status:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
-                    pass
-                else:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
-                if etat_pause is False:
-                    return False
-                elif etat_pause == "menu":
-                    return "menu"
+                return "menu"
 
-            # Zoom souris
             if event.type == pygame.MOUSEWHEEL:
                 ancien_zoom = zoom
                 zoom += event.y * VITESSE_ZOOM
                 zoom = max(ZOOM_MIN, min(ZOOM_MAX, zoom))
 
-                # Zoom centré sur l’écran
                 centre_x = camera_x + LARGEUR_ECRAN / (2 * ancien_zoom)
                 centre_y = camera_y + HAUTEUR_ECRAN / (2 * ancien_zoom)
 
                 camera_x = centre_x - LARGEUR_ECRAN / (2 * zoom)
                 camera_y = centre_y - HAUTEUR_ECRAN / (2 * zoom)
 
-            # Début déplacement caméra
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
                 deplacement_camera = True
                 derniere_souris = pygame.mouse.get_pos()
 
-            # Fin déplacement caméra
             if event.type == pygame.MOUSEBUTTONUP and event.button == 2:
                 deplacement_camera = False
 
-            # Mouvement caméra
             if event.type == pygame.MOUSEMOTION and deplacement_camera:
                 sx, sy = pygame.mouse.get_pos()
                 dx = sx - derniere_souris[0]
@@ -143,15 +114,12 @@ def boucle_jeu(ecran, horloge, FPS):
                 camera_y -= dy / zoom
                 derniere_souris = (sx, sy)
 
-            # Clic droit : désélection
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 batiment_selectionne = None
 
-            # Clic gauche
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 sx, sy = pygame.mouse.get_pos()
 
-                # Clic sur la barre d’icônes
                 clic_barre = False
                 for i, rect in enumerate(rects_icones):
                     if rect.collidepoint(sx, sy):
@@ -159,23 +127,20 @@ def boucle_jeu(ecran, horloge, FPS):
                         clic_barre = True
                         break
 
-                # Placement du bâtiment sur la grille
                 if not clic_barre and batiment_selectionne is not None and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
+
                     mx = camera_x + sx / zoom
                     my = camera_y + sy / zoom
 
-                    # snap à la grille
                     mx = int(mx // TAILLE_CASE) * TAILLE_CASE
                     my = int(my // TAILLE_CASE) * TAILLE_CASE
 
                     type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+                    nouveau = Batiment(type_batiment, mx, my)
 
-                    nouveau_batiment = Batiment(type_batiment, mx, my)
+                    if not collision(batiments, nouveau):
+                        batiments.append(nouveau)
 
-                    if not collision(batiments, nouveau_batiment):
-                        batiments.append(nouveau_batiment)
-
-        # rendu
         ecran.fill((0, 0, 0))
 
         largeur_vue = LARGEUR_ECRAN / zoom
@@ -186,34 +151,58 @@ def boucle_jeu(ecran, horloge, FPS):
         ).convert()
 
         dessiner_grille(surface_monde)
-        # Dessin des bâtiments
+
+        # bâtiments
         for b in batiments:
+            index = TYPES_BATIMENTS.index(b.type)
             x = b.x - camera_x
             y = b.y - camera_y
 
-            index = TYPES_BATIMENTS.index(b.type)
             surface_monde.blit(images_batiments[index], (x, y))
 
+        # 👻 FANTÔME
+        if batiment_selectionne is not None:
+            sx, sy = pygame.mouse.get_pos()
 
+            mx = camera_x + sx / zoom
+            my = camera_y + sy / zoom
 
-        # Application du zoom
+            mx = int(mx // TAILLE_CASE) * TAILLE_CASE
+            my = int(my // TAILLE_CASE) * TAILLE_CASE
+
+            type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+            test_batiment = Batiment(type_batiment, mx, my)
+
+            image = images_batiments[batiment_selectionne]
+            image_fantome = image.copy()
+            image_fantome.set_alpha(120)
+
+            # collision = rouge
+            if collision(batiments, test_batiment):
+                image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
+
+            surface_monde.blit(
+                image_fantome,
+                (mx - camera_x, my - camera_y)
+            )
+
         surface_affichee = pygame.transform.smoothscale(
             surface_monde,
             (LARGEUR_ECRAN, HAUTEUR_ECRAN - HAUTEUR_BARRE)
         )
+
         ecran.blit(surface_affichee, (0, 0))
 
-        # Barre du bas
         pygame.draw.rect(
             ecran,
             (40, 40, 40),
             (0, HAUTEUR_ECRAN - HAUTEUR_BARRE, LARGEUR_ECRAN, HAUTEUR_BARRE)
         )
 
-        # Icônes
         for i, rect in enumerate(rects_icones):
             couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
             pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
+
             icone = pygame.transform.smoothscale(
                 images_batiments[i], (TAILLE_ICONE, TAILLE_ICONE)
             )
