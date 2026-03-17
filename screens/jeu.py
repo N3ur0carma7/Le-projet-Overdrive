@@ -85,12 +85,7 @@ def boucle_jeu(ecran, horloge, FPS):
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
                 surface.blit(herbe, (x - camera_x, y - camera_y))
-                pygame.draw.rect(
-                    surface,
-                    (60, 60, 60),
-                    (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE),
-                    1
-                )
+                
 
     # Boucle principale du jeu
     en_cours = True
@@ -169,6 +164,10 @@ def boucle_jeu(ecran, horloge, FPS):
                     mx = camera_x + sx / zoom
                     my = camera_y + sy / zoom
 
+                    # snap à la grille
+                    mx = int(mx // TAILLE_CASE) * TAILLE_CASE
+                    my = int(my // TAILLE_CASE) * TAILLE_CASE
+
                     type_batiment = TYPES_BATIMENTS[batiment_selectionne]
 
                     nouveau_batiment = Batiment(type_batiment, mx, my)
@@ -186,8 +185,7 @@ def boucle_jeu(ecran, horloge, FPS):
             (math.ceil(largeur_vue), math.ceil(hauteur_vue))
         ).convert()
 
-        surface_monde.fill((34, 139, 34))  # vert herbe simple
-
+        dessiner_grille(surface_monde)
         # Dessin des bâtiments
         for b in batiments:
             x = b.x - camera_x
