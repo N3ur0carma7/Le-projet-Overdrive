@@ -3,6 +3,12 @@ import math
 from core.Class.player import Player
 from core.saves import load_save
 import os
+from core.Class.batiments import Batiment
+TYPES_BATIMENTS = [
+    Batiment.TYPE_RESIDENTIEL,
+    Batiment.TYPE_MINE,
+    Batiment.TYPE_AGRICOLE
+]
 
 def boucle_jeu(ecran, horloge, FPS):
 
@@ -24,12 +30,18 @@ def boucle_jeu(ecran, horloge, FPS):
     # Dictionnaire des bâtiments placés
     # clé : (x_case, y_case)
     # valeur : index du bâtiment
-    batiments = {}
+    batiments = []
     if os.path.exists("save/save.json"):
         if not load_save(batiments, player):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
     batiment_selectionne = None
+
+    def collision(batiments, nouveau):
+        for b in batiments:
+            if b.collision(nouveau):
+                return True
+        return False
 
     # Caméra et zoom
     camera_x, camera_y = 0.0, 0.0
@@ -154,9 +166,15 @@ def boucle_jeu(ecran, horloge, FPS):
 
                 # Placement du bâtiment sur la grille
                 if not clic_barre and batiment_selectionne is not None and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
-                    case = souris_vers_case((sx, sy))
-                    if case not in batiments:
-                        batiments[case] = batiment_selectionne
+                    mx = camera_x + sx / zoom
+                    my = camera_y + sy / zoom
+
+                    type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+
+                    nouveau_batiment = Batiment(type_batiment, mx, my)
+
+                    if not collision(batiments, nouveau_batiment):
+                        batiments.append(nouveau_batiment)
 
         # rendu
         ecran.fill((0, 0, 0))
@@ -168,13 +186,17 @@ def boucle_jeu(ecran, horloge, FPS):
             (math.ceil(largeur_vue), math.ceil(hauteur_vue))
         ).convert()
 
-        dessiner_grille(surface_monde)
+        surface_monde.fill((34, 139, 34))  # vert herbe simple
 
         # Dessin des bâtiments
-        for (x_case, y_case), idx in batiments.items():
-            x = x_case * TAILLE_CASE - camera_x
-            y = y_case * TAILLE_CASE - camera_y
-            surface_monde.blit(images_batiments[idx], (x, y))
+        for b in batiments:
+            x = b.x - camera_x
+            y = b.y - camera_y
+
+            index = TYPES_BATIMENTS.index(b.type)
+            surface_monde.blit(images_batiments[index], (x, y))
+
+
 
         # Application du zoom
         surface_affichee = pygame.transform.smoothscale(
