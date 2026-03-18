@@ -81,9 +81,18 @@ def boucle_jeu(ecran, horloge, FPS):
         debut_x = int(camera_x // TAILLE_CASE) * TAILLE_CASE
         debut_y = int(camera_y // TAILLE_CASE) * TAILLE_CASE
 
+        couleur_grille = (20, 80, 20)
+        epaisseur = 2
+        # -------------------------------
+
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
+                # 1. On dessine l'image de l'herbe
                 surface.blit(herbe, (x - camera_x, y - camera_y))
+
+                # 2. On dessine le contour de la case par-dessus
+                rect_case = (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE)
+                pygame.draw.rect(surface, couleur_grille, rect_case, epaisseur)
 
     en_cours = True
 
@@ -147,11 +156,15 @@ def boucle_jeu(ecran, horloge, FPS):
 
                     # CAS A : On a un bâtiment en main -> On tente de le CONSTRUIRE
                     if batiment_selectionne is not None:
-                        # On aligne sur la grille
+                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+
+                        # On récupère l'image pour connaître sa vraie taille
+                        image_ref = images_batiments[type_batiment][1]
+
+                        # On décale le clic pour tenir le bâtiment par son centre, puis on aligne sur la grille
                         grid_x = int(mx // TAILLE_CASE) * TAILLE_CASE
                         grid_y = int(my // TAILLE_CASE) * TAILLE_CASE
 
-                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
                         nouveau = Batiment(type_batiment, grid_x, grid_y)
 
                         if not collision(batiments, nouveau):
@@ -182,39 +195,51 @@ def boucle_jeu(ecran, horloge, FPS):
 
         dessiner_grille(surface_monde)
 
-        # bâtiments
+        # bâtiments centrés
         for b in batiments:
             image_a_dessiner = images_batiments[b.type][b.niveau]
 
-            x = b.x - camera_x
-            y = b.y - camera_y
+            offset_x = (TAILLE_CASE - image_a_dessiner.get_width()) // 2
+            offset_y = (TAILLE_CASE - image_a_dessiner.get_height()) // 2
+
+            x = b.x - camera_x + offset_x
+            y = b.y - camera_y + offset_y
+            # --------------------------
 
             surface_monde.blit(image_a_dessiner, (x, y))
 
-        # 👻 FANTÔME
+        # Fantôme
         if batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
 
             mx = camera_x + sx / zoom
             my = camera_y + sy / zoom
 
-            mx = int(mx // TAILLE_CASE) * TAILLE_CASE
-            my = int(my // TAILLE_CASE) * TAILLE_CASE
-
             type_batiment = TYPES_BATIMENTS[batiment_selectionne]
-            test_batiment = Batiment(type_batiment, mx, my)
-
-            # On prend l'image du niveau 1 par défaut pour le fantôme
             image = images_batiments[type_batiment][1]
-            image_fantome = image.copy()
 
-            # collision = rouge
+            grid_x = int(mx // TAILLE_CASE) * TAILLE_CASE
+            grid_y = int(my // TAILLE_CASE) * TAILLE_CASE
+            # -----------------------------
+
+            test_batiment = Batiment(type_batiment, grid_x, grid_y)
+
+            image_fantome = image.copy()
+            image_fantome.set_alpha(128)
+
             if collision(batiments, test_batiment):
                 image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
 
+            if collision(batiments, test_batiment):
+                image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
+
+            offset_x = (TAILLE_CASE - image_fantome.get_width()) // 2
+            offset_y = (TAILLE_CASE - image_fantome.get_height()) // 2
+            # ------------------------------------------
+
             surface_monde.blit(
                 image_fantome,
-                (mx - camera_x, my - camera_y)
+                (grid_x - camera_x + offset_x, grid_y - camera_y + offset_y)
             )
 
         surface_affichee = pygame.transform.smoothscale(
