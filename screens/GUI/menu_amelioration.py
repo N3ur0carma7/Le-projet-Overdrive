@@ -24,7 +24,7 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
 
 
     btn_fermer = BoutonImage(
-        menu_x + 100, menu_y + 200, 200, 75,
+        menu_x + 320, menu_y -14 , 90, 90,
         "assets/buttons/close_button.png", "assets/buttons/close_button.png",
         ""
     )
@@ -54,9 +54,9 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
         else:
             stat = police.render(f"Production : {batiment.get_production()}", True, (150, 255, 150))
 
-        ecran.blit(titre, (menu_x + 50, menu_y + 50))
+        ecran.blit(titre, (menu_x + 50, menu_y + 60))
         ecran.blit(niveau, (menu_x + 50, menu_y + 110))
-        ecran.blit(stat, (menu_x + 50, menu_y + 170))
+        ecran.blit(stat, (menu_x + 50, menu_y + 160))
 
         # Clics
         for event in pygame.event.get():
