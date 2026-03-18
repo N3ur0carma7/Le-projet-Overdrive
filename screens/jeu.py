@@ -198,7 +198,7 @@ def boucle_jeu(ecran, horloge, FPS):
 
             surface_monde.blit(image_a_dessiner, (x, y))
 
-        # 👻 FANTÔME
+        # fantome
         if batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
 
