@@ -34,14 +34,19 @@ class Batiment:
         self.y = y
 
         # taille
-        self.largeur = 175
-        self.hauteur = 175
+        self.largeur = 1
+        self.hauteur = 1
 
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]
 
-    def get_rect(self):
-        return pygame.Rect(self.x, self.y, self.largeur, self.hauteur)
+    def get_rect_pixel(self, TAILLE_CASE):
+        return pygame.Rect(
+            self.x * TAILLE_CASE,
+            self.y * TAILLE_CASE,
+            self.largeur * TAILLE_CASE,
+            self.hauteur * TAILLE_CASE
+        )
 
     def get_production(self):
         stats = self.get_stats()
@@ -73,3 +78,24 @@ class Batiment:
 
     def __str__(self):
         return f"{self.type} (niveau {self.niveau})"
+
+    #pour convertir pour le serveur
+    #PAS TOUCHE !!!
+    # SINON AU BUCHER !!!!
+    def to_dict(self):
+        return {
+            "type": self.type,
+            "niveau": self.niveau,
+            "x": self.x,
+            "y": self.y,
+            "largeur": self.largeur,
+            "hauteur": self.hauteur,
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        obj = cls(d["type"], d["x"], d["y"])
+        obj.niveau = d.get("niveau", 1)
+        obj.largeur = d.get("largeur", 175)
+        obj.hauteur = d.get("hauteur", 175)
+        return obj

@@ -20,7 +20,6 @@ if __name__ == "__main__":
     # état initial = menu
     en_cours = True
     etat = "menu"
-
     while en_cours:
         # Gestion globale du plein écran (F11) entre les écrans
         for event in pygame.event.get([pygame.KEYDOWN]):
@@ -38,6 +37,6 @@ if __name__ == "__main__":
             etat, en_cours = menu_principal(ecran, horloge, FPS)
         elif etat == "jeu":
             en_cours = boucle_jeu(ecran, horloge, FPS)
-            etat = "menu"  # revenir au menu après jeu
+            etat = "menu"  # revenir au menu après jeu*
 
     pygame.quit()

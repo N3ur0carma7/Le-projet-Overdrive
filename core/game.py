@@ -27,5 +27,3 @@ class Game:
                     self.horloge,
                     self.FPS
                 )
-
-        pygame.quit()

@@ -1,7 +1,8 @@
 import json
 from core.Class.player import Player
+from core.Class.batiments import Batiment
 
-def save_game(buildings: dict, player: Player, online_data):
+def save_game(buildings: list, player: Player, online_data):
     """
     :param buildings: dictionnaire des coordonnées des builds accompagné de leur id respectif
     :param player: objet de type Player : c'est le joueur
@@ -9,12 +10,9 @@ def save_game(buildings: dict, player: Player, online_data):
     :return: True | False
     """
     try:
-        # Convertion de la liste de coordonées en liste d'ID de batiment
-        batiments_real = {}
-        for k, v in buildings.items():
-            if v not in batiments_real:
-                batiments_real[v] = []
-            batiments_real[v].append(k)
+        batiments_real = []
+        for B in buildings:
+            batiments_real.append(B.to_dict())
         # Génération de la save
         save_data = {
             "Player": {
@@ -39,7 +37,7 @@ def save_game(buildings: dict, player: Player, online_data):
         return False
 
 
-def load_save(buildings: dict, player: Player):
+def load_save(buildings: list, player: Player):
     """
     :param buildings: dictionnaire VIDE qui va contenir les batiments du fichier de sauvegarde
     :param player: objet de classe Player : c'est le joueur qui doit être vide (en gros il viens d'être créé)
@@ -59,9 +57,8 @@ def load_save(buildings: dict, player: Player):
         player.money = save_data["Player"]["money"]
         player.pos = save_data["Player"]["pos"]
         # Loading buildings data
-        for k, v in save_data["Builds"].items():
-            for build in v:
-                buildings[(int(build[0]), int(build[1]))] = int(k)
+        for b in save_data["Builds"]:
+            buildings.append(Batiment.from_dict(b))
         # Loadign online data | TO DO
         return True
     except Exception:
