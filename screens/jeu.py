@@ -291,6 +291,7 @@ def boucle_jeu(ecran, horloge, FPS):
                 camera_y -= dy / zoom
                 derniere_souris = (sx, sy)
 
+#clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
@@ -300,21 +301,13 @@ def boucle_jeu(ecran, horloge, FPS):
                     sx, sy = pygame.mouse.get_pos()
                     case = souris_vers_case((sx, sy))
 
-                    batiment_a_supprimer = None
-                    for B in batiments:
-                        if (B.x <= case[0] < B.x + B.largeur and
-                                B.y <= case[1] < B.y + B.hauteur):
-                            batiment_a_supprimer = B
-                            break
 
-                    if batiment_a_supprimer:
-                        batiments.remove(batiment_a_supprimer)
-                        if CLIENT is not None:
-                            send_liste_batiments_client(batiments, CLIENT)
-                    else:
-                        if sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
-                            if not player.a_star(case, TAILLE_CASE):
-                                print("Chemin bloqué")
+
+
+
+                    if sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
+                        if not player.a_star(case, TAILLE_CASE):
+                            print("Chemin bloqué")
 
 
             # Clic gauche
