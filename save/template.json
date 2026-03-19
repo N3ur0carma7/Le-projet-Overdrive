@@ -11,23 +11,15 @@
     "pos": [0, 0]
   },
 
-  "Params": {
-    "todo":  0
-  },
-
   "Builds": [
-
+      {"Batiment 1": "maison"},
+      {"Batiment 2": "usine"}
   ],
 
   "Online": [
 
     {
       "Player1": ...
-    },
-
-    {
-      "Player2": ...
     }
-
   ]
 }

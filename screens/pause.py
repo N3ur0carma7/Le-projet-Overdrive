@@ -25,14 +25,16 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player):
                 return "jeu"
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if boutons[0].clic():
-                    send_server(DISCONNECT_MESSAGE, CLIENT)
+                    if online_data:
+                        send_server(DISCONNECT_MESSAGE, CLIENT)
                     return "menu"
                 if boutons[1].clic():
                     if not save_game(buildings, player, online_data):
                         print("ERREUR CRITIQUE: Écriture du fichier save/save.json")
                         return False
                 if boutons[2].clic():
-                    send_server(DISCONNECT_MESSAGE, CLIENT)
+                    if online_data:
+                        send_server(DISCONNECT_MESSAGE, CLIENT)
                     return False
 
         # fond semi-transparent

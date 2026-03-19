@@ -20,7 +20,8 @@ def menu_principal(ecran, horloge, FPS):
             Bouton("Continuer", W // 2 - 100, 300, 200, 50),
             Bouton("Rejoindre", W//2 - 100, 400, 200, 50),
             Bouton("Paramètres", W//2 - 100, 500, 200, 50),
-            Bouton("Quitter", W//2 - 100, 600, 200, 50)
+            Bouton("Quitter", W//2 - 100, 600, 200, 50),
+            Bouton("DEV", W // 2 - 500, 200, 200, 50),
         ]
 
     # créer les boutons
@@ -67,6 +68,8 @@ def menu_principal(ecran, horloge, FPS):
                     print("Ouvrir menu paramètres")
                 if boutons[4].clic():  # Quitter
                     return etat_suivant, False
+                if boutons[5].clic():
+                    return "jeudev", True
 
         ecran.fill((50, 50, 50))
         for btn in boutons:

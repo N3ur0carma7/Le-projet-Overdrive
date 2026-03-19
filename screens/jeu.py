@@ -1,13 +1,9 @@
 import pygame
 import math
-
-from core.Class.player import Player
-from core.saves import load_save
 import os
 from multiplayer.serveur import *
 from multiplayer.client import send_list_client, CLIENT, recieved_client, send_batiment_client, send_liste_batiments_client, send_liste_joueurs_client
 from core.Class.batiments import *
-from screens.GUI.menu_amelioration import afficher_menu_amelioration
 import time
 from multiplayer.client import send_liste_batiments_client
 
@@ -54,7 +50,7 @@ from screens.GUI.menu_amelioration import afficher_menu_amelioration
 import core.sounds as sound
 
 
-def boucle_jeu(ecran, horloge, FPS):
+def boucle_jeu(ecran, horloge, FPS, online: bool):
     global batiments
     global players
     global thread_lance
@@ -143,7 +139,6 @@ def boucle_jeu(ecran, horloge, FPS):
                 npc.assigner_travail(None)
 
     players.append(player)
-    online = {}
     # Dictionnaire des bâtiments placés
     # clé : (x_case, y_case)
     # valeur : index du bâtiment
@@ -239,7 +234,7 @@ def boucle_jeu(ecran, horloge, FPS):
             player.money += gains
             production_acc -= gains
 
-        if CLIENT is not None and not thread_lance:
+        if CLIENT is not None and not thread_lance and online:
             thread_lance = True
             threading.Thread(target=update, args=(CLIENT,), daemon=True).start()
 
@@ -254,11 +249,11 @@ def boucle_jeu(ecran, horloge, FPS):
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
-                if False:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
+                if online:
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player)
                     pass
                 else:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, None, player)
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player)
                 if not etat_pause:
                     return False
                 elif etat_pause == "menu":
@@ -300,10 +295,6 @@ def boucle_jeu(ecran, horloge, FPS):
                     sx, sy = pygame.mouse.get_pos()
                     case = souris_vers_case((sx, sy))
 
-
-
-
-
                     if sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
                         if not player.a_star(case, TAILLE_CASE):
                             print("Chemin bloqué")
@@ -340,7 +331,7 @@ def boucle_jeu(ecran, horloge, FPS):
                             batiments.append(nouveau)
                             sound.son_placement.play()
                             synchroniser_npcs()
-                            if CLIENT is not None:
+                            if CLIENT is not None and online:
                                 print(f"envoi en cours {batiments}")
                                 send_liste_batiments_client(batiments, CLIENT)
 
@@ -359,11 +350,11 @@ def boucle_jeu(ecran, horloge, FPS):
 
                                 if resultat == "supprimer":
                                     batiments.remove(B)
-                                    player.money += cout
-                                    if CLIENT is not None:
+                                    player.money += Batiment.DATA[B.type][1]["cout"]
+                                    if CLIENT is not None and online:
                                         send_liste_batiments_client(batiments, CLIENT)
                                 elif resultat == "upgrade":
-                                    if CLIENT is not None:
+                                    if CLIENT is not None and online:
                                         send_liste_batiments_client(batiments, CLIENT)
 
                                 synchroniser_npcs()

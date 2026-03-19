@@ -36,7 +36,10 @@ if __name__ == "__main__":
             # retourne le prochain état selon le bouton cliqué
             etat, en_cours = menu_principal(ecran, horloge, FPS)
         elif etat == "jeu":
-            en_cours = boucle_jeu(ecran, horloge, FPS)
+            en_cours = boucle_jeu(ecran, horloge, FPS, True)
             etat = "menu"  # revenir au menu après jeu*
+        elif etat == "jeudev":
+            en_cours = boucle_jeu(ecran, horloge, FPS, False)
+            etat = "menu"
 
     pygame.quit()
