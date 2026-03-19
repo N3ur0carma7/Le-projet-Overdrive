@@ -10,7 +10,7 @@ class Player:
         self.raw_damage = 1
         self.defense = 0
         self.health_regen = 1
-        self.money = 0
+        self.money = 500
         self.pos = (0, 0)
     def hurt(self, raw_damage: int) -> float | None:
         """
