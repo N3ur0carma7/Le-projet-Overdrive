@@ -4,7 +4,8 @@ from core.Class.batiments import Batiment
 from core.Class.buttons import BoutonImage
 import screens.jeu
 import core.sounds as sound
-def afficher_menu_amelioration(ecran, batiment, clic_x):
+def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
+
     en_menu = True
     horloge = pygame.time.Clock()
     police = pygame.font.Font("assets/fonts/Minecraft.ttf", 35)
@@ -69,9 +70,16 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
                     en_menu = False
 
                 if btn_ameliorer and btn_ameliorer.clic():
-                    batiment.upgrade()
-                    sound.son_upgrade.play()
-                    en_menu = False
+                    cout = batiment.get_upgrade_cost()
+                    if player is not None and player.money < cout:
+                        pass  # pas assez d'argent, on ne fait rien
+                    else:
+                        if player is not None:
+                            player.money -= cout
+                        batiment.upgrade()
+                        sound.son_upgrade.play()
+                        en_menu = False
+
 
         # Affichage boutons
         btn_fermer.afficher(ecran)
