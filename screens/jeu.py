@@ -16,6 +16,7 @@ def boucle_jeu(ecran, horloge, FPS):
     dims = [LARGEUR_ECRAN, HAUTEUR_ECRAN]  # mutable pour mise a jour au resize
 
 
+
     herbe = pygame.image.load("assets/grass.png").convert()
     TAILLE_CASE = herbe.get_width()
 
@@ -145,9 +146,15 @@ def boucle_jeu(ecran, horloge, FPS):
         couleur_grille = (20, 80, 20)
         epaisseur = 2
 
+
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
+                # 1. On dessine l'image de l'herbe
                 surface.blit(herbe, (x - camera_x, y - camera_y))
+                rect_case = (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE)
+                pygame.draw.rect(surface, couleur_grille, rect_case, epaisseur)
+
+                # 2. On dessine le contour de la case par-dessus
                 rect_case = (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE)
                 pygame.draw.rect(surface, couleur_grille, rect_case, epaisseur)
 
@@ -225,6 +232,7 @@ def boucle_jeu(ecran, horloge, FPS):
                         type_batiment = TYPES_BATIMENTS[batiment_selectionne]
                         image_ref = images_batiments[type_batiment][1]
 
+
                         grid_x = int(mx // TAILLE_CASE) * TAILLE_CASE
                         grid_y = int(my // TAILLE_CASE) * TAILLE_CASE
 
@@ -236,6 +244,7 @@ def boucle_jeu(ecran, horloge, FPS):
                             batiments.append(nouveau)
                             sound.son_placement.play()
                             synchroniser_npcs()
+
 
                     elif batiment_selectionne is None:
                         for b in batiments:
@@ -256,7 +265,7 @@ def boucle_jeu(ecran, horloge, FPS):
 
         dessiner_grille(surface_monde)
 
-        # batiments centres
+
         for b in batiments:
             image_a_dessiner = images_batiments[b.type][b.niveau]
 
@@ -268,7 +277,7 @@ def boucle_jeu(ecran, horloge, FPS):
 
             surface_monde.blit(image_a_dessiner, (x, y))
 
-        # Fantome
+
         if batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
 
@@ -281,6 +290,7 @@ def boucle_jeu(ecran, horloge, FPS):
             grid_x = int(mx // TAILLE_CASE) * TAILLE_CASE
             grid_y = int(my // TAILLE_CASE) * TAILLE_CASE
 
+
             test_batiment = Batiment(type_batiment, grid_x, grid_y)
 
             image_fantome = image.copy()
@@ -291,6 +301,7 @@ def boucle_jeu(ecran, horloge, FPS):
 
             offset_x = (TAILLE_CASE - image_fantome.get_width()) // 2
             offset_y = (TAILLE_CASE - image_fantome.get_height()) // 2
+
 
             surface_monde.blit(
                 image_fantome,

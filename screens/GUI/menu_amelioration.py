@@ -5,6 +5,7 @@ from core.Class.buttons import BoutonImage
 import screens.jeu
 import core.sounds as sound
 def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
+
     en_menu = True
     horloge = pygame.time.Clock()
     police = pygame.font.Font("assets/fonts/Minecraft.ttf", 35)
@@ -78,6 +79,7 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
                         batiment.upgrade()
                         sound.son_upgrade.play()
                         en_menu = False
+
 
         # Affichage boutons
         btn_fermer.afficher(ecran)
