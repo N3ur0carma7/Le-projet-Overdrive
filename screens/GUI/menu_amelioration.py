@@ -4,8 +4,7 @@ from core.Class.batiments import Batiment
 from core.Class.buttons import BoutonImage
 import screens.jeu
 import core.sounds as sound
-def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
-
+def afficher_menu_amelioration(ecran, batiment, clic_x, player):
     en_menu = True
     horloge = pygame.time.Clock()
     police = pygame.font.Font("assets/fonts/Minecraft.ttf", 35)
@@ -23,6 +22,11 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
     image_fond = pygame.image.load("assets/buttons/upgrade_menu.png").convert_alpha()
     image_fond = pygame.transform.smoothscale(image_fond, (400, 260))
 
+    btn_supprimer = BoutonImage(
+        menu_x + 100, menu_y + 150, 220, 200,
+        "assets/buttons/delete_button.png", "assets/buttons/delete_button.png",
+        ""
+    )
 
     btn_fermer = BoutonImage(
         menu_x + 320, menu_y -14 , 90, 90,
@@ -31,17 +35,22 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
     )
 
     btn_ameliorer = None
-    if not batiment.est_max_level():
+    if  batiment.est_max_level() or player.money <= batiment.get_upgrade_cost():
         cout = batiment.get_upgrade_cost()
+
+
+        btn_ameliorer = BoutonImage(menu_x + 100, menu_y - 12, 200, 85,
+                                    "assets/buttons/upgrade_impossible_button.png",
+                                    "assets/buttons/upgrade_impossible_button.png",
+                                    f"")
+
+
+    else:
         btn_ameliorer = BoutonImage(
-            menu_x + 93, menu_y-14 ,210, 90,
+            menu_x + 93, menu_y - 14, 210, 90,
             "assets/buttons/upgrade_available_button.png", "assets/buttons/upgrade_available_button.png",
             f""
         )
-    else :
-        btn_ameliorer = BoutonImage(menu_x + 100, menu_y-12 ,200, 85,
-            "assets/buttons/upgrade_impossible_button.png", "assets/buttons/upgrade_impossible_button.png",
-            f"")
 
     while en_menu:
         ecran.blit(image_fond, (menu_x, menu_y))
@@ -70,19 +79,19 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
                     en_menu = False
 
                 if btn_ameliorer and btn_ameliorer.clic():
-                    cout = batiment.get_upgrade_cost()
-                    if player is not None and player.money < cout:
-                        pass  # pas assez d'argent, on ne fait rien
-                    else:
-                        if player is not None:
-                            player.money -= cout
-                        batiment.upgrade()
-                        sound.son_upgrade.play()
-                        en_menu = False
+                    if batiment.niveau < 3:
+                        if player.money >= batiment.get_upgrade_cost():
 
+                            sound.son_upgrade.play()
+                            batiment.upgrade()
+
+                    en_menu = False
+                if btn_ameliorer and btn_supprimer.clic():
+                    return "supprimer"
 
         # Affichage boutons
         btn_fermer.afficher(ecran)
+        btn_supprimer.afficher(ecran)
         if btn_ameliorer:
             btn_ameliorer.afficher(ecran)
 

@@ -9,6 +9,7 @@ from multiplayer.client import send_list_client, CLIENT, recieved_client, send_b
 from core.Class.batiments import *
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
 import time
+from multiplayer.client import send_liste_batiments_client
 
 batiments = []
 players = []
@@ -291,23 +292,31 @@ def boucle_jeu(ecran, horloge, FPS):
                 derniere_souris = (sx, sy)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                sx, sy = pygame.mouse.get_pos()
-                case = souris_vers_case((sx, sy))
                 if batiment_selectionne is not None:
-                    for B in batiments:
-                        if (
-                                B.x <= case[0] < B.x + B.largeur and
-                                B.y <= case[1] < B.y + B.hauteur
-                        ):
-                            batiments.remove(B)
-                            print(f"envoi en cours {batiments}")
-                            send_liste_batiments_client(batiments, CLIENT)
-                            break
-                if not batiment_selectionne is not None and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
+                    batiment_selectionne = None
+                    print("Sélection annulée")
+
+                else:
+                    sx, sy = pygame.mouse.get_pos()
                     case = souris_vers_case((sx, sy))
-                    if not player.a_star(case, TAILLE_CASE):
-                        print("bloqué")
-                    print(player.path)
+
+                    batiment_a_supprimer = None
+                    for B in batiments:
+                        if (B.x <= case[0] < B.x + B.largeur and
+                                B.y <= case[1] < B.y + B.hauteur):
+                            batiment_a_supprimer = B
+                            break
+
+                    if batiment_a_supprimer:
+                        batiments.remove(batiment_a_supprimer)
+                        if CLIENT is not None:
+                            send_liste_batiments_client(batiments, CLIENT)
+                    else:
+                        if sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
+                            if not player.a_star(case, TAILLE_CASE):
+                                print("Chemin bloqué")
+
+
             # Clic gauche
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 sx, sy = pygame.mouse.get_pos()
@@ -354,8 +363,16 @@ def boucle_jeu(ecran, horloge, FPS):
                             rect = B.get_rect_pixel(TAILLE_CASE)
 
                             if rect.collidepoint(mx, my):
-                                afficher_menu_amelioration(ecran, B, sx, player)
-                                synchroniser_npcs()
+                                resultat = afficher_menu_amelioration(ecran, B, sx, player)
+
+                                if resultat == "supprimer":
+                                    batiments.remove(B)
+                                    player.money += cout
+                                    if CLIENT is not None:
+                                        send_liste_batiments_client(batiments, CLIENT)
+
+                                    synchroniser_npcs()
+
                                 break
 
 
