@@ -45,12 +45,23 @@ def update(client_sock):
 
 thread_lance = False
 
+from core.Class.player import Player
+from core.Class.batiments import Batiment
+from core.Class.npc import Npc
+from core.saves import load_save
+from screens.GUI.menu_amelioration import afficher_menu_amelioration
+import core.sounds as sound
+
+
 def boucle_jeu(ecran, horloge, FPS):
     global batiments
     global players
     global thread_lance
+    HAUTEUR_BARRE = 100
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
-    HAUTEUR_BARRE = 100  # barre du bas
+    dims = [LARGEUR_ECRAN, HAUTEUR_ECRAN]  # mutable pour mise a jour au resize
+
+
 
     herbe = pygame.image.load("assets/grass.png").convert()
     TAILLE_CASE = herbe.get_width()
@@ -77,6 +88,60 @@ def boucle_jeu(ecran, horloge, FPS):
     TAILLE_ICONE = 64
 
     player = Player()
+    batiments = []
+    npcs = []
+
+    image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
+    image_argent_raw = pygame.image.load("assets/argent.png").convert_alpha()
+    HAUTEUR_ARGENT = 32
+    _aw, _ah = image_argent_raw.get_size()
+    image_argent = pygame.transform.smoothscale(image_argent_raw, (int(_aw * HAUTEUR_ARGENT / _ah), HAUTEUR_ARGENT))
+    font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 20)
+
+    def synchroniser_npcs():
+        """Synchronise les PNJ selon la population sans reinitialiser les PNJ existants."""
+        population_attendue = {}
+        for b in batiments:
+            if b.type == Batiment.TYPE_RESIDENTIEL:
+                population_attendue[id(b)] = b.get_population()
+
+        npcs_par_maison = {}
+        for npc in list(npcs):
+            cle = id(npc.maison)
+            if cle not in npcs_par_maison:
+                npcs_par_maison[cle] = []
+            npcs_par_maison[cle].append(npc)
+
+        maisons_valides = {id(b) for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL}
+        for npc in list(npcs):
+            if id(npc.maison) not in maisons_valides:
+                npcs.remove(npc)
+
+        for b in batiments:
+            if b.type != Batiment.TYPE_RESIDENTIEL:
+                continue
+            cle = id(b)
+            actuels = npcs_par_maison.get(cle, [])
+            attendus = population_attendue.get(cle, 0)
+
+            while len(actuels) < attendus:
+                npc = Npc(b)
+                npc.TAILLE_CASE = TAILLE_CASE
+                npcs.append(npc)
+                actuels.append(npc)
+
+            while len(actuels) > attendus:
+                npc = actuels.pop()
+                if npc in npcs:
+                    npcs.remove(npc)
+
+        lieux_travail = [b for b in batiments if b.type != Batiment.TYPE_RESIDENTIEL]
+        for i, npc in enumerate(npcs):
+            if lieux_travail:
+                npc.assigner_travail(lieux_travail[i % len(lieux_travail)])
+            else:
+                npc.assigner_travail(None)
+
     players.append(player)
     online = {}
     # Dictionnaire des bâtiments placés
@@ -86,6 +151,9 @@ def boucle_jeu(ecran, horloge, FPS):
         if not load_save(batiments, player):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
+
+    synchroniser_npcs()
+
     batiment_selectionne = None
 
     def collision(batiments, nouveau):
@@ -107,54 +175,69 @@ def boucle_jeu(ecran, horloge, FPS):
     ZOOM_MAX = 3.0
     VITESSE_ZOOM = 0.1
 
-    # Déplacement caméra avec bouton du milieu
     deplacement_camera = False
     derniere_souris = (0, 0)
 
-    # Création de la barre d’icônes
-    rects_icones = []
-    marge = 20
+    def calculer_rects_icones():
+        rects = []
+        marge = 20
+        for i in range(len(images_batiments)):
+            rect = pygame.Rect(
+                marge + i * (TAILLE_ICONE + marge),
+                dims[1] - HAUTEUR_BARRE + (HAUTEUR_BARRE - TAILLE_ICONE) // 2,
+                TAILLE_ICONE,
+                TAILLE_ICONE
+            )
+            rects.append(rect)
+        return rects
 
-    for i in range(len(images_batiments)):
-        rect = pygame.Rect(
-            marge + i * (TAILLE_ICONE + marge),
-            HAUTEUR_ECRAN - HAUTEUR_BARRE + (HAUTEUR_BARRE - TAILLE_ICONE) // 2,
-            TAILLE_ICONE,
-            TAILLE_ICONE
-        )
-        rects_icones.append(rect)
-
+    rects_icones = calculer_rects_icones()
     def souris_vers_case(pos):
         sx, sy = pos
         mx = camera_x + sx / zoom
         my = camera_y + sy / zoom
         return int(mx // TAILLE_CASE), int(my // TAILLE_CASE)
 
-    # Dessine la grille infinie + l’herbe
     def dessiner_grille(surface):
-        largeur_vue = LARGEUR_ECRAN / zoom
-        hauteur_vue = (HAUTEUR_ECRAN - HAUTEUR_BARRE) / zoom
+        lw, lh = dims[0], dims[1]
+        largeur_vue = lw / zoom
+        hauteur_vue = (lh - HAUTEUR_BARRE) / zoom
 
         debut_x = int(camera_x // TAILLE_CASE) * TAILLE_CASE
         debut_y = int(camera_y // TAILLE_CASE) * TAILLE_CASE
 
+        couleur_grille = (20, 80, 20)
+        epaisseur = 2
+
+
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
+                # 1. On dessine l'image de l'herbe
                 surface.blit(herbe, (x - camera_x, y - camera_y))
                 pygame.draw.rect(
                     surface,
-                    (60, 60, 60, 1),
+                    couleur_grille,
                     (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE),
-                    1
+                    epaisseur
                 )
 
+                # 2. On dessine le contour de la case par-dessus
+                rect_case = (x - camera_x, y - camera_y, TAILLE_CASE, TAILLE_CASE)
+                pygame.draw.rect(surface, couleur_grille, rect_case, epaisseur)
 
-
-    # Boucle principale du jeu
     en_cours = True
-    online_status = False
+    production_acc = 0.0  # accumulateur production en coins
+
     while en_cours:
-        horloge.tick(FPS)
+        dt = horloge.tick(FPS) / 1000.0  # secondes ecoulees
+
+        # Production des batiments
+        for b in batiments:
+            production_acc += b.get_production() * dt / 60.0
+        gains = int(production_acc)
+        if gains > 0:
+            player.money += gains
+            production_acc -= gains
 
         if CLIENT is not None and not thread_lance:
             thread_lance = True
@@ -162,11 +245,13 @@ def boucle_jeu(ecran, horloge, FPS):
 
         for event in pygame.event.get():
 
-            # Quitter le jeu
             if event.type == pygame.QUIT:
                 return False
 
-            # Menu pause
+            if event.type == pygame.VIDEORESIZE:
+                dims[0], dims[1] = event.w, event.h
+                rects_icones[:] = calculer_rects_icones()
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
                 if False:
@@ -179,29 +264,24 @@ def boucle_jeu(ecran, horloge, FPS):
                 elif etat_pause == "menu":
                     return True
 
-            # Zoom souris
             if event.type == pygame.MOUSEWHEEL:
                 ancien_zoom = zoom
                 zoom += event.y * VITESSE_ZOOM
                 zoom = max(ZOOM_MIN, min(ZOOM_MAX, zoom))
 
-                # Zoom centré sur l’écran
-                centre_x = camera_x + LARGEUR_ECRAN / (2 * ancien_zoom)
-                centre_y = camera_y + HAUTEUR_ECRAN / (2 * ancien_zoom)
+                centre_x = camera_x + dims[0] / (2 * ancien_zoom)
+                centre_y = camera_y + dims[1] / (2 * ancien_zoom)
 
-                camera_x = centre_x - LARGEUR_ECRAN / (2 * zoom)
-                camera_y = centre_y - HAUTEUR_ECRAN / (2 * zoom)
+                camera_x = centre_x - dims[0] / (2 * zoom)
+                camera_y = centre_y - dims[1] / (2 * zoom)
 
-            # Début déplacement caméra
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
                 deplacement_camera = True
                 derniere_souris = pygame.mouse.get_pos()
 
-            # Fin déplacement caméra
             if event.type == pygame.MOUSEBUTTONUP and event.button == 2:
                 deplacement_camera = False
 
-            # Mouvement caméra
             if event.type == pygame.MOUSEMOTION and deplacement_camera:
                 sx, sy = pygame.mouse.get_pos()
                 dx = sx - derniere_souris[0]
@@ -210,7 +290,6 @@ def boucle_jeu(ecran, horloge, FPS):
                 camera_y -= dy / zoom
                 derniere_souris = (sx, sy)
 
-            # Clic droit : désélection
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 sx, sy = pygame.mouse.get_pos()
                 case = souris_vers_case((sx, sy))
@@ -227,13 +306,12 @@ def boucle_jeu(ecran, horloge, FPS):
                 if not batiment_selectionne is not None and sy < HAUTEUR_ECRAN - HAUTEUR_BARRE:
                     case = souris_vers_case((sx, sy))
                     if not player.a_star(case, TAILLE_CASE):
-                        print("TA GEULE")
+                        print("bloqué")
                     print(player.path)
             # Clic gauche
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 sx, sy = pygame.mouse.get_pos()
 
-                # Clic sur la barre d’icônes
                 clic_barre = False
                 for i, rect in enumerate(rects_icones):
                     if rect.collidepoint(sx, sy):
@@ -252,10 +330,15 @@ def boucle_jeu(ecran, horloge, FPS):
                         grid_y = int(my // TAILLE_CASE)
 
                         type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+                        image_ref = images_batiments[type_batiment][1]
                         nouveau = Batiment(type_batiment, grid_x, grid_y)
 
-                        if not collision(batiments, nouveau):
+                        cout = Batiment.DATA[type_batiment][1]["cout"]
+                        if not collision(batiments, nouveau) and player.money >= cout:
+                            player.money -= cout
                             batiments.append(nouveau)
+                            sound.son_placement.play()
+                            synchroniser_npcs()
                             if CLIENT is not None:
                                 print(f"envoi en cours {batiments}")
                                 send_liste_batiments_client(batiments, CLIENT)
@@ -271,17 +354,17 @@ def boucle_jeu(ecran, horloge, FPS):
                             rect = B.get_rect_pixel(TAILLE_CASE)
 
                             if rect.collidepoint(mx, my):
-                                afficher_menu_amelioration(ecran, B, sx)
+                                afficher_menu_amelioration(ecran, B, sx, player)
+                                synchroniser_npcs()
                                 break
 
 
         player.update(TAILLE_CASE)
 
-        # rendu
         ecran.fill((0, 0, 0))
 
-        largeur_vue = LARGEUR_ECRAN / zoom
-        hauteur_vue = (HAUTEUR_ECRAN - HAUTEUR_BARRE) / zoom
+        largeur_vue = dims[0] / zoom
+        hauteur_vue = (dims[1] - HAUTEUR_BARRE) / zoom
 
         surface_monde = pygame.Surface(
             (math.ceil(largeur_vue), math.ceil(hauteur_vue))
@@ -318,21 +401,26 @@ def boucle_jeu(ecran, horloge, FPS):
         # Dessin du joueur
         player.draw_player(surface_monde, camera_x, camera_y)
 
-        # Application du zoom
         surface_affichee = pygame.transform.smoothscale(
             surface_monde,
-            (LARGEUR_ECRAN, HAUTEUR_ECRAN - HAUTEUR_BARRE)
+            (dims[0], dims[1] - HAUTEUR_BARRE)
         )
+
         ecran.blit(surface_affichee, (0, 0))
 
-        # Barre du bas
+        # PNJ : mise a jour + dessin directement sur l'ecran (taille fixe, pas zoomee)
+        for npc in npcs:
+            npc.update()
+            ex, ey = npc.ecran_pos(camera_x, camera_y, zoom)
+            if -40 < ex < dims[0] + 40 and -40 < ey < dims[1] - HAUTEUR_BARRE + 40:
+                npc.dessiner(ecran, image_pnj, camera_x, camera_y, zoom)
+
         pygame.draw.rect(
             ecran,
             (40, 40, 40),
-            (0, HAUTEUR_ECRAN - HAUTEUR_BARRE, LARGEUR_ECRAN, HAUTEUR_BARRE)
+            (0, dims[1] - HAUTEUR_BARRE, dims[0], HAUTEUR_BARRE)
         )
 
-        # Icônes
         for i, rect in enumerate(rects_icones):
             couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
             pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
@@ -343,6 +431,20 @@ def boucle_jeu(ecran, horloge, FPS):
                 images_batiments[type_actuel][1], (TAILLE_ICONE, TAILLE_ICONE)
             )
             ecran.blit(icone, rect)
+
+        # Affichage argent en haut a droite
+        marge_hud = 10
+        texte_argent = font_argent.render(str(player.money), True, (255, 235, 80))
+        hud_x = dims[0] - image_argent.get_width() - marge_hud
+        hud_y = marge_hud
+        ecran.blit(image_argent, (hud_x, hud_y))
+        # Centrer le texte sur la zone noire (apres l'icone carre a gauche)
+        icone_offset = image_argent.get_height()  # la piece est un carre = hauteur
+        zone_noire_x = hud_x + icone_offset
+        zone_noire_w = image_argent.get_width() - icone_offset
+        tx = (zone_noire_x + (zone_noire_w - texte_argent.get_width()) // 2) -40
+        ty = (hud_y + (image_argent.get_height() - texte_argent.get_height()) // 2) + 4
+        ecran.blit(texte_argent, (tx, ty))
 
         pygame.display.flip()
 

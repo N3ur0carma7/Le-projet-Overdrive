@@ -2,12 +2,13 @@ import pygame
 import sys
 from core.Class.batiments import Batiment
 from core.Class.buttons import BoutonImage
+import screens.jeu
+import core.sounds as sound
+def afficher_menu_amelioration(ecran, batiment, clic_x, player=None):
 
-
-def afficher_menu_amelioration(ecran, batiment, clic_x):
     en_menu = True
     horloge = pygame.time.Clock()
-    police = pygame.font.SysFont(None, 40)
+    police = pygame.font.Font("assets/fonts/Minecraft.ttf", 35)
 
     largeur_ecran = ecran.get_width()
 
@@ -20,11 +21,11 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
 
     # chargement image menu
     image_fond = pygame.image.load("assets/buttons/upgrade_menu.png").convert_alpha()
-    image_fond = pygame.transform.smoothscale(image_fond, (400, 250))
+    image_fond = pygame.transform.smoothscale(image_fond, (400, 260))
 
 
     btn_fermer = BoutonImage(
-        menu_x + 100, menu_y + 200, 200, 75,
+        menu_x + 320, menu_y -14 , 90, 90,
         "assets/buttons/close_button.png", "assets/buttons/close_button.png",
         ""
     )
@@ -33,10 +34,14 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
     if not batiment.est_max_level():
         cout = batiment.get_upgrade_cost()
         btn_ameliorer = BoutonImage(
-            menu_x + 100, menu_y-12 ,200, 85,
+            menu_x + 93, menu_y-14 ,210, 90,
             "assets/buttons/upgrade_available_button.png", "assets/buttons/upgrade_available_button.png",
             f""
         )
+    else :
+        btn_ameliorer = BoutonImage(menu_x + 100, menu_y-12 ,200, 85,
+            "assets/buttons/upgrade_impossible_button.png", "assets/buttons/upgrade_impossible_button.png",
+            f"")
 
     while en_menu:
         ecran.blit(image_fond, (menu_x, menu_y))
@@ -50,9 +55,9 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
         else:
             stat = police.render(f"Production : {batiment.get_production()}", True, (150, 255, 150))
 
-        ecran.blit(titre, (menu_x + 50, menu_y + 50))
+        ecran.blit(titre, (menu_x + 50, menu_y + 60))
         ecran.blit(niveau, (menu_x + 50, menu_y + 110))
-        ecran.blit(stat, (menu_x + 50, menu_y + 170))
+        ecran.blit(stat, (menu_x + 50, menu_y + 160))
 
         # Clics
         for event in pygame.event.get():
@@ -65,9 +70,16 @@ def afficher_menu_amelioration(ecran, batiment, clic_x):
                     en_menu = False
 
                 if btn_ameliorer and btn_ameliorer.clic():
-                    batiment.upgrade()
-                    print(f"{batiment.type} amélioré au niveau {batiment.niveau} !")
-                    en_menu = False
+                    cout = batiment.get_upgrade_cost()
+                    if player is not None and player.money < cout:
+                        pass  # pas assez d'argent, on ne fait rien
+                    else:
+                        if player is not None:
+                            player.money -= cout
+                        batiment.upgrade()
+                        sound.son_upgrade.play()
+                        en_menu = False
+
 
         # Affichage boutons
         btn_fermer.afficher(ecran)

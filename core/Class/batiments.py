@@ -68,6 +68,14 @@ class Batiment:
     def est_max_level(self):
         return self.niveau >= 3
 
+    def collision(self, autre):
+        return not (
+                self.x + self.largeur < autre.x or
+                self.x > autre.x + autre.largeur or
+                self.y + self.hauteur < autre.y or
+                self.y > autre.y + autre.hauteur
+        )
+
     def __str__(self):
         return f"{self.type} (niveau {self.niveau})"
 

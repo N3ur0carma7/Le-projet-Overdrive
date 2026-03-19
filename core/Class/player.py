@@ -13,9 +13,7 @@ class Player:
         self.raw_damage = 1
         self.defense = 0
         self.health_regen = 1
-        self.money = 0
-
-
+        self.money = 500
         self.pos = (0, 0)
         self.path = []
 
@@ -174,7 +172,7 @@ class Player:
         obj.raw_damage = d.get("raw_damage", 1)
         obj.defense = d.get("defense", 0)
         obj.health_regen = d.get("health_regen", 1)
-        obj.money = d.get("money", 0)
+        obj.money = d.get("money", 500)
         obj.pos = d.get("pos", (0, 0))
         obj.path = d.get("path", [])
         obj.speed = d.get("speed", 10)
