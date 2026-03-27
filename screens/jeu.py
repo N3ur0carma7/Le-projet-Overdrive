@@ -21,33 +21,6 @@ def on_message_recu(result):
 
 client_module.receive_callback = on_message_recu
 
-def update(client_sock, stop):
-    global batiments
-    global players
-    while not stop.is_set():
-        client = receive_loop(client_sock)
-        res = client
-        if res is None:
-            continue
-        data, msg_type = res
-        print(msg_type)
-        if msg_type == 'liste_batiments':
-            print(">>> Donnée reçue (batiments) :", data)
-            if not data:
-                batiments = []
-            else:
-                batiments = []
-                for B in data:
-                    batiments.append(B)
-        elif msg_type == 'liste_joueurs':
-            print(">>> Donnée reçue (joueurs) :", data)
-            if not data:
-                players = []
-            else:
-                players = []
-                for P in data:
-                    players.append(P)
-        time.sleep(0.05)
 
 
 
