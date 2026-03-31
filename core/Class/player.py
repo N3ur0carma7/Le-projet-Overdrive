@@ -3,8 +3,6 @@ import random
 import pygame
 import heapq
 
-# Coordonnées pixel de chaque sprite dans le spritesheet (row, col) -> (x, y, w, h)
-# Rangée 0 : face (bas), Rangée 1 : dos (haut), Rangée 2 : droite, Rangée 3 : gauche
 _COL_BOUNDS = [(18,71),(88,148),(155,221),(232,294),(306,363),(375,430)]
 _ROW_BOUNDS = [(32,109),(173,251),(305,388),(428,511)]
 
@@ -16,7 +14,6 @@ def _build_sprite_rects():
             rects[row_idx].append(pygame.Rect(cx1, ry1, cx2 - cx1, ry2 - ry1))
     return rects
 
-# Direction → index de rangée dans le spritesheet
 _DIR_ROW = {
     "down":  0,
     "up":    1,
@@ -26,7 +23,6 @@ _DIR_ROW = {
 
 
 class Player:
-    # Spritesheet partagé entre toutes les instances (chargé une seule fois)
     _spritesheet = None
     _sprite_rects = None
 
@@ -58,7 +54,6 @@ class Player:
         self.anim_fps = 8         # frames par seconde d'animation
         self.is_moving = False
 
-        # Taille d'affichage du sprite (hauteur cible en pixels monde)
         self.sprite_height = 72
     def hurt(self, raw_damage: int) -> float | None:
         """
@@ -128,8 +123,6 @@ class Player:
             ]
 
             for voisin in voisins:
-                #if voisin in batiments:
-                    #continue
 
                 if voisin in closed_set:
                     continue
@@ -161,7 +154,6 @@ class Player:
 
         distance = math.hypot(dx, dy)
 
-        # Déterminer la direction
         if abs(dx) >= abs(dy):
             self.direction = "right" if dx > 0 else "left"
         else:
@@ -191,7 +183,7 @@ class Player:
                 self.anim_timer = 0.0
                 self.anim_frame = (self.anim_frame + 1) % len(_COL_BOUNDS)
         else:
-            # Idle : frame 0
+            #idle
             self.anim_frame = 0
             self.anim_timer = 0.0
             self.direction = "down"
@@ -208,16 +200,13 @@ class Player:
         row = _DIR_ROW[self.direction]
         src_rect = Player._sprite_rects[row][self.anim_frame]
 
-        # Mise à l'échelle : on cible sprite_height pixels de hauteur
         scale = self.sprite_height / src_rect.height
         dst_w = int(src_rect.width * scale)
         dst_h = self.sprite_height
 
-        # Extraire la sous-surface et la redimensionner
         sub = Player._spritesheet.subsurface(src_rect)
         scaled = pygame.transform.scale(sub, (dst_w, dst_h))
 
-        # Centrer sur la position du joueur, pieds à pos
         draw_x = int(self.pos[0] - camera_x) - dst_w // 2
         draw_y = int(self.pos[1] - camera_y) - dst_h
 
