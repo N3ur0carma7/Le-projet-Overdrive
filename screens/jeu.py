@@ -176,6 +176,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
         my = camera_y + sy / zoom
         return int(mx // TAILLE_CASE), int(my // TAILLE_CASE)
 
+    def joueur_a_portee(case, distance_max=2):
+        """Vérifie que le joueur est à moins de distance_max cases de la case cible."""
+        joueur_case_x = int(player.pos[0] // TAILLE_CASE)
+        joueur_case_y = int(player.pos[1] // TAILLE_CASE)
+        dist = abs(joueur_case_x - case[0]) + abs(joueur_case_y - case[1])
+        return dist <= distance_max
+
     def dessiner_grille(surface):
         lw, lh = dims[0], dims[1]
         largeur_vue = lw / zoom
@@ -309,7 +316,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                         nouveau = Batiment(type_batiment, grid_x, grid_y)
 
                         cout = Batiment.DATA[type_batiment][1]["cout"]
-                        if not collision(batiments, nouveau) and player.money >= cout:
+                        if not joueur_a_portee((grid_x, grid_y)):
+                            print("Trop loin : rapprochez-vous de la case (2 cases max)")
+                        elif not collision(batiments, nouveau) and player.money >= cout:
                             player.money -= cout
                             batiments.append(nouveau)
                             sound.son_placement.play()
@@ -329,6 +338,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                             rect = B.get_rect_pixel(TAILLE_CASE)
 
                             if rect.collidepoint(mx, my):
+                                if not joueur_a_portee((B.x, B.y)):
+                                    print("Trop loin : rapprochez-vous du bâtiment (2 cases max)")
+                                    break
                                 resultat = afficher_menu_amelioration(ecran, B, sx, player)
 
                                 if resultat == "supprimer":
@@ -377,9 +389,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
             # On prend l'image du niveau 1 par défaut pour le fantôme
             image = images_batiments[type_batiment][1]
             image_fantome = image.copy()
-            # collision = rouge
+            # collision = rouge, hors portée = orange
             if collision(batiments, test_batiment):
                 image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
+            elif not joueur_a_portee(case):
+                image_fantome.fill((255, 140, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
 
             x = case[0] * TAILLE_CASE - camera_x + (TAILLE_CASE - image.get_width()) // 2
             y = case[1] * TAILLE_CASE - camera_y + (TAILLE_CASE - image.get_height()) // 2
