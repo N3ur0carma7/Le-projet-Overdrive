@@ -22,16 +22,12 @@ def on_message_recu(result):
 client_module.receive_callback = on_message_recu
 
 
-
-
-
 from core.Class.player import Player
 from core.Class.batiments import Batiment
 from core.Class.npc import Npc
 from core.saves import load_save
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
 import core.sounds as sound
-
 
 def boucle_jeu(ecran, horloge, FPS, online: bool):
     global batiments
@@ -53,16 +49,28 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
             2: pygame.image.load("assets/buildings/house_lvl2.png").convert_alpha(),  # Image niveau 2
             3: pygame.image.load("assets/buildings/house_lvl3.png").convert_alpha()  # Image niveau 3
         },
+        Batiment.TYPE_GENERATEUR: {
+            1: pygame.image.load("assets/buildings/generateur_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/generateur_lvl2.png").convert_alpha(),
+            3: pygame.image.load("assets/buildings/generateur_lvl3.png").convert_alpha()
+        },
         Batiment.TYPE_MINE: {
             1: pygame.image.load("assets/buildings/mine_lvl1.png").convert_alpha(),
             2: pygame.image.load("assets/buildings/mine_lvl2.png").convert_alpha(),
             3: pygame.image.load("assets/buildings/mine_lvl3.png").convert_alpha()
+        },
+        Batiment.TYPE_FARM: {
+            1: pygame.image.load("assets/buildings/farm_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/farm_lvl2.png").convert_alpha(),
+            3: pygame.image.load("assets/buildings/farm_lvl3.png").convert_alpha()
         }
     }
 
     TYPES_BATIMENTS = [
         Batiment.TYPE_RESIDENTIEL,
-        Batiment.TYPE_MINE
+        Batiment.TYPE_GENERATEUR,
+        Batiment.TYPE_MINE,
+        Batiment.TYPE_FARM,
     ]
 
     TAILLE_ICONE = 64
@@ -72,14 +80,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
     npcs = []
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
-    image_argent_raw = pygame.image.load("assets/argent.png").convert_alpha()
-    HAUTEUR_ARGENT = 32
-    _aw, _ah = image_argent_raw.get_size()
-    image_argent = pygame.transform.smoothscale(image_argent_raw, (int(_aw * HAUTEUR_ARGENT / _ah), HAUTEUR_ARGENT))
-    font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 20)
+    font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
+    hud_or_img     = pygame.image.load("assets/or.png").convert_alpha()
+    hud_food_img   = pygame.image.load("assets/food.png").convert_alpha()
+    hud_vapeur_img = pygame.image.load("assets/vapeur.png").convert_alpha()
 
     def synchroniser_npcs():
-        """Synchronise les PNJ selon la population sans reinitialiser les PNJ existants."""
         population_attendue = {}
         for b in batiments:
             if b.type == Batiment.TYPE_RESIDENTIEL:
@@ -105,7 +111,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
             attendus = population_attendue.get(cle, 0)
 
             while len(actuels) < attendus:
-                npc = Npc(b, TAILLE_CASE)
+                npc = Npc(b, TAILLE_CASE, player)
                 npcs.append(npc)
                 actuels.append(npc)
 
@@ -149,8 +155,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
     camera_x, camera_y = 0.0, 0.0
     zoom = 1.0
 
-    ZOOM_MIN = 0.5
-    ZOOM_MAX = 3.0
+    ZOOM_MIN = 0.3
+    ZOOM_MAX = 2.5
     VITESSE_ZOOM = 0.1
 
     deplacement_camera = False
@@ -194,7 +200,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
         couleur_grille = (20, 80, 20)
         epaisseur = 2
 
-
+        
         for y in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
             for x in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
                 # 1. On dessine l'image de l'herbe
@@ -211,18 +217,42 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                 pygame.draw.rect(surface, couleur_grille, rect_case, epaisseur)
 
     en_cours = True
-    production_acc = 0.0  # accumulateur production en coins
+    acc_argent   = 0.0  # mine → money
+    acc_food     = 0.0  # farm → food
+    acc_vapeur   = 0.0  # generateur → vapeur
 
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0  # secondes ecoulees
 
-        # Production des batiments
+        # Production des batiments selon leur type de ressource
+        # Si food == 0, seule la farm continue de produire
+        food_ok = player.food > 0
         for b in batiments:
-            production_acc += b.get_production() * dt / 60.0
-        gains = int(production_acc)
-        if gains > 0:
-            player.money += gains
-            production_acc -= gains
+            rtype = b.get_production_type()
+            val   = b.get_production() * dt / 60.0
+            if rtype == "nourriture":
+                acc_food   += val
+            elif not food_ok:
+                pass  # production stoppee tant que food == 0
+            elif rtype == "argent":
+                acc_argent += val
+            elif rtype == "vapeur":
+                acc_vapeur += val
+
+        gains_argent = int(acc_argent)
+        if gains_argent > 0:
+            player.money  += gains_argent
+            acc_argent    -= gains_argent
+
+        gains_food = int(acc_food)
+        if gains_food > 0:
+            player.food  += gains_food
+            acc_food     -= gains_food
+
+        gains_vapeur = int(acc_vapeur)
+        if gains_vapeur > 0:
+            player.vapeur += gains_vapeur
+            acc_vapeur    -= gains_vapeur
 
 
         for event in pygame.event.get():
@@ -237,11 +267,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
+                screenshot = ecran.copy()
                 if online:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player)
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player, screenshot)
                     pass
                 else:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player)
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player, screenshot)
                 if not etat_pause:
                     stop_event.set()
                     return False
@@ -316,8 +347,16 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                         nouveau = Batiment(type_batiment, grid_x, grid_y)
 
                         cout = Batiment.DATA[type_batiment][1]["cout"]
+
+                        # Limite : nb batiments de production <= nb total de villageois
+                        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+                        nb_production = sum(1 for b in batiments if b.type != Batiment.TYPE_RESIDENTIEL)
+                        production_pleine = (type_batiment != Batiment.TYPE_RESIDENTIEL and nb_production >= nb_villageois)
+
                         if not joueur_a_portee((grid_x, grid_y)):
                             print("Trop loin : rapprochez-vous de la case (2 cases max)")
+                        elif production_pleine:
+                            print("Pas assez de villageois pour ce batiment de production")
                         elif not collision(batiments, nouveau) and player.money >= cout:
                             player.money -= cout
                             batiments.append(nouveau)
@@ -440,19 +479,25 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
             )
             ecran.blit(icone, rect)
 
-        # Affichage argent en haut a droite
-        marge_hud = 10
-        texte_argent = font_argent.render(str(player.money), True, (255, 235, 80))
-        hud_x = dims[0] - image_argent.get_width() - marge_hud
+# hud ressources
+        hud_font = font_argent
+        marge_hud = 2
         hud_y = marge_hud
-        ecran.blit(image_argent, (hud_x, hud_y))
-        # Centrer le texte sur la zone noire (apres l'icone carre a gauche)
-        icone_offset = image_argent.get_height()  # la piece est un carre = hauteur
-        zone_noire_x = hud_x + icone_offset
-        zone_noire_w = image_argent.get_width() - icone_offset
-        tx = (zone_noire_x + (zone_noire_w - texte_argent.get_width()) // 2) -40
-        ty = (hud_y + (image_argent.get_height() - texte_argent.get_height()) // 2) + 4
-        ecran.blit(texte_argent, (tx, ty))
+
+        ressources_hud = [
+            (str(player.money),  (255, 235,  80), hud_or_img),
+            (str(player.food),   ( 255, 235,  80), hud_food_img),
+            (str(player.vapeur), (255, 235, 80), hud_vapeur_img),
+        ]
+
+        for i, (valeur, couleur, img) in enumerate(ressources_hud):
+            iw, ih = img.get_size()
+            hud_x = dims[0] - marge_hud - (len(ressources_hud) - i) * (iw + marge_hud)
+            ecran.blit(img, (hud_x, hud_y))
+            texte = hud_font.render(valeur, True, couleur)
+            tx = hud_x + (iw - texte.get_width()) // 2 - 13
+            ty = hud_y + (ih - texte.get_height()) // 2 + 2
+            ecran.blit(texte, (tx, ty))
 
         pygame.display.flip()
     stop_event.set()

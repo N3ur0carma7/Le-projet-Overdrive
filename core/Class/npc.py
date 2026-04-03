@@ -26,9 +26,10 @@ class Npc:
     RAYON_ERRANCE    = 80    # rayon errance autour de la maison en pixels monde
     TAILLE_AFFICHAGE = 64    # hauteur sprite en pixels écran (fixe)
 
-    def __init__(self, batiment, taille_case=225):
+    def __init__(self, batiment, taille_case=225, player=None):
         self.maison = batiment
         self.taille_case = taille_case
+        self.player = player
 
         self.lieu_travail = None
         self.etat = self.ETAT_ERRANCE
@@ -149,6 +150,12 @@ class Npc:
             self._rentrer()
 
     def _rentrer(self):
+        # Consomme 20 food quand le villageois quitte un batiment de production
+        from core.Class.batiments import Batiment
+        if (self.player is not None
+                and self.lieu_travail is not None
+                and self.lieu_travail.type != Batiment.TYPE_RESIDENTIEL):
+            self.player.food = max(0, self.player.food - 20)
         dest = self._centre_pixels(self.maison)
         self.chemin = self._construire_chemin_direct(*dest)
         self.etat = self.ETAT_VERS_MAISON

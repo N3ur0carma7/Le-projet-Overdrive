@@ -45,6 +45,8 @@ class Player:
         self.defense = 0
         self.health_regen = 1
         self.money = 5000
+        self.food = 100
+        self.vapeur = 0
         self.pos = (0, 0)
         self.path = []
 
@@ -234,6 +236,8 @@ class Player:
             "defense" : self.defense,
             "health_regen" : self.health_regen,
             "money": self.money,
+            "food": self.food,
+            "vapeur": self.vapeur,
             "pos": self.pos,
             "path": self.path,
             "speed": self.speed,
@@ -251,6 +255,8 @@ class Player:
         obj.defense = d.get("defense", 0)
         obj.health_regen = d.get("health_regen", 1)
         obj.money = d.get("money", 5000)
+        obj.food = d.get("food", 0)
+        obj.vapeur = d.get("vapeur", 0)
         obj.pos = d.get("pos", (0, 0))
         obj.path = d.get("path", [])
         obj.speed = d.get("speed", 10)

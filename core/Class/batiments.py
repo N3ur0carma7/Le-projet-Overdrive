@@ -2,8 +2,9 @@ import pygame
 
 class Batiment:
     TYPE_RESIDENTIEL = "residentiel"
-    TYPE_MINE = "mine"
-    TYPE_AGRICOLE = "agricole"
+    TYPE_GENERATEUR  = "generateur"
+    TYPE_MINE        = "mine"
+    TYPE_FARM        = "farm"
 
     DATA = {
         TYPE_RESIDENTIEL: {
@@ -11,29 +12,30 @@ class Batiment:
             2: {"population": 3, "cout": 250},
             3: {"population": 5, "cout": 750},
         },
-        TYPE_MINE: {
-            1: {"production": 30, "cout": 200},
-            2: {"production": 60, "cout": 500},
-            3: {"production": 120, "cout": 1000},
+        TYPE_GENERATEUR: {
+            1: {"vapeur": 30,  "cout": 200},
+            2: {"vapeur": 60,  "cout": 500},
+            3: {"vapeur": 120, "cout": 1000},
         },
-        TYPE_AGRICOLE: {
-            1: {"production": 30, "cout": 150},
-            2: {"production": 60, "cout": 400},
-            3: {"production": 120, "cout": 800},
-        }
+        TYPE_MINE: {
+            1: {"argent": 30,  "cout": 250},
+            2: {"argent": 60,  "cout": 600},
+            3: {"argent": 120, "cout": 1200},
+        },
+        TYPE_FARM: {
+            1: {"nourriture": 30,  "cout": 150},
+            2: {"nourriture": 60,  "cout": 400},
+            3: {"nourriture": 120, "cout": 800},
+        },
     }
 
     def __init__(self, type_batiment, x, y):
         if type_batiment not in Batiment.DATA:
-            raise ValueError("Type de bâtiment invalide")
+            raise ValueError("Type de batiment invalide")
         self.type = type_batiment
         self.niveau = 1
-
-        # position
         self.x = x
         self.y = y
-
-        # taille
         self.largeur = 1
         self.hauteur = 1
 
@@ -50,7 +52,17 @@ class Batiment:
 
     def get_production(self):
         stats = self.get_stats()
-        return stats.get("production", 0)
+        for key in ("vapeur", "argent", "nourriture", "production"):
+            if key in stats:
+                return stats[key]
+        return 0
+
+    def get_production_type(self):
+        stats = self.get_stats()
+        for key in ("vapeur", "argent", "nourriture"):
+            if key in stats:
+                return key
+        return None
 
     def get_population(self):
         stats = self.get_stats()

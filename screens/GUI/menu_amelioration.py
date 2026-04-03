@@ -60,17 +60,42 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player):
             unite = ""
             if not batiment.est_max_level():
                 val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["population"]
+        elif batiment.type == Batiment.TYPE_MINE:
+            info = "Argent"
+            val_actuelle = batiment.get_production()
+            if not batiment.est_max_level():
+                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["argent"]
+        elif batiment.type == Batiment.TYPE_FARM:
+            info = "Nourriture"
+            val_actuelle = batiment.get_production()
+            if not batiment.est_max_level():
+                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["nourriture"]
+        elif batiment.type == Batiment.TYPE_GENERATEUR:
+            info = "Vapeur"
+            val_actuelle = batiment.get_production()
+            if not batiment.est_max_level():
+                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["vapeur"]
         else:
             info = "Production"
             val_actuelle = batiment.get_production()
             if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["production"]
+                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1].get("production", "?")
 
         stat_info = police_stat.render(info, True, (0, 0, 0))
         number = police_stat.render(f"{val_actuelle}{unite}", True, (0, 0, 0))
 
         couleur_next = (0, 0, 0) if not batiment.est_max_level() else (0, 0, 0)
         new_number = police_stat.render(f"{val_suivante}{unite}", True, couleur_next)
+
+        # cout upgrade
+        police_cout = pygame.font.Font("assets/fonts/Minecraft.ttf", 22)
+        menu_centre_x = menu_x + 612 // 2
+        if batiment.est_max_level():
+            texte_cout = police_cout.render("Niveau MAX", True, (150, 40, 40))
+        else:
+            cout_val = batiment.get_upgrade_cost()
+            texte_cout = police_cout.render(f"Upgrade : {cout_val} gold", True, (180, 130, 0))
+        ecran.blit(texte_cout, (menu_centre_x - texte_cout.get_width() // 2, menu_y + offset_block + 72))
 
     #affichage c'est TRES TRES sale mais vs inquietez pas c'est temporaire
         ecran.blit(stat_info, (menu_x + 60+ offset_block+ offset_block, menu_y + 70+ offset_block+ offset_block))
@@ -111,4 +136,3 @@ def afficher_menu_amelioration(ecran, batiment, clic_x, player):
 
         pygame.display.flip()
         horloge.tick(60)
-

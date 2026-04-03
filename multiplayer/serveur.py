@@ -28,9 +28,11 @@ def search_client():
             s.sendto("searching client...".encode(FORMAT), s_addr)
         except socket.timeout:
             pass
+        except Exception as e:
+            print(f"[ERROR] in search_client: {e}")
+            break
         time.sleep(0.5)
     s.close()
-
 
 def connect_client ():
     try:
@@ -42,8 +44,6 @@ def connect_client ():
         return 1
     return server
 
-
-
 def tuple_from_str(key_str):
     if not(isinstance(key_str, str) and key_str.startswith('(') and key_str.endswith(')')):
         return key_str
@@ -52,7 +52,6 @@ def tuple_from_str(key_str):
         return ast.literal_eval(f"({content})")
     except:
         return key_str
-
 
 def str_to_tuple_key(dic):
     result = {}
@@ -170,13 +169,9 @@ def handle_message_recieved (msg, addr):
             plays = [Player.from_dict(d) for d in liste_dicts]
             print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
-
-
     except json.JSONDecodeError:
         print(f"[ERROR] {addr} : {msg}")
         return ""
-
-
 
 def disconnect (client):
     print(f"[STOP] client disconnected")
@@ -264,7 +259,6 @@ def start(server):
         client_thread.start()
     stop_server()
     return "done"
-
 
 def server_running():
     global SERVER, clients
