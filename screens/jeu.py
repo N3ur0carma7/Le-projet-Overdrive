@@ -28,8 +28,9 @@ from core.Class.npc import Npc
 from core.saves import load_save
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
 import core.sounds as sound
+from screens.tutorial import run_tutorial
 
-def boucle_jeu(ecran, horloge, FPS, online: bool):
+def boucle_jeu(ecran, horloge, FPS, online: bool, dev_mode: bool = False):
     global batiments
     global players
     global update_finished
@@ -78,11 +79,15 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
     batiments = []
     npcs = []
 
+    # Set player spawn in the middle of a tile
+    player.pos = (TAILLE_CASE / 2, TAILLE_CASE / 2)
+
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
     hud_or_img     = pygame.image.load("assets/or.png").convert_alpha()
     hud_food_img   = pygame.image.load("assets/food.png").convert_alpha()
     hud_vapeur_img = pygame.image.load("assets/vapeur.png").convert_alpha()
+    save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
 
     def synchroniser_npcs():
         population_attendue = {}
@@ -130,12 +135,53 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
     # Dictionnaire des bâtiments placés
     # clé : (x_case, y_case)
     # valeur : index du bâtiment
-    if os.path.exists("save/save.json"):
+    is_new_game = not os.path.exists("save/save.json")
+    if not dev_mode and os.path.exists("save/save.json"):
         if not load_save(batiments, player):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
 
+    if dev_mode:
+        player.money = 5000
+        player.food = 5000
+        player.vapeur = 5000
+
     synchroniser_npcs()
+
+    # Camera et zoom
+    camera_x = player.pos[0] - dims[0] / 2
+    camera_y = player.pos[1] - (dims[1] - HAUTEUR_BARRE) / 2
+    zoom = 1.0
+    #tuto
+    if is_new_game and not dev_mode:
+        def _draw_tuto_background():
+            ecran.fill((0, 0, 0))
+            lw, lh = dims[0], dims[1]
+            largeur_vue = lw / 1.0
+            hauteur_vue = (lh - HAUTEUR_BARRE) / 1.0
+            surf_tuto = pygame.Surface(
+                (math.ceil(largeur_vue), math.ceil(hauteur_vue))
+            ).convert()
+            couleur_grille = (20, 80, 20)
+            epaisseur = 2
+            debut_x = int(camera_x // TAILLE_CASE) * TAILLE_CASE
+            debut_y = int(camera_y // TAILLE_CASE) * TAILLE_CASE
+            for ty in range(debut_y, debut_y + int(hauteur_vue) + TAILLE_CASE, TAILLE_CASE):
+                for tx in range(debut_x, debut_x + int(largeur_vue) + TAILLE_CASE, TAILLE_CASE):
+                    surf_tuto.blit(herbe, (tx - camera_x, ty - camera_y))
+                    pygame.draw.rect(surf_tuto, couleur_grille,
+                        (tx - camera_x, ty - camera_y, TAILLE_CASE, TAILLE_CASE), epaisseur)
+            player.draw_player(surf_tuto, camera_x, camera_y)
+            ecran.blit(surf_tuto, (0, 0))
+            pygame.draw.rect(
+                ecran, (40, 40, 40),
+                (0, dims[1] - HAUTEUR_BARRE, dims[0], HAUTEUR_BARRE)
+            )
+
+        result = run_tutorial(ecran, horloge, FPS, draw_background_fn=_draw_tuto_background)
+        if result is False:
+            stop_event.set()
+            return False
 
     batiment_selectionne = None
 
@@ -150,9 +196,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                 return True
         return False
 
-    # Caméra et zoom
-    camera_x, camera_y = 0.0, 0.0
-    zoom = 1.0
 
     ZOOM_MIN = 0.3
     ZOOM_MAX = 2.5
@@ -182,7 +225,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
         return int(mx // TAILLE_CASE), int(my // TAILLE_CASE)
 
     def joueur_a_portee(case, distance_max=2):
-        """Vérifie que le joueur est à moins de distance_max cases de la case cible."""
         joueur_case_x = int(player.pos[0] // TAILLE_CASE)
         joueur_case_y = int(player.pos[1] // TAILLE_CASE)
         dist = abs(joueur_case_x - case[0]) + abs(joueur_case_y - case[1])
@@ -217,9 +259,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
     acc_argent   = 0.0  # mine → money
     acc_food     = 0.0  # farm → food
     acc_vapeur   = 0.0  # generateur → vapeur
+    save_done_timer = 0.0
 
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0  # secondes ecoulees
+        save_done_timer = max(0, save_done_timer - dt)
 
         # Production des batiments selon leur type de ressource
         # Si food == 0, seule la farm continue de produire
@@ -270,7 +314,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
                     pass
                 else:
                     etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, player, screenshot)
-                if not etat_pause:
+                if etat_pause == "jeu_save_done":
+                    save_done_timer = 1.5  # show for 1.5 seconds
+                elif not etat_pause:
                     stop_event.set()
                     return False
                 elif etat_pause == "menu":
@@ -490,6 +536,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool):
             tx = hud_x + (iw - texte.get_width()) // 2 - 13
             ty = hud_y + (ih - texte.get_height()) // 2 + 2
             ecran.blit(texte, (tx, ty))
+
+        if save_done_timer > 0:
+            img_w, img_h = save_done_img.get_size()
+            x = 10
+            y = 10
+            ecran.blit(save_done_img, (x, y))
 
         pygame.display.flip()
     stop_event.set()

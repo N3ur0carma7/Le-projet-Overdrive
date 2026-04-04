@@ -62,10 +62,7 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
                         print("ERREUR CRITIQUE: Écriture du fichier save/save.json")
                         return False
                     print("Sauvegarde réussite, retour au jeu")
-                    ecran.blit(save, (0, 0))
-                    pygame.display.flip()
-                    time.sleep(1)
-                    return "jeu"
+                    return "jeu_save_done"
                 if boutons[2].clic():
                     if online_data and CLIENT is not None:
                         disconnect()
