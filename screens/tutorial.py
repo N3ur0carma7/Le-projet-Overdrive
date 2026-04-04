@@ -14,7 +14,7 @@ STEPS = [
 
 # Durée d'affichage de chaque caractère
 CHAR_DELAY = 0.032
-
+#tuto
 # Dimensions du panneau overlay
 PANEL_W = 520
 PANEL_H = 220
