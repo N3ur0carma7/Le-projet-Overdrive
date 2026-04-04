@@ -37,7 +37,7 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
     # boutons
     boutons = [
         BoutonImage(LARGEUR_ECRAN//2 - BTN_W//2, btn_y_start + 0 * BTN_SPACING, BTN_W, BTN_H,
-                    btn_path("Continuer", "normal"), btn_path("Continuer", "hover")),
+                    btn_path("Menu_principal", "normal"), btn_path("Menu_principal", "hover")),
         BoutonImage(LARGEUR_ECRAN//2 - BTN_W//2, btn_y_start + 1 * BTN_SPACING, BTN_W, BTN_H,
                     btn_path("Sauvegarder", "normal"), btn_path("Sauvegarder", "hover")),
         BoutonImage(LARGEUR_ECRAN//2 - BTN_W//2, btn_y_start + 2 * BTN_SPACING, BTN_W, BTN_H,

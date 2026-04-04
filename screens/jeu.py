@@ -227,8 +227,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool, dev_mode: bool = False):
     def joueur_a_portee(case, distance_max=2):
         joueur_case_x = int(player.pos[0] // TAILLE_CASE)
         joueur_case_y = int(player.pos[1] // TAILLE_CASE)
-        dist = abs(joueur_case_x - case[0]) + abs(joueur_case_y - case[1])
-        return dist <= distance_max
+        dx = abs(joueur_case_x - case[0])
+        dy = abs(joueur_case_y - case[1])
+        return dx <= distance_max and dy <= distance_max
 
     def dessiner_grille(surface):
         lw, lh = dims[0], dims[1]

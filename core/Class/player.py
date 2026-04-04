@@ -26,6 +26,10 @@ class Player:
     _spritesheet = None
     _sprite_rects = None
 
+    START_MONEY = 1500
+    START_FOOD = 100
+    START_VAPEUR = 40
+
     @classmethod
     def load_sprites(cls):
         if cls._spritesheet is None:
@@ -40,9 +44,9 @@ class Player:
         self.raw_damage = 1
         self.defense = 0
         self.health_regen = 1
-        self.money = 5000
-        self.food = 100
-        self.vapeur = 0
+        self.money = Player.START_MONEY
+        self.food = Player.START_FOOD
+        self.vapeur = Player.START_VAPEUR
         self.pos = (0, 0)
         self.path = []
 

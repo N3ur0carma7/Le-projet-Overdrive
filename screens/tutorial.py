@@ -5,7 +5,7 @@ STEPS = [
     "Bienvenue dans Overdrive ! Cette ville est a toi. Construit, developpe, et prospere.",
     "Utilise le clic GAUCHE pour placer des batiments depuis la barre du bas.",
     "Les batiments de PRODUCTION (mine, ferme, generateur) necessitent des villageois.",
-    "Reste a portee de 2 cases pour placer ou interagir avec un batiment.",
+    "Reste a portee dans un carré de 2 cases pour placer ou interagir avec un batiment.",
     "Scroll molette pour zoomer. Clic molette pour deplacer la camera.",
     "Appuie sur ECHAP pour acceder au menu pause et sauvegarder ta partie.",
     "Tes villageois ont besoin d'une MAISON pour vivre. Commence par en construire une !",
