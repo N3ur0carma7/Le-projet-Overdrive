@@ -15,18 +15,11 @@ dt = 0.0
 
 _fullscreen = False
 
-# ──────────────────────────────────────────────────────────────
-# Table des assignations manuelles
-# ──────────────────────────────────────────────────────────────
-# Clé   : id(npc)
-# Valeur: id(batiment) auquel ce NPC est assigné manuellement
-# Si l'entrée existe → on respecte l'assignation du joueur.
-# Si absente          → on tombe en round-robin automatique.
+
 assignations_manuelles: dict[int, int] = {}
 
 
 def marquer_assignation_manuelle(npc, batiment):
-    """Appeler après un drag-and-drop / clic dans menu_travail."""
     if batiment is None:
         assignations_manuelles.pop(id(npc), None)
     else:
@@ -34,7 +27,6 @@ def marquer_assignation_manuelle(npc, batiment):
 
 
 def effacer_toutes_assignations():
-    """Vider la table → prochain synchroniser_npcs repasse en auto."""
     assignations_manuelles.clear()
 
 # ──────────────────────────────────────────────────────────────
@@ -91,12 +83,7 @@ def draw_players(surface, camera_x, camera_y):
         nuber = nuber + 1
 
 def synchroniser_npcs(batiments_list, npcs, player, taille_case):
-    """
-    Synchronise la liste des NPCs avec les maisons existantes,
-    en respectant les assignations manuelles de la table
-    `assignations_manuelles`.  Les NPCs sans entrée manuelle
-    reçoivent l'ancienne logique round-robin.
-    """
+
     population_attendue = {}
     for b in batiments_list:
         if b.type == Batiment.TYPE_RESIDENTIEL:

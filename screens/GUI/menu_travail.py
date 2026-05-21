@@ -1,31 +1,9 @@
-"""
-menu_travail.py  -  Panneau d'assignation manuelle des villageois
-=================================================================
-
-Ouvre un panneau "pause legere" qui liste :
-  - les maisons avec leurs villageois disponibles  (colonne gauche)
-  - les batiments de production sans villageois ou sous-peuples (colonne droite)
-
-Le joueur clique un villageois (gauche) puis un batiment (droite) pour l'assigner.
-Un bouton "Auto" reinitialise l'assignation round-robin habituelle.
-
-Integration :
-    from screens.GUI.menu_travail import afficher_menu_travail
-    resultat = afficher_menu_travail(ecran, batiments, npcs, player)
-    # resultat == "fermer" toujours ; les npcs sont modifies sur place.
-
-Appel suggere :
-    Ouvrir avec une touche dediee (ex. TAB) dans boucle_jeu().
-"""
 
 import pygame
 import sys
 from core.Class.batiments import Batiment
 from core.Class.npc import Npc
 
-# --------------------------------------------------------------
-# Palette steampunk coherente avec le reste du jeu
-# --------------------------------------------------------------
 C_BG          = (20,  16,  12)
 C_PANEL       = (35,  28,  20)
 C_BORDER      = (90,  70,  40)
@@ -47,7 +25,6 @@ C_BTN_AUTO_H  = (55,  80,  55)
 C_SCROLL_BG   = (28,  22,  14)
 C_SCROLL_THB  = (80,  62,  35)
 
-# Icones texte pour les types de production
 ICONE_TYPE = {
     Batiment.TYPE_MINE:        "Mine Or",
     Batiment.TYPE_FARM:        "Farm Bouffe",
@@ -56,10 +33,6 @@ ICONE_TYPE = {
     Batiment.TYPE_TOURELLE:    "Tourelle",
 }
 
-
-# --------------------------------------------------------------
-# Helpers de rendu
-# --------------------------------------------------------------
 
 def _charger_police(taille):
     try:
@@ -75,20 +48,11 @@ def _rect_arrondi(surface, couleur, rect, rayon=6, bordure=0, coul_bordure=None)
 
 
 def _compter_assigned(npc_list, batiment):
-    """Compte combien de NPCs sont assignes a ce batiment."""
     return sum(1 for n in npc_list if n.lieu_travail is batiment)
 
 
-# --------------------------------------------------------------
-# Panneau principal
-# --------------------------------------------------------------
-
 def afficher_menu_travail(ecran, batiments, npcs, player):
-    """
-    Affiche le panneau d'assignation et bloque jusqu'a fermeture.
-    Modifie npcs in-place via npc.assigner_travail().
-    Retourne "fermer".
-    """
+
     horloge   = pygame.time.Clock()
     f_titre   = _charger_police(22)
     f_sous    = _charger_police(14)
@@ -118,9 +82,6 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
     scroll_g = 0
     scroll_d = 0
 
-    # ----------------------------------------------------------
-    # Boucle principale
-    # ----------------------------------------------------------
     en_cours = True
     while en_cours:
         horloge.tick(60)
@@ -216,9 +177,6 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
         clip_g = pygame.Rect(COL_L_X, COL_Y, COL_W, COL_H)
         clip_d = pygame.Rect(COL_R_X, COL_Y, COL_W, COL_H)
 
-        # ------------------------------------------------------
-        # Colonne gauche - villageois
-        # ------------------------------------------------------
         ecran.set_clip(clip_g)
 
         for i, npc in enumerate(npcs):
@@ -301,9 +259,6 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
 
         ecran.set_clip(None)
 
-        # ------------------------------------------------------
-        # Colonne droite - batiments
-        # ------------------------------------------------------
         ecran.set_clip(clip_d)
 
         for j, bat in enumerate(batiments_prod):
@@ -390,9 +345,6 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
 
         ecran.set_clip(None)
 
-        # ------------------------------------------------------
-        # Boutons
-        # ------------------------------------------------------
         BTN_W, BTN_H = 130, 36
         BTN_Y = PY + PH - 52
 
@@ -508,12 +460,7 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
             )
 
         pygame.display.flip()
-
-        # ------------------------------------------------------
-        # Evenements
-        # ------------------------------------------------------
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -525,17 +472,12 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                     pygame.K_TAB
                 ):
                     en_cours = False
-
                 if event.key == pygame.K_F11:
                     from screens import game_logic
                     game_logic.toggle_fullscreen()
-
             if event.type == pygame.MOUSEWHEEL:
-
                 if clip_g.collidepoint(mx, my):
-
                     total_g = len(npcs) * (CARD_H + CARD_GAP)
-
                     scroll_g = max(
                         0,
                         min(
@@ -543,7 +485,6 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                             max(0, total_g - COL_H)
                         )
                     )
-
                 elif clip_d.collidepoint(mx, my):
 
                     total_d = len(batiments_prod) * (CARD_H + CARD_GAP)
@@ -555,30 +496,21 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                             max(0, total_d - COL_H)
                         )
                     )
-
             if (
                 event.type == pygame.MOUSEBUTTONDOWN
                 and event.button == 1
             ):
-
                 if btn_fermer_rect.collidepoint(mx, my):
                     en_cours = False
-
                 elif btn_auto_rect.collidepoint(mx, my):
                     _auto_assigner(batiments, npcs)
                     npc_selectionne = None
-
                 elif btn_clear_rect.collidepoint(mx, my):
-
                     for n in npcs:
                         n.assigner_travail(None)
-
                     npc_selectionne = None
-
                 elif clip_g.collidepoint(mx, my):
-
                     for i, npc in enumerate(npcs):
-
                         cy = COL_Y + i * (CARD_H + CARD_GAP) - scroll_g
 
                         card_rect = pygame.Rect(
@@ -587,52 +519,30 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                             COL_W,
                             CARD_H
                         )
-
                         if card_rect.collidepoint(mx, my):
-
                             npc_selectionne = (
                                 None if npc_selectionne is npc else npc
                             )
-
                             break
-
                 elif (
                     clip_d.collidepoint(mx, my)
                     and npc_selectionne is not None
                 ):
-
                     for j, bat in enumerate(batiments_prod):
-
                         cy = COL_Y + j * (CARD_H + CARD_GAP) - scroll_d
-
                         card_rect = pygame.Rect(
                             COL_R_X,
                             cy,
                             COL_W,
                             CARD_H
                         )
-
                         if card_rect.collidepoint(mx, my):
-
                             npc_selectionne.assigner_travail(bat)
-
                             npc_selectionne = None
-
                             break
-
     return "fermer"
 
-
-# --------------------------------------------------------------
-# Auto assignation
-# --------------------------------------------------------------
-
 def _auto_assigner(batiments, npcs):
-    """
-    Reassigne tous les NPCs en round-robin
-    sur les batiments de production.
-    """
-
     lieux = [
         b for b in batiments
         if b.type not in (
