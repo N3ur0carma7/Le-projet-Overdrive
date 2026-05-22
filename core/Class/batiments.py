@@ -16,7 +16,7 @@ class Batiment:
             3: {"population": 5, "cout": 750},
         },
         TYPE_GENERATEUR: {
-            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 2,
+            "hitbox_l": 3, "hitbox_h": 5, "scale_visuel": 1.6,
             1: {"vapeur": 30, "cout": 200},
             2: {"vapeur": 60, "cout": 500},
             3: {"vapeur": 120, "cout": 1000},

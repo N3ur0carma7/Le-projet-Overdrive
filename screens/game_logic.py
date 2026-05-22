@@ -123,29 +123,23 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             if npc in npcs:
                 npcs.remove(npc)
 
-    # Construire la carte id(batiment) → objet batiment pour retrouver les refs
     bat_by_id = {id(b): b for b in batiments_list}
 
-    # Lieux disponibles pour le round-robin (bâtiments non résidentiels et non tourelles)
     lieux_travail = [b for b in batiments_list
                      if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE)]
 
-    # Séparer NPCs manuels et auto
     npcs_auto = []
     for npc in npcs:
         bat_id = assignations_manuelles.get(id(npc))
         if bat_id is not None:
-            # Le bâtiment manuel existe encore ?
             bat_cible = bat_by_id.get(bat_id)
             if bat_cible is not None:
                 npc.assigner_travail(bat_cible)
                 continue
             else:
-                # Bâtiment supprimé → retirer l'assignation manuelle
                 assignations_manuelles.pop(id(npc), None)
         npcs_auto.append(npc)
 
-    # Round-robin sur les NPCs sans assignation manuelle
     for i, npc in enumerate(npcs_auto):
         if lieux_travail:
             npc.assigner_travail(lieux_travail[i % len(lieux_travail)])
@@ -153,18 +147,14 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             npc.assigner_travail(None)
 
 
-# === REÉCRIRE LA FONCTION DANS .\screens\game_logic.py ===
 def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, raid_manager=None):
     from core.Class.batiments import Batiment
 
-    # 1. Compter la population totale du joueur (somme des populations des maisons résidentielles)
     total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
 
-    # 2. Calculer la consommation passive des villageois (2 par minute par villageois)
-    # delta_time / 60.0 permet de convertir la valeur "par minute" en valeur "par seconde/frame"
+
     consommation_food = (total_villageois * 6.0) * delta_time / 60.0
 
-    # On retire passivement la nourriture consommée (sans descendre en dessous de 0)
     player.food = max(0.0, player.food - consommation_food)
 
     food_ok = player.food > 0
@@ -185,7 +175,6 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
         elif rtype == "vapeur":
             acc_vapeur += val
 
-    # 3. Application des gains accumulés
     gains_argent = int(acc_argent)
     if gains_argent > 0:
         player.money += gains_argent
