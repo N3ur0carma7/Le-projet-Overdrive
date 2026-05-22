@@ -9,31 +9,31 @@ class Batiment:
     TYPE_TOURELLE = "tourelle"
     DATA = {
         TYPE_RESIDENTIEL: {
-            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 0.9,
+            "hitbox_l": 4, "hitbox_h": 3, "scale_visuel": 2,
             1: {"population": 1, "cout": 125},
             2: {"population": 3, "cout": 250},
             3: {"population": 5, "cout": 750},
         },
         TYPE_GENERATEUR: {
-            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 1.0,
+            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 2,
             1: {"vapeur": 30, "cout": 200},
             2: {"vapeur": 60, "cout": 500},
             3: {"vapeur": 120, "cout": 1000},
         },
         TYPE_MINE: {
-            "hitbox_l": 3 , "hitbox_h": 3, "scale_visuel": 1.1,
+            "hitbox_l": 3 , "hitbox_h": 3, "scale_visuel": 2,
             1: {"argent": 30, "cout": 250},
             2: {"argent": 60, "cout": 600},
             3: {"argent": 120, "cout": 1200},
         },
         TYPE_FARM: {
-            "hitbox_l": 3, "hitbox_h": 2, "scale_visuel": 2.2,
+            "hitbox_l": 3, "hitbox_h": 2, "scale_visuel": 2,
             1: {"nourriture": 30, "cout": 150},
             2: {"nourriture": 60, "cout": 400},
             3: {"nourriture": 120, "cout": 800},
         },
         TYPE_TOURELLE: {
-            "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 3.0,
+            "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 2,
             1: {"degat": 30, "cout": 150},
             2: {"degat": 60, "cout": 400},
             3: {"degat": 120, "cout": 800},
