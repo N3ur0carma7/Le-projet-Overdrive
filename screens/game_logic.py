@@ -15,6 +15,22 @@ dt = 0.0
 
 _fullscreen = False
 
+
+assignations_manuelles: dict[int, int] = {}
+
+
+def marquer_assignation_manuelle(npc, batiment):
+    if batiment is None:
+        assignations_manuelles.pop(id(npc), None)
+    else:
+        assignations_manuelles[id(npc)] = id(batiment)
+
+
+def effacer_toutes_assignations():
+    assignations_manuelles.clear()
+
+# ──────────────────────────────────────────────────────────────
+
 def toggle_fullscreen():
     global _fullscreen
     _fullscreen = not _fullscreen
@@ -67,7 +83,7 @@ def draw_players(surface, camera_x, camera_y):
         nuber = nuber + 1
 
 def synchroniser_npcs(batiments_list, npcs, player, taille_case):
-    from core.Class.batiments import Batiment
+
     population_attendue = {}
     for b in batiments_list:
         if b.type == Batiment.TYPE_RESIDENTIEL:
@@ -80,11 +96,15 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             npcs_par_maison[cle] = []
         npcs_par_maison[cle].append(npc)
 
+    # Supprimer les NPCs dont la maison n'existe plus
     maisons_valides = {id(b) for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL}
     for npc in list(npcs):
         if id(npc.maison) not in maisons_valides:
+            # Nettoyer aussi la table d'assignations
+            assignations_manuelles.pop(id(npc), None)
             npcs.remove(npc)
 
+    # Créer / supprimer des NPCs selon la population
     for b in batiments_list:
         if b.type != Batiment.TYPE_RESIDENTIEL:
             continue
@@ -99,11 +119,34 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
         while len(actuels) > attendus:
             npc = actuels.pop()
+            assignations_manuelles.pop(id(npc), None)
             if npc in npcs:
                 npcs.remove(npc)
 
-    lieux_travail = [b for b in batiments_list if b.type != Batiment.TYPE_RESIDENTIEL]
-    for i, npc in enumerate(npcs):
+    # Construire la carte id(batiment) → objet batiment pour retrouver les refs
+    bat_by_id = {id(b): b for b in batiments_list}
+
+    # Lieux disponibles pour le round-robin (bâtiments non résidentiels et non tourelles)
+    lieux_travail = [b for b in batiments_list
+                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE)]
+
+    # Séparer NPCs manuels et auto
+    npcs_auto = []
+    for npc in npcs:
+        bat_id = assignations_manuelles.get(id(npc))
+        if bat_id is not None:
+            # Le bâtiment manuel existe encore ?
+            bat_cible = bat_by_id.get(bat_id)
+            if bat_cible is not None:
+                npc.assigner_travail(bat_cible)
+                continue
+            else:
+                # Bâtiment supprimé → retirer l'assignation manuelle
+                assignations_manuelles.pop(id(npc), None)
+        npcs_auto.append(npc)
+
+    # Round-robin sur les NPCs sans assignation manuelle
+    for i, npc in enumerate(npcs_auto):
         if lieux_travail:
             npc.assigner_travail(lieux_travail[i % len(lieux_travail)])
         else:

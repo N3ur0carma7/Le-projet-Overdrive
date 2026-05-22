@@ -26,6 +26,7 @@ from screens.render import dessiner_monde, dessiner_hud
 from core.pve import RaidManager
 
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
+from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
 
@@ -300,6 +301,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             # terminal toggle
             if event.type == pygame.KEYDOWN and event.unicode == "²":
                 terminal.toggle()
+                continue
+
+            # assignation manuelle des villageois
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+                afficher_menu_travail(ecran, batiments, npcs, players[indice])
                 continue
 
             if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
