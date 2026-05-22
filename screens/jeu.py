@@ -88,7 +88,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             }
         },
         Batiment.TYPE_TILE: {
-            1: corriger_transparence(pygame.image.load("assets/buildings/Tile.png").convert_alpha())
+            1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
         }
     }
 
@@ -453,8 +453,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                         # Limite : nb batiments de production <= nb total de villageois
                         nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
-                        nb_production = sum(1 for b in batiments if b.type != Batiment.TYPE_RESIDENTIEL)
-                        production_pleine = (type_batiment != Batiment.TYPE_RESIDENTIEL and nb_production >= nb_villageois)
+                        nb_production = sum(
+                            1 for b in batiments
+                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                        )
+                        production_pleine = (
+                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                                and nb_production >= nb_villageois
+                        )
 
                         # Portée de pose augmentée
                         if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):

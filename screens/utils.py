@@ -15,7 +15,7 @@ def calculer_rects_icones(dims, hauteur_barre, taille_icone, slide_offset=0):
     """
     rects = []
     marge = 20
-    for i in range(5):
+    for i in range(6):
         rect = pygame.Rect(
             marge + i * (taille_icone + marge),
             dims[1] - hauteur_barre + (hauteur_barre - taille_icone) // 2 + slide_offset,

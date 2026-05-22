@@ -40,7 +40,7 @@ class Batiment:
             3: {"degat": 120, "cout": 800},
         },
         TYPE_TILE: {
-            "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 3,
+            "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
             1: {"cout": 10},
         },
     }
