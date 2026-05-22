@@ -86,6 +86,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 "SE": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_droite_bas.png").convert_alpha(),
                 "SW": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_gauche_bas.png").convert_alpha(),
             }
+        },
+        Batiment.TYPE_TILE: {
+            1: corriger_transparence(pygame.image.load("assets/buildings/Tile.png").convert_alpha())
         }
     }
 
@@ -100,6 +103,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_MINE,
         Batiment.TYPE_FARM,
         Batiment.TYPE_TOURELLE,
+        Batiment.TYPE_TILE,
     ]
 
     TAILLE_ICONE = 64
