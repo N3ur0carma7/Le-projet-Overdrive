@@ -9,7 +9,7 @@ class Batiment:
     TYPE_TOURELLE = "tourelle"
     DATA = {
         TYPE_RESIDENTIEL: {
-            "hitbox_l": 4, "hitbox_h": 3, "scale_visuel": 2,
+            "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,
             1: {"population": 1, "cout": 125},
             2: {"population": 3, "cout": 250},
             3: {"population": 5, "cout": 750},
@@ -33,7 +33,7 @@ class Batiment:
             3: {"nourriture": 120, "cout": 800},
         },
         TYPE_TOURELLE: {
-            "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 2,
+            "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 3,
             1: {"degat": 30, "cout": 150},
             2: {"degat": 60, "cout": 400},
             3: {"degat": 120, "cout": 800},
