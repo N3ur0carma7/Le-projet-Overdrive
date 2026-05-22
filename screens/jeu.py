@@ -10,8 +10,9 @@ from core.Class.batiments import *
 import time
 import random
 from screens.environment import CloudManager
-from screens.game_logic import stop_event, on_message_recu, new_player, draw_players, players
+from screens.game_logic import stop_event, on_message_recu, new_player, draw_players
 from screens.render import corriger_transparence
+import screens.game_logic as gl
 
 from core.Class.player import Player
 from core.Class.batiments import Batiment
@@ -31,14 +32,16 @@ from screens.floating_messages import FloatingMessageManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
+batiments = []
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments, indice
-    global players, TAILLE_CASE
+    global batiments
+    global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     dims = [LARGEUR_ECRAN, HAUTEUR_ECRAN]  # mutable pour mise a jour au resize
-
+    players = []
+    indice = 0
     herbe = None
     TAILLE_CASE = 40
 
@@ -102,13 +105,17 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ]
 
     TAILLE_ICONE = 64
-    batiments = []
     npcs = []
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
         update = threading.Thread(target=on_message_recu, args=(TAILLE_CASE,), daemon=True)
         update.start()
         time.sleep(1)
+
+    players = gl.players
+    batiments = gl.batiments
+    indice = gl.indice
+
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
@@ -242,6 +249,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         dt = horloge.tick(FPS) / 1000.0
         save_done_timer = max(0, save_done_timer - dt)
         attack_cooldown = max(0.0, attack_cooldown - dt)
+
+        if players != gl.players:
+            players = gl.players
+        if batiments != gl.batiments:
+            batiments = gl.batiments
+        if indice != gl.indice:
+            indice = gl.indice
 
         # Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
@@ -497,9 +511,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
-
-        player.update(TAILLE_CASE, dt)
-        player.update_anim(dt)
+        for player in players:
+            player.update(TAILLE_CASE, dt)
+            player.update_anim(dt)
 
         # mort
         if player.hp <= 0:

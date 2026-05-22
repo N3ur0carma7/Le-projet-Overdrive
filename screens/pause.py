@@ -9,7 +9,7 @@ from multiplayer.client import send_server, DISCONNECT_MESSAGE, CLIENT, disconne
 from core.Class.buttons import BoutonImage
 from core.Class.player import Player
 from core.saves import save_game
-from screens.jeu import players, indice
+from screens.game_logic import players, indice
 
 save = pygame.image.load("assets/save_done.png")
 

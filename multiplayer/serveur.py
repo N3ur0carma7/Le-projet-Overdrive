@@ -6,6 +6,7 @@ import ast
 from core.Class.batiments import *
 from core.Class.player import *
 import screens.jeu as jeu
+from screens.game_logic import players, batiments
 FORMAT = "utf-8"
 HEADER = 64
 PORT = 5050
@@ -71,16 +72,16 @@ def handle_client(client, addr):
     send_dict_server({"server": "hello client"}, client)
     if number_connected > 1:
         for sujet2 in clients.keys():
-            if jeu.batiments != []:
-                payload = [b.to_dict() for b in jeu.batiments]  # message = liste de Batiment
+            if batiments != []:
+                payload = [b.to_dict() for b in batiments]  # message = liste de Batiment
                 data = json.dumps({"type": "liste_batiments", "payload": payload})
                 send_client(data, clients[sujet2])
     if jeu.TAILLE_CASE is not None:
         player = Player()
         player.pos = (jeu.TAILLE_CASE / 2, jeu.TAILLE_CASE / 2)
-        jeu.players.append(player)
+        players.append(player)
     for sujet in clients.keys():
-        payload = [p.to_dict() for p in jeu.players]
+        payload = [p.to_dict() for p in players]
         payload[0]["pos"] = list(payload[0]["pos"])
         for j in range(len(payload[0]["path"])):
             payload[0]["path"][j] = list(payload[0]["path"][j])
@@ -210,9 +211,9 @@ def disconnect (client):
     global clients, clients_indice
     print(f"[STOP] client disconnected")
     print(clients_indice[client])
-    jeu.players.pop(clients_indice[client])
+    players.pop(clients_indice[client])
     for sujet in clients.keys():
-        payload = [p.to_dict() for p in jeu.players]
+        payload = [p.to_dict() for p in players]
         payload[0]["pos"] = list(payload[0]["pos"])
         for j in range(len(payload[0]["path"])):
             payload[0]["path"][j] = list(payload[0]["path"][j])
