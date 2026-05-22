@@ -51,8 +51,33 @@ def joueur_a_portee(case, player, taille_case, distance_max=2, width=1, height=1
     dy = abs(joueur_case_y - nearest_y)
     return dx <= distance_max and dy <= distance_max
 
+
 def dessiner_grille(surface, camera_x, camera_y, dims, hauteur_barre, zoom, grass, taille_case):
     surface.fill((58, 44, 32))
+
+    if grass is None:
+        return
+
+
+    taille_bloc_cases = 16
+    taille_image_px = taille_bloc_cases * taille_case  # 640 pixels
+    sol_calibre = pygame.transform.smoothscale(grass, (taille_image_px, taille_image_px))
+
+    largeur_vue, hauteur_vue = surface.get_size()
+
+
+    debut_x = int(camera_x // taille_image_px) * taille_image_px
+    debut_y = int(camera_y // taille_image_px) * taille_image_px
+
+    fin_x = debut_x + largeur_vue + taille_image_px
+    fin_y = debut_y + hauteur_vue + taille_image_px
+
+    for y in range(debut_y, int(fin_y), taille_image_px):
+        for x in range(debut_x, int(fin_x), taille_image_px):
+            screen_x = x - camera_x
+            screen_y = y - camera_y
+
+            surface.blit(sol_calibre, (screen_x, screen_y))
 
 def dessiner_grille_overlay(surface, camera_x, camera_y, dims, hauteur_barre, zoom, taille_case):
     couleur_grille = (92, 72, 44)
