@@ -257,7 +257,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if indice != gl.indice:
             indice = gl.indice
 
-        # Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
+        """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
             Player.load_sprites()
             p = Player()
@@ -265,7 +265,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             players.append(p)
             indice = 0
         elif indice < 0 or indice >= len(players):
-            indice = max(0, min(indice, len(players) - 1))
+            indice = max(0, min(indice, len(players) - 1))"""
         player = players[indice]
 
         # animation d'ouverture/fermeture de la barre de batiments
@@ -511,9 +511,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
-        for player in players:
-            player.update(TAILLE_CASE, dt)
-            player.update_anim(dt)
+        player.update(TAILLE_CASE, dt, players)
+        player.update_anim(dt)
 
         # mort
         if player.hp <= 0:
@@ -554,6 +553,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if surface_monde is None or surface_monde_size != needed_size:
             surface_monde = pygame.Surface(needed_size).convert()
             surface_monde_size = needed_size
+
+        gl.draw_players(surface_monde, camera_x, camera_y)
 
         dessiner_grille(surface_monde, camera_x, camera_y, dims, 0, zoom, herbe, TAILLE_CASE)
 
