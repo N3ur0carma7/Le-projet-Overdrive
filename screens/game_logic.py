@@ -109,22 +109,40 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
         else:
             npc.assigner_travail(None)
 
+
+# === REÉCRIRE LA FONCTION DANS .\screens\game_logic.py ===
 def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, raid_manager=None):
+    from core.Class.batiments import Batiment
+
+    # 1. Compter la population totale du joueur (somme des populations des maisons résidentielles)
+    total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+
+    # 2. Calculer la consommation passive des villageois (2 par minute par villageois)
+    # delta_time / 60.0 permet de convertir la valeur "par minute" en valeur "par seconde/frame"
+    consommation_food = (total_villageois * 6.0) * delta_time / 60.0
+
+    # On retire passivement la nourriture consommée (sans descendre en dessous de 0)
+    player.food = max(0.0, player.food - consommation_food)
+
     food_ok = player.food > 0
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
+
         rtype = b.get_production_type()
         val = b.get_production() * delta_time / 60.0
+
         if rtype == "nourriture":
             acc_food += val
         elif not food_ok:
             pass
         elif rtype == "argent":
             acc_argent += val
+
         elif rtype == "vapeur":
             acc_vapeur += val
 
+    # 3. Application des gains accumulés
     gains_argent = int(acc_argent)
     if gains_argent > 0:
         player.money += gains_argent

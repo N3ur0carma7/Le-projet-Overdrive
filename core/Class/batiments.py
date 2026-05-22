@@ -9,33 +9,37 @@ class Batiment:
     TYPE_TOURELLE = "tourelle"
     DATA = {
         TYPE_RESIDENTIEL: {
+            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 0.9,
             1: {"population": 1, "cout": 125},
             2: {"population": 3, "cout": 250},
             3: {"population": 5, "cout": 750},
         },
         TYPE_GENERATEUR: {
-            1: {"vapeur": 30,  "cout": 200},
-            2: {"vapeur": 60,  "cout": 500},
+            "hitbox_l": 3, "hitbox_h": 3, "scale_visuel": 1.0,
+            1: {"vapeur": 30, "cout": 200},
+            2: {"vapeur": 60, "cout": 500},
             3: {"vapeur": 120, "cout": 1000},
         },
         TYPE_MINE: {
-            1: {"argent": 30,  "cout": 250},
-            2: {"argent": 60,  "cout": 600},
+            "hitbox_l": 3 , "hitbox_h": 3, "scale_visuel": 1.1,
+            1: {"argent": 30, "cout": 250},
+            2: {"argent": 60, "cout": 600},
             3: {"argent": 120, "cout": 1200},
         },
         TYPE_FARM: {
-            1: {"nourriture": 30,  "cout": 150},
-            2: {"nourriture": 60,  "cout": 400},
+            "hitbox_l": 3, "hitbox_h": 2, "scale_visuel": 2.2,
+            1: {"nourriture": 30, "cout": 150},
+            2: {"nourriture": 60, "cout": 400},
             3: {"nourriture": 120, "cout": 800},
         },
         TYPE_TOURELLE: {
+            "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 3.0,
             1: {"degat": 30, "cout": 150},
             2: {"degat": 60, "cout": 400},
             3: {"degat": 120, "cout": 800},
         },
     }
 
-    # Footprint en "petites cases" (style COC) : 5x5 par défaut
     DEFAULT_FOOTPRINT = 5
 
     def __init__(self, type_batiment, x, y):
@@ -45,12 +49,9 @@ class Batiment:
         self.niveau = 1
         self.x = x
         self.y = y
-        if type_batiment == Batiment.TYPE_TOURELLE:
-            self.largeur = 4
-            self.hauteur = 4
-        else:
-            self.largeur = Batiment.DEFAULT_FOOTPRINT
-            self.hauteur = Batiment.DEFAULT_FOOTPRINT
+
+        self.largeur = Batiment.DATA[type_batiment].get("hitbox_l", Batiment.DEFAULT_FOOTPRINT)
+        self.hauteur = Batiment.DATA[type_batiment].get("hitbox_h", Batiment.DEFAULT_FOOTPRINT)
 
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]
@@ -193,8 +194,8 @@ class Batiment:
     def from_dict(cls, d):
         obj = cls(d["type"], d["x"], d["y"])
         obj.niveau = d.get("niveau", 1)
-        # Normalisation : on force le footprint "grille fine" pour éviter
-        # les superpositions/collisions incohérentes avec d'anciennes saves.
-        obj.largeur = Batiment.DEFAULT_FOOTPRINT
-        obj.hauteur = Batiment.DEFAULT_FOOTPRINT
+
+
+        obj.largeur = Batiment.DATA[obj.type].get("largeur", Batiment.DEFAULT_FOOTPRINT)
+        obj.hauteur = Batiment.DATA[obj.type].get("hauteur", Batiment.DEFAULT_FOOTPRINT)
         return obj

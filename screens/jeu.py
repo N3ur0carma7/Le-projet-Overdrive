@@ -112,9 +112,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
-    hud_or_img     = pygame.image.load("assets/or.png").convert_alpha()
-    hud_food_img   = pygame.image.load("assets/food.png").convert_alpha()
-    hud_vapeur_img = pygame.image.load("assets/vapeur.png").convert_alpha()
+    hud_or_img     = pygame.image.load("assets/icones/argent_icone.png").convert_alpha()
+    hud_food_img   = pygame.image.load("assets/icones/nourriture_icone.png").convert_alpha()
+    hud_vapeur_img = pygame.image.load("assets/icones/vapeur_icone.png").convert_alpha()
+    hud_pop_img = pygame.image.load("assets/pnj.png").convert_alpha()
     save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
 
     cloud_manager = CloudManager(
@@ -585,8 +586,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         float_msg.update(dt)
 
-        dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS, TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect, skill_btn_rect, raid_manager=raid_manager)
-
+        # === MODIFIEZ CET APPEL TOUT À LA FIN DE .\screens\jeu.py ===
+        dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
+                     TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
+                     save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect,
+                     skill_btn_rect, raid_manager=raid_manager, batiments_list=batiments)
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
