@@ -40,7 +40,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     dims = [LARGEUR_ECRAN, HAUTEUR_ECRAN]  # mutable pour mise a jour au resize
 
-    herbe = None
+    herbe = pygame.image.load("assets/environment/ground.png").convert()
     TAILLE_CASE = 40
 
     def _pos_centre_case(cx: int, cy: int):
