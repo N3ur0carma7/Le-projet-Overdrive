@@ -51,7 +51,7 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
     cache[key] = scaled
     return scaled
 
-def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, player, npcs, image_pnj, dt, zoom, raid_manager=None):
+def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None):
     from screens.utils import collision, souris_vers_case, joueur_a_portee
     from core.Class.batiments import Batiment
 
@@ -93,8 +93,8 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
         y = grid_y * TAILLE_CASE - camera_y + (footprint_h_px - image.get_height()) / 2
 
         surface_monde.blit(image_fantome, (x, y))
-
-    player.draw_player(surface_monde, camera_x, camera_y)
+    for player in players:
+        player.draw_player(surface_monde, camera_x, camera_y)
 
 
     for npc in npcs:

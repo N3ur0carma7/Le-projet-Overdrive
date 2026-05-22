@@ -511,7 +511,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
-        player.update(TAILLE_CASE, dt, players)
+        player.update(TAILLE_CASE, dt)
         player.update_anim(dt)
 
         # mort
@@ -554,14 +554,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_monde = pygame.Surface(needed_size).convert()
             surface_monde_size = needed_size
 
-        gl.draw_players(surface_monde, camera_x, camera_y)
 
         dessiner_grille(surface_monde, camera_x, camera_y, dims, 0, zoom, herbe, TAILLE_CASE)
 
         cloud_manager.draw(surface_monde, camera_x, camera_y)
 
         dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE,
-                       batiment_selectionne, TYPES_BATIMENTS, player, npcs, image_pnj, dt, zoom,
+                       batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom,
                        raid_manager=raid_manager)
 
         if surface_monde_size == (dims[0], dims[1]):
@@ -607,6 +606,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         terminal.draw(ecran, dt)
 
         pygame.display.flip()
+
+        print(players)
+        if players[indice] != gl.players[indice]:
+            send_liste_joueurs_client(players, CLIENT)
     stop_event.set()
     sound.stop_ambient()
     return True

@@ -148,7 +148,7 @@ class Player:
         return False
 
     # ------------------------------------------------------------------
-    def update(self, taille_case, dt=1/60, players= None):
+    def update(self, taille_case,players, dt=1/60):
         if not self.path:
             self.is_moving = False
             return
