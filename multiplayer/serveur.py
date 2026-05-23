@@ -68,6 +68,23 @@ def pos(client):
         send_float_server(float(number_connected), clients[i])
     send_int_server(number_connected - 1, client)
 
+monsters = []
+monster_director = None
+def handle_monsters(liste_monstres, addr):
+    global monsters, monster_director
+    if monster_director is None:
+        monster_director = addr
+    elif monster_director != addr:
+        if len(liste_monstres) > len(monsters):
+            send_liste_monstres(monsters, addr)
+        else :
+            send_liste_monstres(liste_monstres, monster_director)
+    else:
+        send_liste_monstres(monsters, addr)
+
+
+
+
 
 def handle_client(client, addr):
     global clients
@@ -83,6 +100,7 @@ def handle_client(client, addr):
         player = Player()
         player.pos = (jeu.TAILLE_CASE / 2, jeu.TAILLE_CASE / 2)
         players.append(player)
+
     for sujet in clients.keys():
         payload = [p.to_dict() for p in players]
         payload[0]["pos"] = list(payload[0]["pos"])
@@ -215,6 +233,7 @@ def handle_message_recieved (msg, addr):
             liste_dicts = data["payload"]  # liste de dicts
             monstre = [Monster.from_dict(d) for d in liste_dicts]
             print(f"[LISTE MONSTRE] {addr} : {[str(b) for b in monstre]}")
+            handle_monsters(monstre, addr)
             return monstre, "liste_monstres"
     except json.JSONDecodeError:
         print(f"[ERROR] {addr} : {msg}")
