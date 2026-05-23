@@ -244,6 +244,11 @@ class Terminal:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self._executer(player, batiments, extra_ctx or {})
+            elif event.key == pygame.K_ESCAPE:
+                self.visible = False
+                self._ac_prefix = None
+                self._ac_matches = []
+                self.history_index = -1
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
                 self.history_index = -1

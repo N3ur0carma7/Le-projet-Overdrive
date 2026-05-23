@@ -293,6 +293,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0
+        if terminal.visible:
+            dt = 0.0
         save_done_timer = max(0, save_done_timer - dt)
         attack_cooldown = max(0.0, attack_cooldown - dt)
 
@@ -363,6 +365,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 terminal.toggle()
                 continue
 
+            if terminal.visible:
+                if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
+                    continue
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    terminal.toggle()
+                    continue
+                continue
+
             # assignation manuelle des villageois
             if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
                 afficher_menu_travail(ecran, batiments, npcs, players[indice])
@@ -380,11 +390,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
-            if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
-                continue
-
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                from screens.pause import menu_pause
                 screenshot = ecran.copy()
                 if online:
                     etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, players[indice], screenshot)
