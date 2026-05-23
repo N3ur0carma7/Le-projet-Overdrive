@@ -18,7 +18,7 @@ if __name__ == "__main__":
     en_cours = True
     etat = "menu"
     while en_cours:
-        for event in pygame.event.get([pygame.KEYDOWN]):
+        for event in pygame.event.get([ pygame.KEYDOWN]):
             if event.key == pygame.K_F11:
                 fullscreen = not fullscreen
                 if fullscreen:
