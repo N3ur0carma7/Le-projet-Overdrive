@@ -26,7 +26,7 @@ from screens.game_logic import synchroniser_npcs, calculer_production
 from screens.render import dessiner_monde, dessiner_hud
 from core.pve import RaidManager
 
-from screens.GUI.menu_amelioration import afficher_menu_amelioration
+from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
@@ -204,6 +204,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     batiment_selectionne = None
     unlocked_skills = set()
+    menu_amelioration = None
 
     terminal = Terminal()
 
@@ -293,8 +294,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0
-        if terminal.visible:
-            dt = 0.0
         save_done_timer = max(0, save_done_timer - dt)
         attack_cooldown = max(0.0, attack_cooldown - dt)
 
@@ -373,6 +372,31 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     continue
                 continue
 
+            if menu_amelioration:
+                result = menu_amelioration.handle_event(event)
+                if result == "close":
+                    menu_amelioration = None
+                    continue
+                if result == "supprimer":
+                    batiments.remove(menu_amelioration.batiment)
+                    cashback = 0
+                    for k in range(menu_amelioration.batiment.niveau):
+                        cashback += Batiment.DATA[menu_amelioration.batiment.type][1+k]["cout"]
+                    players[indice].money += cashback
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
+                if result == "upgrade":
+                    menu_amelioration.batiment.upgrade()
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
+                continue
+
             # assignation manuelle des villageois
             if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
                 afficher_menu_travail(ecran, batiments, npcs, players[indice])
@@ -390,6 +414,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                from screens.pause import menu_pause
                 screenshot = ecran.copy()
                 if online:
                     etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, players[indice], screenshot)
@@ -534,22 +560,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
                                     break
-                                resultat = afficher_menu_amelioration(ecran, B, sx, players[indice])
-
-                                if resultat == "supprimer":
-                                    batiments.remove(B)
-                                    cashback = 0
-                                    for k in range(B.niveau):
-                                        cashback += Batiment.DATA[B.type][1+k]["cout"]
-                                    players[indice].money += cashback
-                                    if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
-                                elif resultat == "upgrade":
-                                    if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
-
-                                synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
-
+                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
@@ -660,6 +671,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
+        if menu_amelioration:
+            menu_amelioration.draw(ecran)
 
         pygame.display.flip()
 
