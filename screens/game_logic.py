@@ -163,7 +163,14 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             npc.assigner_travail(None)
 
 
-def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, npcs=None, raid_manager=None):
+def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur,
+                         npcs=None, raid_manager=None, day_night=None):
+    """
+    Calcule et applique la production des bâtiments.
+
+    day_night : instance de DayNightCycle (optionnel).
+                Si fourni, la production non-alimentaire est réduite de 40 % la nuit.
+    """
     from core.Class.batiments import Batiment
 
     total_villageois = sum(
@@ -176,7 +183,10 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     player.food = max(0.0, player.food - consommation_food)
 
     food_ok = player.food > 0
-    
+
+    # Modificateur nuit : -40 % sur la production (sauf nourriture)
+    night_mult = 0.6 if (day_night is not None and day_night.is_night) else 1.0
+
     # Créer un mapping de bâtiments de production vers nombre de villageois assignés
     batiments_production_accessibles = set()
     if npcs is not None:
@@ -184,7 +194,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             # Le bâtiment produit seulement quand le villageois est physiquement au travail
             if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
                 batiments_production_accessibles.add(id(npc.lieu_travail))
-    
+
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
@@ -197,15 +207,16 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             if id(b) not in batiments_production_accessibles:
                 # Ce bâtiment de production n'est pas accessible
                 continue
-        
+
         if rtype == "nourriture":
+            # La nourriture n'est pas affectée par le cycle jour/nuit
             acc_food += val
         elif not food_ok:
             pass
         elif rtype == "argent":
-            acc_argent += val
+            acc_argent += val * night_mult
         elif rtype == "vapeur":
-            acc_vapeur += val
+            acc_vapeur += val * night_mult
 
     gains_argent = int(acc_argent)
     if gains_argent > 0:

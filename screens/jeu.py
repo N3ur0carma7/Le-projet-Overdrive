@@ -31,6 +31,8 @@ from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
 from screens.ambiance import AmbianceManager
+# from screens.day_night import DayNightCycle  # Logique jour/nuit désactivée
+from screens.weather import WeatherManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
@@ -174,6 +176,20 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     cloud_manager.load_images()
     cloud_manager.generate_clouds(count=80)
     ambiance_manager = AmbianceManager()
+
+    # ── Système jour / nuit ──────────────────────────────────
+    # day_night = DayNightCycle(start_phase=0.0)   # Logique jour/nuit désactivée
+
+    # ── Système météo ────────────────────────────────────────
+    weather = WeatherManager()
+
+    # Mémoriser la vitesse de base de chaque nuage pour le vent
+    for cloud in cloud_manager.clouds:
+        cloud._base_speed_x = cloud.speed_x
+
+    # Polices HUD jour/nuit et météo
+    font_clock   = pygame.font.Font("assets/fonts/Minecraft.ttf", 18)
+    font_weather = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
 
 
     is_new_game = not os.path.exists("save/save.json")
@@ -399,9 +415,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     current_playlist_index = 0
                 ambient_delay_timer = 3.0
 
-        acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager)
+        acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager, day_night=None)
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
+
+        # ── Mise à jour jour/nuit et météo ──────────────────
+        # day_night.update(dt)  # Logique jour/nuit désactivée
+        weather.update(dt)
+
+        # Adapter la vitesse des nuages au vent
+        for cloud in cloud_manager.clouds:
+            base = getattr(cloud, '_base_speed_x', cloud.speed_x)
+            cloud._base_speed_x = base
+            cloud.speed_x = base * weather.wind_factor
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
@@ -428,7 +454,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 continue
 
             if terminal.visible:
-                if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
+                if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager, "weather": weather}):
                     continue
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     terminal.toggle()
@@ -771,6 +797,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         cloud_manager.draw(surface_monde, camera_x, camera_y)
         ambiance_manager.draw(surface_monde, camera_x, camera_y)
 
+        # ── Pluie (dans l'espace monde, avant scaling) ───────
+        weather.draw_rain(surface_monde, camera_x, camera_y)
+
 
         if surface_monde_size == (dims[0], dims[1]):
             surface_affichee = surface_monde
@@ -778,6 +807,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_affichee = pygame.transform.scale(surface_monde, (dims[0], dims[1]))
 
         ecran.blit(surface_affichee, (0, 0))
+
+        # ── Overlays post-scaling ────────────────────────────
+        # day_night.apply(ecran)           # Logique jour/nuit désactivée
+        weather.apply_sky_tint(ecran)    # teinture pluie / orage
+        weather.apply_lightning_flash(ecran)  # flash éclair orage
 
 
 
@@ -864,6 +898,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         terminal.draw(ecran, dt)
         if menu_amelioration:
             menu_amelioration.draw(ecran)
+
+        # ── HUD jour/nuit et météo ───────────────────────────
+        # day_night.draw_clock(ecran, 15, 15, font_clock)  # Chrono de temps caché
+        # weather.draw_label(ecran, 15, 15 + font_clock.get_height() + 8, font_weather)  # Étiquette météo cachée
 
         pygame.display.flip()
 

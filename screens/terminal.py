@@ -184,6 +184,78 @@ def cmd_trigger_raid(args, player, batiments, **ctx):
         return "Gestionnaire PVE introuvable."
     return raid_mgr.trigger_raid()
 
+def cmd_settime(args, player, batiments, **ctx):
+    day_night = ctx.get("day_night")
+    if day_night is None:
+        return "Cycle jour/nuit introuvable."
+    if not args:
+        return f"Phase actuelle : {day_night.phase:.2f}  |  {day_night.time_label}"
+    
+    arg = args[0].lower()
+    
+    # Aliases
+    if arg == "day":
+        phase = 0.25
+    elif arg == "night":
+        phase = 0.6
+    elif arg == "dawn":
+        phase = 0.0
+    elif arg == "dusk":
+        phase = 0.45
+    else:
+        try:
+            phase = float(arg)
+            if not (0.0 <= phase < 1.0):
+                return f"Phase doit etre entre 0.0 et 1.0. (0=aube, 0.5=minuit, 1=aube)"
+        except ValueError:
+            return f"Valeur invalide : '{arg}'. Utilisez un nombre [0, 1[ ou day/night/dawn/dusk."
+    
+    # CYCLE_TOTAL = 360 (DAY_DURATION + NIGHT_DURATION = 180 + 180)
+    day_night.time = phase * 360.0
+    return f"[OK] Temps change a phase {phase:.2f}  |  {day_night.time_label}"
+
+def cmd_setweather(args, player, batiments, **ctx):
+    from screens.weather import WEATHER_SUNNY, WEATHER_CLOUDY, WEATHER_WINDY, WEATHER_RAIN, WEATHER_STORM
+    weather = ctx.get("weather")
+    if weather is None:
+        return "Gestionnaire meteo introuvable."
+    
+    if not args:
+        return f"Meteo actuelle : {weather.label}  |  Vent {weather.wind_factor:.1f}x"
+    
+    weathers = {
+        "sunny": WEATHER_SUNNY,
+        "cloudy": WEATHER_CLOUDY,
+        "windy": WEATHER_WINDY,
+        "rain": WEATHER_RAIN,
+        "storm": WEATHER_STORM,
+        "ensolleille": WEATHER_SUNNY,
+        "nuageux": WEATHER_CLOUDY,
+        "venteux": WEATHER_WINDY,
+        "pluie": WEATHER_RAIN,
+        "orage": WEATHER_STORM,
+    }
+    
+    arg = args[0].lower()
+    if arg not in weathers:
+        opts = ", ".join(sorted(set(weathers.values())))
+        return f"Meteo inconnue : '{arg}'.\nOptions : {opts}"
+    
+    new_weather = weathers[arg]
+    from screens.weather import _DURATION, _WIND_FACTOR, _RAIN_DROPS_COUNT
+    
+    weather.current = new_weather
+    weather._next_timer = 60.0  # 60 secondes avant prochaine transition
+    weather._wind_target = _WIND_FACTOR[new_weather]
+    nb = _RAIN_DROPS_COUNT[new_weather]
+    weather._ensure_drops(nb)
+    weather._rain_alpha_tgt = 200.0 if nb > 0 else 0.0
+    
+    if new_weather != WEATHER_STORM:
+        weather._storm_timer = 10.0
+    
+    return f"[OK] Meteo changee a {weather.label}  |  Vent {weather.wind_factor:.1f}x"
+
 
 COMMANDS: dict[str, tuple] = {
     "godlike":  (cmd_godlike,  "Donne 10 000 de chaque ressource"),
@@ -196,6 +268,8 @@ COMMANDS: dict[str, tuple] = {
     "spawn":        (cmd_spawn,        "spawn <ennemi> [qte]  (PVE)"),
     "event":        (cmd_event,        "event <nom>  (Events)"),
     "trigger_raid": (cmd_trigger_raid, "Declenche un raid PVE immediatement"),
+    "settime":      (cmd_settime,      "settime [0-1|day|night|dawn|dusk]"),
+    "setweather":   (cmd_setweather,   "setweather [sunny|cloudy|windy|rain|storm]"),
 }
 
 

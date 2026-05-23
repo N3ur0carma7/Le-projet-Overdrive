@@ -160,8 +160,8 @@ class BoutonBlit:
 
 class MenuAmelioration:
     # Taille du panneau
-    PANEL_W = 480
-    PANEL_H = 320
+    PANEL_W = 440
+    PANEL_H = 280
 
     def __init__(self, ecran, batiment, clic_x, player):
         self.ecran = ecran
@@ -227,113 +227,242 @@ class MenuAmelioration:
         can = self._can_upgrade()
 
         self.btn_ameliorer = BoutonBlit(
-            px + 30, py + H - 68, 160, 44,
+            px + 30, py + H - 68, 200, 44,
             "AMELIORER",
             VERT_OK if can else FUMEE,
             VERT_HOVER if can else FUMEE,
+            CHARBON,
             enabled=can
         )
         self.btn_sell = BoutonBlit(
-            px + 210, py + H - 68, 120, 44,
+            px + W - 150, py + H - 68, 120, 44,
             "VENDRE",
-            ROUGE_DANGER, ROUGE_HOVER
+            ROUGE_DANGER, ROUGE_HOVER, CHARBON
         )
         self.btn_fermer = BoutonBlit(
-            px + W - 40, py + 8, 28, 28,
+            px + W - 38, py + 10, 28, 28,
             "X",
-            CUIVRE_SOMBRE, ROUGE_DANGER
+            CUIVRE_SOMBRE, ROUGE_DANGER, CHARBON
         )
 
     # --- Dessin du panneau ---
     def draw(self, ecran):
-        self._t = pygame.time.get_ticks()
         self._build_buttons()
 
         px, py = self.px, self.py
         W, H = self.PANEL_W, self.PANEL_H
 
-        # -- Fond principal --
-        panel_rect = pygame.Rect(px, py, W, H)
-        draw_rounded_rect(ecran, CHARBON, panel_rect, 10)
+        # ========= FOND PANEL =========
+        panel = pygame.Rect(px, py, W, H)
 
-        # Grain texture simule (lignes horizontales legeres)
-        for i in range(0, H, 6):
-            if i % 12 == 0:
-                pygame.draw.line(ecran, CHARBON_CLAIR,
-                                 (px + 10, py + i), (px + W - 10, py + i), 1)
+        draw_rounded_rect(ecran, (24,22,18), panel, 18)
+        draw_rounded_rect(ecran, CUIVRE, panel, 18, 3)
 
-        # -- Bordure double --
-        draw_rounded_rect(ecran, CUIVRE,        panel_rect, 10, 3)
-        draw_rounded_rect(ecran, CUIVRE_SOMBRE, pygame.Rect(px+3, py+3, W-6, H-6), 8, 1)
+        inner = pygame.Rect(px+8, py+8, W-16, H-16)
+        draw_rounded_rect(ecran, CHARBON_CLAIR, inner, 14)
 
-        # -- Rivets aux coins --
-        for rx, ry in [(px+14, py+14), (px+W-14, py+14),
-                       (px+14, py+H-14), (px+W-14, py+H-14)]:
-            draw_rivet(ecran, rx, ry)
+        # ========= TITRE =========
+        type_label = TYPE_LABELS.get(
+            self.batiment.type,
+            self.batiment.type.upper()
+        )
 
-        # -- Engrenages decoratifs (statiques) --
-        draw_gear(ecran, px + W - 28, py + H - 28, 20, 14, 8, CUIVRE_SOMBRE, 0)
-        draw_gear(ecran, px + 26,     py + H - 28, 16, 11, 6, CUIVRE_SOMBRE, 0)
+        titre = self.font_title.render(type_label, True, LAITON_CLAIR)
 
-        # -- Tuyaux horizontaux deco --
-        draw_pipe_horizontal(ecran, px + 30, py + H - 82, W - 60, 6, CUIVRE_SOMBRE, FUMEE)
-        draw_pipe_horizontal(ecran, px + 30, py + 52, W - 60, 4, CUIVRE_SOMBRE, FUMEE)
+        ecran.blit(
+            titre,
+            (
+                px + W//2 - titre.get_width()//2,
+                py + 20
+            )
+        )
 
-        # -- Titre du type de batiment --
-        type_label = TYPE_LABELS.get(self.batiment.type, self.batiment.type.upper())
-        titre_surf = self.font_title.render("[ " + type_label + " ]", True, LAITON_CLAIR)
-        ecran.blit(titre_surf, (px + W // 2 - titre_surf.get_width() // 2, py + 14))
+        # ========= NIVEAU =========
+        level_y = py + 58
+        spacing = 34
 
-        # -- Indicateur de niveau --
-        level_x = px + W // 2 - (3 * 27) // 2
-        draw_level_pips(ecran, level_x, py + 38, self.batiment.niveau)
+        for i in range(3):
 
-        # -- Blocs de stats --
-        label, val_act, val_suiv, unite = self._get_stat_info()
-        bloc_y = py + 62
-        bloc_h = 70
+            cx = px + W//2 - spacing + i*spacing
 
-        # Stat actuelle
-        draw_stat_block(ecran, self.font_label, self.font_val,
-                        "ACTUEL", val_act, unite,
-                        px + 30, bloc_y, 140, bloc_h, CUIVRE_CLAIR)
+            color = LAITON if i < self.batiment.niveau else FUMEE
 
-        # Fleche
-        draw_arrow(ecran, px + W // 2, bloc_y + bloc_h // 2, LAITON)
+            pygame.draw.circle(
+                ecran,
+                color,
+                (cx, level_y),
+                10
+            )
 
-        # Stat suivante
-        next_accent = VERT_OK if val_suiv != "MAX" else FUMEE_CLAIR
-        draw_stat_block(ecran, self.font_label, self.font_val,
-                        "SUIVANT", val_suiv, unite if val_suiv != "MAX" else "",
-                        px + W - 170, bloc_y, 140, bloc_h, next_accent)
+            pygame.draw.circle(
+                ecran,
+                CUIVRE_SOMBRE,
+                (cx, level_y),
+                10,
+                2
+            )
 
-        # -- Sous-label ressource --
-        label_surf = self.font_label.render(label.upper(), True, FUMEE_CLAIR)
-        ecran.blit(label_surf, (px + W // 2 - label_surf.get_width() // 2, bloc_y + bloc_h + 6))
+        # ========= CARD STATS =========
+        label,val_act,val_suiv,unite = self._get_stat_info()
 
-        # -- Cout / statut upgrade --
+        card = pygame.Rect(
+            px+28,
+            py+90,
+            W-56,
+            95
+        )
+
+        draw_rounded_rect(
+            ecran,
+            (40,32,24),
+            card,
+            12
+        )
+
+        pygame.draw.line(
+            ecran,
+            CUIVRE,
+            (card.centerx, card.y+15),
+            (card.centerx, card.bottom-15),
+            2
+        )
+
+        # ACTUEL
+        actuel = self.font_label.render(
+            "ACTUEL",
+            True,
+            FUMEE_CLAIR
+        )
+
+        ecran.blit(
+            actuel,
+            (
+                card.x+70,
+                card.y+10
+            )
+        )
+
+        valeur = self.font_val.render(
+            f"{val_act}{unite}",
+            True,
+            CUIVRE_CLAIR
+        )
+
+        ecran.blit(
+            valeur,
+            (
+                card.x+40,
+                card.y+42
+            )
+        )
+
+        # SUIVANT
+        suivant = self.font_label.render(
+            "SUIVANT",
+            True,
+            FUMEE_CLAIR
+        )
+
+        ecran.blit(
+            suivant,
+            (
+                card.centerx+55,
+                card.y+10
+            )
+        )
+
+        next_color = VERT_OK if val_suiv != "MAX" else FUMEE_CLAIR
+
+        valeur2 = self.font_val.render(
+            f"{val_suiv}{unite if val_suiv!='MAX' else ''}",
+            True,
+            next_color
+        )
+
+        ecran.blit(
+            valeur2,
+            (
+                card.centerx+25,
+                card.y+42
+            )
+        )
+
+        # ========= LABEL RESOURCE =========
+        txt = self.font_label.render(
+            label.upper(),
+            True,
+            LAITON
+        )
+
+        ecran.blit(
+            txt,
+            (
+                px+W//2-txt.get_width()//2,
+                card.bottom+10
+            )
+        )
+
+        # ========= COUT =========
         cost = self.batiment.get_upgrade_cost()
-        max_debloque = Batiment.DATA[self.batiment.type].get("max_level", 1)
+
+        max_debloque = Batiment.DATA[
+            self.batiment.type
+        ].get("max_level",1)
+
         if not self.batiment.construction_finie():
-            cout_str = "EN CONSTRUCTION..."
-            cout_color = FUMEE_CLAIR
-        elif self.batiment.est_max_level() or self.batiment.niveau >= 3:
-            cout_str = "-- NIVEAU MAXIMUM --"
-            cout_color = FUMEE_CLAIR
+
+            cout = "EN CONSTRUCTION"
+            color = FUMEE_CLAIR
+
+        elif self.batiment.est_max_level():
+
+            cout = "NIVEAU MAXIMUM"
+            color = FUMEE_CLAIR
+
         elif self.batiment.niveau >= max_debloque:
-            cout_str = "AMELIORATION NON DEBLOQUEE"
-            cout_color = ROUGE_DANGER
+
+            cout = "NON DEBLOQUE"
+            color = ROUGE_DANGER
+
         else:
-            cout_str = "COUT : " + str(cost) + " OR"
-            cout_color = OR if self.player.money >= cost else ROUGE_DANGER
 
-        cout_surf = self.font_cost.render(cout_str, True, cout_color)
-        ecran.blit(cout_surf, (px + W // 2 - cout_surf.get_width() // 2, bloc_y + bloc_h + 24))
+            cout = f"{cost} OR"
 
-        # -- Boutons --
-        self.btn_ameliorer.afficher(ecran, self.font_btn)
-        self.btn_sell.afficher(ecran, self.font_btn)
-        self.btn_fermer.afficher(ecran, self.font_btn)
+            color = (
+                OR
+                if self.player.money >= cost
+                else ROUGE_DANGER
+            )
+
+        surf = self.font_cost.render(
+            cout,
+            True,
+            color
+        )
+
+        ecran.blit(
+            surf,
+            (
+                px+W//2-surf.get_width()//2,
+                py+205
+            )
+        )
+
+        # ========= BOUTONS =========
+        self.btn_ameliorer.afficher(
+            ecran,
+            self.font_btn
+        )
+
+        self.btn_sell.afficher(
+            ecran,
+            self.font_btn
+        )
+
+        self.btn_fermer.afficher(
+            ecran,
+            self.font_btn
+        )
 
     # --- Evenements ---
     def handle_event(self, event):
