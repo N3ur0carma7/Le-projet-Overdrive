@@ -218,7 +218,10 @@ def disconnect (client):
     for client in clients_indice:
         clients_indice[client] -= 1 if clients_indice[client] > i else 0
     for client in clients_indice:
-        send_int_server(clients_indice[client], client)
+        try:
+            send_int_server(clients_indice[client], client)
+        except:
+            pass
     for sujet in clients.keys():
         payload = [p.to_dict() for p in players]
         payload[0]["pos"] = list(payload[0]["pos"])
@@ -287,7 +290,9 @@ stop_event = threading.Event()
 
 def stop_server():
     global STOPSEARCH
-    stop_event.set()   # signale à tous les threads de s'arrêter
+    stop_event.set() # signale à tous les threads de s'arrêter
+    for client in clients:
+        clients[client].close()
     SERVER.close()     # débloque server.accept()
     for client in clients.values():
         client.close()

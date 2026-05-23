@@ -530,9 +530,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
-
-        player.update(TAILLE_CASE, dt)
-        player.update_anim(dt)
+        for player in players:
+            player.update(TAILLE_CASE, dt)
+            player.update_anim(dt)
 
 
         # mort

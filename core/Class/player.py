@@ -174,11 +174,7 @@ class Player:
                 self.anim_frame = 0
                 self.anim_timer = 0.0
             return
-        if players is not None and client_module.CLIENT is not None:
-            try:
-                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
-            except :
-                pass
+
 
         dx /= distance
         dy /= distance
