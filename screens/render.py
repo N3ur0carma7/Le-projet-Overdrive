@@ -126,6 +126,11 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         ecran.blit(barre_surf, (0, dims[1] - hauteur_barre + slide_offset))
 
     # 2. Dessin des icônes de construction dans la barre
+    try:
+        font_shortcut = pygame.font.Font("assets/fonts/Minecraft.ttf", 12)
+    except Exception:
+        font_shortcut = pygame.font.SysFont("arial", 12, bold=True)
+
     for i, rect in enumerate(rects_icones):
         couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
         pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
@@ -137,6 +142,15 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
         icone = pygame.transform.smoothscale(img_base, (taille_icone, taille_icone))
         ecran.blit(icone, rect)
+
+        # Afficher la touche raccourci [1] à [9] dans le coin bas-gauche de l'icône
+        if i < 9:
+            key_label = str(i + 1)
+            key_surf = font_shortcut.render(key_label, True, (255, 255, 255))
+            key_bg = pygame.Surface((key_surf.get_width() + 4, key_surf.get_height() + 2), pygame.SRCALPHA)
+            key_bg.fill((0, 0, 0, 160))
+            ecran.blit(key_bg, (rect.left + 2, rect.bottom - key_bg.get_height() - 2))
+            ecran.blit(key_surf, (rect.left + 4, rect.bottom - key_surf.get_height() - 3))
 
     # 3. Préparation de la police pour les ressources
     try:

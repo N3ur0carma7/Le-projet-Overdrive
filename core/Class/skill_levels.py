@@ -3,11 +3,11 @@
 # skill_tree.py writes here; batiments.py reads here.
 
 MAX_LEVELS = {
-    "residentiel": 3,
-    "generateur":  3,
-    "mine":        3,
-    "farm":       3,
-    "tourelle":     3,
+    "residentiel": 1,
+    "generateur":  1,
+    "mine":        1,
+    "farm":       1,
+    "tourelle":     1,
 }
 
 def get_max_level(building_type):

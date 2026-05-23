@@ -1,147 +1,169 @@
-import pygame
+﻿import pygame
 import sys
 from core.Class.batiments import Batiment
 from core.Class.buttons import BoutonImage
-import screens.jeu
 import core.sounds as sound
-import screens.jeu as jeu
 
-def afficher_menu_amelioration(ecran, batiment, clic_x, player):
-    en_menu = True
-    horloge = pygame.time.Clock()
-    police = pygame.font.Font("assets/fonts/Minecraft.ttf", 35)
 
-    largeur_ecran = ecran.get_width()
+class MenuAmelioration:
+    def __init__(self, ecran, batiment, clic_x, player):
+        self.ecran = ecran
+        self.batiment = batiment
+        self.player = player
+        self.clic_x = clic_x
+        self.menu_x = -50
+        self.menu_y = 270
+        self.offset_block = 40
+        self.police_stat = pygame.font.Font("assets/fonts/Minecraft.ttf", 25)
+        self.police_cout = pygame.font.Font("assets/fonts/Minecraft.ttf", 22)
+        self.image_fond = pygame.image.load("assets/buttons/upgrade_menu_interface.png").convert_alpha()
+        self.image_fond = pygame.transform.scale_by(self.image_fond, 1)
+        self._build_buttons()
 
-    #placement du menu
-    menu_x = -50
-    menu_y = 270
-    offset_block = 40 #tkt c'est pour la science
-
-    # chargement image menu
-    image_fond = pygame.image.load("assets/buttons/upgrade_menu_interface.png").convert_alpha()
-    image_fond = pygame.transform.scale_by(image_fond, 1 )
-
-    while en_menu:
-        btn_fermer = BoutonImage(
-            menu_x + 400 + offset_block, menu_y +32+ offset_block , 90, 90,
-            "assets/buttons/close_button.png", "assets/buttons/close_button.png",
+    def _build_buttons(self):
+        self.btn_fermer = BoutonImage(
+            self.menu_x + 400 + self.offset_block,
+            self.menu_y + 32 + self.offset_block,
+            90,
+            90,
+            "assets/buttons/close_button.png",
+            "assets/buttons/close_button.png",
             ""
         )
-        btn_sell = BoutonImage(
-            menu_x + 270+ offset_block, menu_y + 180+ offset_block, 180, 85,
-            "assets/buttons/sell_button.png", "assets/buttons/sell_button.png",
+        self.btn_sell = BoutonImage(
+            self.menu_x + 270 + self.offset_block,
+            self.menu_y + 180 + self.offset_block,
+            180,
+            85,
+            "assets/buttons/sell_button.png",
+            "assets/buttons/sell_button.png",
             ""
         )
-        upgrade_cost = batiment.get_upgrade_cost()
-        if batiment.est_max_level() or upgrade_cost is None or player.money <= upgrade_cost:
-            btn_ameliorer = BoutonImage(menu_x + 70+ offset_block, menu_y + 180+ offset_block, 200, 85,
-                                        "assets/buttons/upgrade_impossible_button.png",
-                                        "assets/buttons/upgrade_impossible_button.png",
-                                        f"")
-        else:
-            btn_ameliorer = BoutonImage(
-                menu_x + 70+ offset_block, menu_y + 180+ offset_block, 210, 85,
-                "assets/buttons/upgrade_available_button.png", "assets/buttons/upgrade_available_button.png",
-                f""
+        upgrade_cost = self.batiment.get_upgrade_cost()
+        if self.batiment.est_max_level() or upgrade_cost is None or self.player.money <= upgrade_cost:
+            self.btn_ameliorer = BoutonImage(
+                self.menu_x + 70 + self.offset_block,
+                self.menu_y + 180 + self.offset_block,
+                200,
+                85,
+                "assets/buttons/upgrade_impossible_button.png",
+                "assets/buttons/upgrade_impossible_button.png",
+                ""
             )
-        ecran.blit(image_fond, (menu_x, menu_y))
+        else:
+            self.btn_ameliorer = BoutonImage(
+                self.menu_x + 70 + self.offset_block,
+                self.menu_y + 180 + self.offset_block,
+                210,
+                85,
+                "assets/buttons/upgrade_available_button.png",
+                "assets/buttons/upgrade_available_button.png",
+                ""
+            )
 
-        # Textes d'information
-        police_stat = pygame.font.Font("assets/fonts/Minecraft.ttf", 25)
-
+    def _build_texts(self):
         val_suivante = "MAX"
         unite = "/min"
 
-        if batiment.type == Batiment.TYPE_RESIDENTIEL:
+        if self.batiment.type == Batiment.TYPE_RESIDENTIEL:
             info = "Population"
-            val_actuelle = batiment.get_population()
+            val_actuelle = self.batiment.get_population()
             unite = ""
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["population"]
-        elif batiment.type == Batiment.TYPE_MINE:
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["population"]
+        elif self.batiment.type == Batiment.TYPE_MINE:
             info = "Argent"
-            val_actuelle = batiment.get_production()
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["argent"]
-        elif batiment.type == Batiment.TYPE_FARM:
+            val_actuelle = self.batiment.get_production()
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["argent"]
+        elif self.batiment.type == Batiment.TYPE_FARM:
             info = "Nourriture"
-            val_actuelle = batiment.get_production()
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["nourriture"]
-        elif batiment.type == Batiment.TYPE_GENERATEUR:
+            val_actuelle = self.batiment.get_production()
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["nourriture"]
+        elif self.batiment.type == Batiment.TYPE_GENERATEUR:
             info = "Vapeur"
-            val_actuelle = batiment.get_production()
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["vapeur"]
-        elif batiment.type == Batiment.TYPE_TOURELLE:
+            val_actuelle = self.batiment.get_production()
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["vapeur"]
+        elif self.batiment.type == Batiment.TYPE_TOURELLE:
             info = "Degat"
-            val_actuelle = batiment.get_stats().get("degat", 30)
+            val_actuelle = self.batiment.get_stats().get("degat", 30)
             unite = ""
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1]["degat"]
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["degat"]
         else:
             info = "Production"
-            val_actuelle = batiment.get_production()
-            if not batiment.est_max_level():
-                val_suivante = Batiment.DATA[batiment.type][batiment.niveau + 1].get("production", "?")
+            val_actuelle = self.batiment.get_production()
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1].get("production", "?")
 
-        stat_info = police_stat.render(info, True, (0, 0, 0))
-        number = police_stat.render(f"{val_actuelle}{unite}", True, (0, 0, 0))
+        stat_info = self.police_stat.render(info, True, (0, 0, 0))
+        number = self.police_stat.render(f"{val_actuelle}{unite}", True, (0, 0, 0))
 
-        couleur_next = (0, 0, 0) if not batiment.est_max_level() else (0, 0, 0)
-        new_number = police_stat.render(f"{val_suivante}{unite}", True, couleur_next)
+        couleur_next = (0, 0, 0)
+        new_number = self.police_stat.render(f"{val_suivante}{unite}", True, couleur_next)
 
-        # cout upgrade
-        police_cout = pygame.font.Font("assets/fonts/Minecraft.ttf", 22)
-        menu_centre_x = menu_x + 612 // 2
-        if batiment.est_max_level():
-            texte_cout = police_cout.render("Niveau MAX", True, (150, 40, 40))
+        if self.batiment.est_max_level():
+            texte_cout = self.police_cout.render("Niveau MAX", True, (150, 40, 40))
         else:
-            cout_val = batiment.get_upgrade_cost()
-            texte_cout = police_cout.render(f"Upgrade : {cout_val} gold", True, (180, 130, 0))
-        ecran.blit(texte_cout, (menu_centre_x - texte_cout.get_width() // 2, menu_y + offset_block + 72))
+            cout_val = self.batiment.get_upgrade_cost()
+            texte_cout = self.police_cout.render(f"Upgrade : {cout_val} gold", True, (180, 130, 0))
 
-    #affichage c'est TRES TRES sale mais vs inquietez pas c'est temporaire
-        ecran.blit(stat_info, (menu_x + 60+ offset_block+ offset_block, menu_y + 70+ offset_block+ offset_block))
-        ecran.blit(number, (menu_x + 75+ offset_block+ offset_block, menu_y + 100+ offset_block+ offset_block))
-    #valeur du niveau d'après
-        ecran.blit(stat_info, (menu_x + 265+ offset_block+ offset_block, menu_y + 70+ offset_block+ offset_block))
-        ecran.blit(new_number, (menu_x + 280+ offset_block+ offset_block, menu_y + 100+ offset_block+ offset_block))
+        return stat_info, number, new_number, texte_cout
 
-        # Clics
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+    def handle_event(self, event):
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
-                from screens import game_logic
-                game_logic.toggle_fullscreen()
-                continue
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+            from screens import game_logic
+            game_logic.toggle_fullscreen()
+            return None
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if btn_fermer.clic():
-                    en_menu = False
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            return "close"
 
-                if btn_ameliorer and btn_ameliorer.clic():
-                    upgrade_cost = batiment.get_upgrade_cost()
-                    if upgrade_cost is not None and player.money >= upgrade_cost:
-                        sound.son_upgrade.play()
-                        player.money -= upgrade_cost
-                        batiment.upgrade()
-                        en_menu = False
-                        return "upgrade"
-                    else:
-                        en_menu = False
-                if btn_sell.clic():
-                    return "supprimer"
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._build_buttons()
+            if self.btn_fermer.clic():
+                return "close"
 
-        # Affichage boutons
-        btn_fermer.afficher(ecran)
-        btn_sell.afficher(ecran)
-        if btn_ameliorer:
-            btn_ameliorer.afficher(ecran)
+            if self.btn_ameliorer and self.btn_ameliorer.clic():
+                upgrade_cost = self.batiment.get_upgrade_cost()
+                if upgrade_cost is not None and self.player.money >= upgrade_cost:
+                    sound.son_upgrade.play()
+                    self.player.money -= upgrade_cost
+                    self.batiment.upgrade()
+                    return "upgrade"
+                return "close"
 
-        pygame.display.flip()
-        horloge.tick(60)
+            if self.btn_sell.clic():
+                return "supprimer"
+
+        return None
+
+    def draw(self, ecran):
+        self._build_buttons()
+        stat_info, number, new_number, texte_cout = self._build_texts()
+
+        ecran.blit(self.image_fond, (self.menu_x, self.menu_y))
+
+        menu_centre_x = self.menu_x + 612 // 2
+        ecran.blit(texte_cout, (menu_centre_x - texte_cout.get_width() // 2,
+                                 self.menu_y + self.offset_block + 72))
+
+        ecran.blit(stat_info, (self.menu_x + 60 + self.offset_block + self.offset_block,
+                                self.menu_y + 70 + self.offset_block + self.offset_block))
+        ecran.blit(number, (self.menu_x + 75 + self.offset_block + self.offset_block,
+                             self.menu_y + 100 + self.offset_block + self.offset_block))
+        ecran.blit(stat_info, (self.menu_x + 265 + self.offset_block + self.offset_block,
+                                self.menu_y + 70 + self.offset_block + self.offset_block))
+        ecran.blit(new_number, (self.menu_x + 280 + self.offset_block + self.offset_block,
+                                 self.menu_y + 100 + self.offset_block + self.offset_block))
+
+        self.btn_fermer.afficher(ecran)
+        self.btn_sell.afficher(ecran)
+        if self.btn_ameliorer:
+            self.btn_ameliorer.afficher(ecran)

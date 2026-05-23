@@ -26,7 +26,7 @@ from screens.game_logic import synchroniser_npcs, calculer_production
 from screens.render import dessiner_monde, dessiner_hud
 from core.pve import RaidManager
 
-from screens.GUI.menu_amelioration import afficher_menu_amelioration
+from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
@@ -204,8 +204,47 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     batiment_selectionne = None
     unlocked_skills = set()
+    menu_amelioration = None
 
     terminal = Terminal()
+
+    # Fonction utilitaire : tenter de placer un bâtiment aux coordonnées monde (mx, my)
+    def _essayer_placer_batiment(sx, sy, mx, my):
+        if batiment_selectionne is None:
+            return
+        case_x = int(mx // TAILLE_CASE)
+        case_y = int(my // TAILLE_CASE)
+        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+        nouveau = Batiment(type_batiment, case_x, case_y)
+        grid_x = case_x - (nouveau.largeur // 2)
+        grid_y = case_y - (nouveau.hauteur // 2)
+        nouveau.x = grid_x
+        nouveau.y = grid_y
+        cout = Batiment.DATA[type_batiment][1]["cout"]
+        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+        nb_production = sum(
+            1 for b in batiments
+            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+        )
+        production_pleine = (
+            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            and nb_production >= nb_villageois
+        )
+        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+        elif production_pleine:
+            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
+        elif not collision(batiments, nouveau) and players[indice].money >= cout:
+            players[indice].money -= cout
+            batiments.append(nouveau)
+            sound.son_placement.play()
+            synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+            if client_module.CLIENT is not None and online:
+                send_liste_batiments_client(batiments, client_module.CLIENT)
+        elif collision(batiments, nouveau):
+            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+        else:
+            float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
     # PVE
     raid_manager = RaidManager(taille_case=TAILLE_CASE)
@@ -232,6 +271,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     barre_ouverte = False
     SLIDE_SPEED = 400
     slide_offset = HAUTEUR_BARRE
+    mouse_held_placing = False  # True quand le clic gauche est maintenu en mode placement
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
 
@@ -324,12 +364,54 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 terminal.toggle()
                 continue
 
+            if terminal.visible:
+                if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
+                    continue
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    terminal.toggle()
+                    continue
+                continue
+
+            if menu_amelioration:
+                result = menu_amelioration.handle_event(event)
+                if result == "close":
+                    menu_amelioration = None
+                    continue
+                if result == "supprimer":
+                    batiments.remove(menu_amelioration.batiment)
+                    cashback = 0
+                    for k in range(menu_amelioration.batiment.niveau):
+                        cashback += Batiment.DATA[menu_amelioration.batiment.type][1+k]["cout"]
+                    players[indice].money += cashback
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
+                if result == "upgrade":
+                    menu_amelioration.batiment.upgrade()
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
+                continue
+
             # assignation manuelle des villageois
             if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
                 afficher_menu_travail(ecran, batiments, npcs, players[indice])
                 continue
 
-            if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
+            # Sélection rapide de bâtiment avec les touches 1-9
+            if event.type == pygame.KEYDOWN and pygame.K_1 <= event.key <= pygame.K_9:
+                index_touche = event.key - pygame.K_1  # 0-based
+                if index_touche < len(TYPES_BATIMENTS):
+                    if batiment_selectionne == index_touche:
+                        batiment_selectionne = None  # désélectionner si déjà actif
+                        mouse_held_placing = False
+                    else:
+                        batiment_selectionne = index_touche
+                        barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -360,6 +442,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 camera_x = souris_monde_x - sx / zoom
                 camera_y = souris_monde_y - sy / zoom
 
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                mouse_held_placing = False
+
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 if batiment_selectionne is not None:
@@ -379,6 +464,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 # Clic gauche
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if batiment_selectionne is not None:
+                    mouse_held_placing = True  # démarrer le placement continu
+
                 sx, sy = pygame.mouse.get_pos()
 
                 if btn_batiments_rect.collidepoint(sx, sy):
@@ -456,46 +544,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     my = camera_y + sy / zoom
 
                     if batiment_selectionne is not None:
-                        case_x = int(mx // TAILLE_CASE)
-                        case_y = int(my // TAILLE_CASE)
-
-                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
-                        nouveau = Batiment(type_batiment, case_x, case_y)
-                        grid_x = case_x - (nouveau.largeur // 2)
-                        grid_y = case_y - (nouveau.hauteur // 2)
-                        nouveau.x = grid_x
-                        nouveau.y = grid_y
-
-                        cout = Batiment.DATA[type_batiment][1]["cout"]
-
-                        # Limite : nb batiments de production <= nb total de villageois
-                        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
-                        nb_production = sum(
-                            1 for b in batiments
-                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
-                        )
-                        production_pleine = (
-                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
-                                and nb_production >= nb_villageois
-                        )
-
-                        # Portée de pose augmentée
-                        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
-                            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
-                        elif production_pleine:
-                            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
-                        elif not collision(batiments, nouveau) and players[indice].money >= cout:
-                            players[indice].money -= cout
-                            batiments.append(nouveau)
-                            sound.son_placement.play()
-                            synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
-                            if client_module.CLIENT is not None and online:
-                                print(f"envoi en cours {batiments}")
-                                send_liste_batiments_client(batiments, client_module.CLIENT)
-                        elif collision(batiments, nouveau):
-                            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
-                        else:
-                            float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
+                        _essayer_placer_batiment(sx, sy, mx, my)
 
                     else:
                         for B in batiments:
@@ -511,28 +560,22 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
                                     break
-                                resultat = afficher_menu_amelioration(ecran, B, sx, players[indice])
-
-                                if resultat == "supprimer":
-                                    batiments.remove(B)
-                                    cashback = 0
-                                    for k in range(B.niveau):
-                                        cashback += Batiment.DATA[B.type][1+k]["cout"]
-                                    players[indice].money += cashback
-                                    if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
-                                elif resultat == "upgrade":
-                                    if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
-
-                                synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
-
+                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
         player.update(TAILLE_CASE, dt)
         player.update_anim(dt)
+
+        # Placement continu quand le clic est maintenu (drag)
+        if mouse_held_placing and batiment_selectionne is not None:
+            sx, sy = pygame.mouse.get_pos()
+            limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
+            if sy < limite_ui:
+                mx = camera_x + sx / zoom
+                my = camera_y + sy / zoom
+                _essayer_placer_batiment(sx, sy, mx, my)
 
 
         # mort
@@ -628,6 +671,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
+        if menu_amelioration:
+            menu_amelioration.draw(ecran)
 
         pygame.display.flip()
 
