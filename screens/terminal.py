@@ -203,7 +203,8 @@ class Terminal:
 
     HISTORIQUE_MAX = 200
 
-    def __init__(self):
+    def __init__(self, dev_mode: bool = False):
+        self.dev_mode        = dev_mode
         self.visible         = False
         self.input_text      = ""
         self.historique      = ["Bienvenue dans le terminal Overdrive !",
@@ -228,6 +229,8 @@ class Terminal:
         return self._font
 
     def toggle(self):
+        if not self.dev_mode:
+            return  # Terminal non accessible hors du mode dev
         self.visible = not self.visible
         if self.visible:
             self.input_text    = ""
@@ -244,6 +247,11 @@ class Terminal:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self._executer(player, batiments, extra_ctx or {})
+            elif event.key == pygame.K_ESCAPE:
+                self.visible = False
+                self._ac_prefix = None
+                self._ac_matches = []
+                self.history_index = -1
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
                 self.history_index = -1

@@ -9,7 +9,7 @@ from multiplayer.client import send_server, DISCONNECT_MESSAGE, CLIENT, disconne
 from core.Class.buttons import BoutonImage
 from core.Class.player import Player
 from core.saves import save_game
-from screens.jeu import players, indice
+from screens.game_logic import players, indice
 
 save = pygame.image.load("assets/save_done.png")
 
@@ -29,7 +29,7 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
 
     import core.sounds as sounds
 
-    music_on = pygame.mixer.music.get_busy()
+    music_on = sounds.is_music_enabled()
 
     BTN_SPACING = 100
     BTN_H = 70
@@ -87,8 +87,9 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
                     return "jeu_save_done"
                 if musique_btn.clic():
                     if music_on:
-                        pygame.mixer.music.stop()
+                        sounds.set_music_enabled(False)
                     else:
+                        sounds.set_music_enabled(True)
                         sounds.play_ambient(0)
                     music_on = not music_on
                     music_btn_changed = True
