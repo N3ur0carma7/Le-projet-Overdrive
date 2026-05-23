@@ -83,7 +83,7 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
     cache[key] = scaled
     return scaled
 
-def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None):
+def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None, construction_gear=None, ressources_sol=None, images_ressources_sol=None, active_player=None):
     from screens.utils import collision, souris_vers_case, joueur_a_portee
     from core.Class.batiments import Batiment
 
@@ -108,7 +108,6 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
 
             surface_monde.blit(img_scaled, (rx, ry))
 
-    player = players[gl.indice]
     for B in batiments:
         footprint_w_px = B.largeur * TAILLE_CASE
         footprint_h_px = B.hauteur * TAILLE_CASE
@@ -197,15 +196,28 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
 
         if collision(batiments, test_batiment) or collision_ressource:
             image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
-        elif not joueur_a_portee((grid_x, grid_y), player, TAILLE_CASE, distance_max=10, width=test_batiment.largeur, height=test_batiment.hauteur):
-            image_fantome.fill((255, 140, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
+        else:
+            player_for_range = active_player
+            if player_for_range is None:
+                if isinstance(players, (list, tuple)) and players:
+                    player_for_range = players[0]
+                else:
+                    player_for_range = players
+            if player_for_range is not None and not joueur_a_portee((grid_x, grid_y), player_for_range, TAILLE_CASE, distance_max=10, width=test_batiment.largeur, height=test_batiment.hauteur):
+                image_fantome.fill((255, 140, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
 
         x = grid_x * TAILLE_CASE - camera_x + (footprint_w_px - image.get_width()) / 2
         y = grid_y * TAILLE_CASE - camera_y + (footprint_h_px - image.get_height()) / 2
 
         surface_monde.blit(image_fantome, (x, y))
-    for player in players:
-        player.draw_player(surface_monde, camera_x, camera_y)
+    actual_players = players
+    if actual_players is None:
+        actual_players = []
+    elif not isinstance(actual_players, (list, tuple)):
+        actual_players = [actual_players]
+
+    for player_obj in actual_players:
+        player_obj.draw_player(surface_monde, camera_x, camera_y)
 
 
     for npc in npcs:

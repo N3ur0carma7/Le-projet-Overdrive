@@ -725,7 +725,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE,
-                       batiment_selectionne, TYPES_BATIMENTS, player, npcs, image_pnj, dt, zoom,
+                       batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom,
                        raid_manager=raid_manager,
                        construction_gear=construction_gear,
                        ressources_sol=ressources_sol,
@@ -733,7 +733,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                            "herbe": image_herbe_resource,
                            "coffre": image_coffre_resource,
                            "bois": image_bois_resource
-                       })
+                       },
+                       active_player=player)
         cloud_manager.draw(surface_monde, camera_x, camera_y)
 
         if surface_monde_size == (dims[0], dims[1]):
