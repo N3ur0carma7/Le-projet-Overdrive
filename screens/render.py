@@ -29,11 +29,15 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
     from core.Class.batiments import Batiment
 
     type_tourelle = getattr(Batiment, "TYPE_TOURELLE", "tourelle")
-
     direction = getattr(bat_obj, "direction", "E") if type_batiment == type_tourelle else "E"
+
     key = (type_batiment, niveau, footprint_w_px, footprint_h_px, direction)
     if key in cache:
         return cache[key]
+
+    facteur = 1.0
+    if type_batiment in Batiment.DATA:
+        facteur = Batiment.DATA[type_batiment].get("scale_visuel", 1.0)
 
     if type_batiment == type_tourelle:
         try:
@@ -41,13 +45,15 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
         except (KeyError, TypeError):
             img_dict = images_batiments[type_batiment][niveau]
             base = img_dict if not isinstance(img_dict, dict) else (img_dict.get("S") or list(img_dict.values())[0])
-
-        footprint_w_px = int(footprint_w_px * 1.5)
-        footprint_h_px = int(footprint_h_px * 1.5)
     else:
         base = images_batiments[type_batiment][niveau]
 
-    scaled = _scale_contain(base, footprint_w_px, footprint_h_px)
+    largeur_max_visuelle = int(footprint_w_px * facteur)
+    hauteur_max_visuelle = int(footprint_h_px * facteur)
+
+
+    scaled = _scale_contain(base, largeur_max_visuelle, largeur_max_visuelle)
+
     cache[key] = scaled
     return scaled
 
@@ -55,7 +61,6 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
     from screens.utils import collision, souris_vers_case, joueur_a_portee
     from core.Class.batiments import Batiment
 
-    # Cache par frame pour éviter de rescaler en boucle
     scaled_cache = {}
     player = players[gl.indice]
     for B in batiments:
@@ -109,32 +114,86 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
     if raid_manager is not None:
         raid_manager.draw(surface_monde, camera_x, camera_y)
 
-def dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS, TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, save_done_img, save_done_timer, barre_ouverte=True, slide_offset=0, btn_batiments_rect=None, skill_btn_rect=None, raid_manager=None):
-    if slide_offset < HAUTEUR_BARRE:
-        barre_surf = pygame.Surface((dims[0], HAUTEUR_BARRE), pygame.SRCALPHA)
-        barre_surf.fill((30, 30, 30, 210))
-        ecran.blit(barre_surf, (0, dims[1] - HAUTEUR_BARRE + slide_offset))
 
+def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
+                 taille_icone, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
+                 save_done_img, save_done_timer, barre_ouverte=True, slide_offset=0, btn_batiments_rect=None,
+                 skill_btn_rect=None, raid_manager=None, batiments_list=None):
+    # 1. Dessin de la barre du bas
+    if slide_offset < hauteur_barre:
+        barre_surf = pygame.Surface((dims[0], hauteur_barre), pygame.SRCALPHA)
+        barre_surf.fill((30, 30, 30, 210))
+        ecran.blit(barre_surf, (0, dims[1] - hauteur_barre + slide_offset))
+
+    # 2. Dessin des icônes de construction dans la barre
     for i, rect in enumerate(rects_icones):
         couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
         pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
 
         type_actuel = TYPES_BATIMENTS[i]
         img_base = images_batiments[type_actuel][1]
-        # Si c'est un dictionnaire (comme la tourelle avec ses directions), on prend le Sud ("S")
         if isinstance(img_base, dict):
             img_base = img_base.get("S") or list(img_base.values())[0]
 
-        icone = pygame.transform.smoothscale(img_base, (TAILLE_ICONE, TAILLE_ICONE))
+        icone = pygame.transform.smoothscale(img_base, (taille_icone, taille_icone))
         ecran.blit(icone, rect)
 
-    # bouton toggle barre bâtiments
+    # 3. Préparation de la police pour les ressources
+    try:
+        font_ressources = pygame.font.Font("assets/fonts/Minecraft.ttf", 22)
+    except Exception:
+        font_ressources = pygame.font.SysFont("arial", 22, bold=True)
+
+    marge_hud = 15
+
+    # 4. Récupération de la population via la liste synchronisée
+    from core.Class.batiments import Batiment
+    if batiments_list is not None:
+        total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+    else:
+        total_villageois = 0
+
+    # Vos 4 ressources alignées
+    ressources_hud = [
+        (str(total_villageois), (180, 220, 255), hud_pop_img, 32),  # Villageois
+        (str(int(player.money)), (255, 235, 80), hud_or_img, 64),  # Or
+        (str(int(player.food)), (255, 235, 80), hud_food_img, 64),  # Nourriture
+        (str(int(player.vapeur)), (255, 235, 80), hud_vapeur_img, 64)  # Vapeur
+    ]
+
+    marge_inter_icones = 140
+
+    for i, (valeur, couleur, img, taille_icone_custom) in enumerate(ressources_hud):
+        icone_calibree = pygame.transform.smoothscale(img, (taille_icone_custom, taille_icone_custom))
+        iw, ih = icone_calibree.get_size()
+
+        # Positionnement X de base depuis la droite
+        hud_x = dims[0] - 160 - (len(ressources_hud) - 1 - i) * marge_inter_icones
+
+        if i == 0:
+            hud_x += 35
+
+        # Recentrage vertical automatique
+        y_ajuste = marge_hud + (32 - taille_icone_custom) // 2
+
+        # Dessiner l'icône
+        ecran.blit(icone_calibree, (hud_x, y_ajuste))
+
+        # Dessiner le nombre juste à côté
+        texte = font_ressources.render(valeur, True, couleur)
+        tx = hud_x + iw + 6
+
+        text_height = texte.get_height()
+        ty = marge_hud + (32 - text_height) // 2
+
+        ecran.blit(texte, (tx, ty))
+
+    # 6. Bouton toggle barre bâtiments (BUILD / CLOSE)
     BTN_SIZE = 80
     BTN_MARGE = 12
     btn_x = dims[0] - BTN_SIZE - BTN_MARGE
     btn_y = dims[1] - BTN_SIZE - BTN_MARGE
 
-    # Fond du bouton : vert = ouvrir, orange = fermer
     btn_couleur = (160, 90, 30) if barre_ouverte else (40, 140, 40)
     pygame.draw.rect(ecran, btn_couleur, pygame.Rect(btn_x, btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
     pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(btn_x, btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
@@ -149,12 +208,14 @@ def dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne,
     if btn_batiments_rect is not None:
         btn_batiments_rect.update(btn_x, btn_y, BTN_SIZE, BTN_SIZE)
 
-    # bouton skill tree
+    # 7. Bouton skill tree (SKILLS)
     skill_btn_x = btn_x - BTN_SIZE - BTN_MARGE
     skill_btn_y = btn_y
-    skill_btn_couleur = (100, 100, 200)  # Bleu pour skills
-    pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
-    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
+    skill_btn_couleur = (100, 100, 200)
+    pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE),
+                     border_radius=10)
+    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3,
+                     border_radius=10)
 
     skill_label = "SKILLS"
     skill_lbl_surf = btn_font.render(skill_label, True, (255, 255, 255))
@@ -165,56 +226,30 @@ def dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne,
     if skill_btn_rect is not None:
         skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
 
-    # hud ressources
-    hud_font = font_argent
-    marge_hud = 2
-    hud_y = marge_hud
-
-    ressources_hud = [
-        (str(player.money),  (255, 235,  80), hud_or_img),
-        (str(player.food),   ( 255, 235,  80), hud_food_img),
-        (str(player.vapeur), (255, 235, 80), hud_vapeur_img),
-    ]
-
-    for i, (valeur, couleur, img) in enumerate(ressources_hud):
-        iw, ih = img.get_size()
-        hud_x = dims[0] - marge_hud - (len(ressources_hud) - i) * (iw + marge_hud)
-        ecran.blit(img, (hud_x, hud_y))
-        texte = hud_font.render(valeur, True, couleur)
-        tx = hud_x + (iw - texte.get_width()) // 2 - 13
-        ty = hud_y + (ih - texte.get_height()) // 2 + 2
-        ecran.blit(texte, (tx, ty))
-
+    # 8. Affichage de la notification de sauvegarde
     if save_done_timer > 0:
-        img_w, img_h = save_done_img.get_size()
-        x = 10
-        y = 10
-        ecran.blit(save_done_img, (x, y))
+        ecran.blit(save_done_img, (10, 10))
 
-    # barre de vie du joueur
+    # 9. Barre de vie du joueur
     hp_bar_w = 200
     hp_bar_h = 14
     hp_bar_x = 12
     hp_bar_y = 20
     hp_ratio = max(0.0, player.hp / player.hp_max)
-    # fond
+
     pygame.draw.rect(ecran, (60, 10, 10), (hp_bar_x, hp_bar_y, hp_bar_w, hp_bar_h), border_radius=4)
-    # vie
     if hp_ratio > 0:
         bar_color = (200, 0, 0) if hp_ratio > 0.5 else (220, 180, 30) if hp_ratio > 0.25 else (220, 50, 50)
         pygame.draw.rect(ecran, bar_color, (hp_bar_x, hp_bar_y, int(hp_bar_w * hp_ratio), hp_bar_h), border_radius=4)
-    # contour
     pygame.draw.rect(ecran, (180, 180, 180), (hp_bar_x, hp_bar_y, hp_bar_w, hp_bar_h), 1, border_radius=4)
-    hp_font = font_argent
-    hp_txt = hp_font.render(f"HP {int(player.hp)}/{player.hp_max}", True, (255, 255, 255))
+    hp_txt = font_argent.render(f"HP {int(player.hp)}/{player.hp_max}", True, (255, 255, 255))
     ecran.blit(hp_txt, (hp_bar_x + 4, hp_bar_y - hp_txt.get_height() - 2))
 
-    # indicateur raid
+    # 10. Indicateur de raid
     if raid_manager is not None and raid_manager._raid_active:
-        raid_font = font_argent
         nb_monstres = len(raid_manager.monsters)
         wave_txt = f"RAID  Vague {raid_manager._wave_index}/{raid_manager.WAVES_PER_RAID}  Monstres: {nb_monstres}"
-        raid_surf = raid_font.render(wave_txt, True, (255, 80, 80))
+        raid_surf = font_argent.render(wave_txt, True, (255, 80, 80))
         rx = dims[0] // 2 - raid_surf.get_width() // 2
         ry = 6
         bg = pygame.Surface((raid_surf.get_width() + 16, raid_surf.get_height() + 8), pygame.SRCALPHA)

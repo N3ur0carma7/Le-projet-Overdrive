@@ -27,6 +27,7 @@ from screens.render import dessiner_monde, dessiner_hud
 from core.pve import RaidManager
 
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
+from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
 
@@ -43,6 +44,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     players = []
     indice = 0
     herbe = None
+
+    herbe = pygame.image.load("assets/environment/ground.png").convert()
     TAILLE_CASE = 40
     def _pos_centre_case(cx: int, cy: int):
         return ((cx + 0.5) * TAILLE_CASE, (cy + 0.5) * TAILLE_CASE)
@@ -87,6 +90,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 "SE": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_droite_bas.png").convert_alpha(),
                 "SW": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_gauche_bas.png").convert_alpha(),
             }
+        },
+        Batiment.TYPE_TILE: {
+            1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
         }
     }
 
@@ -101,6 +107,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_MINE,
         Batiment.TYPE_FARM,
         Batiment.TYPE_TOURELLE,
+        Batiment.TYPE_TILE,
     ]
 
     TAILLE_ICONE = 64
@@ -118,9 +125,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
-    hud_or_img     = pygame.image.load("assets/or.png").convert_alpha()
-    hud_food_img   = pygame.image.load("assets/food.png").convert_alpha()
-    hud_vapeur_img = pygame.image.load("assets/vapeur.png").convert_alpha()
+    hud_or_img     = pygame.image.load("assets/icones/argent_icone.png").convert_alpha()
+    hud_food_img   = pygame.image.load("assets/icones/nourriture_icone.png").convert_alpha()
+    hud_vapeur_img = pygame.image.load("assets/icones/vapeur_icone.png").convert_alpha()
+    hud_pop_img = pygame.image.load("assets/pnj.png").convert_alpha()
     save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
 
     cloud_manager = CloudManager(
@@ -316,6 +324,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 terminal.toggle()
                 continue
 
+            # assignation manuelle des villageois
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+                afficher_menu_travail(ecran, batiments, npcs, players[indice])
+                continue
+
             if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
                 continue
 
@@ -457,8 +470,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                         # Limite : nb batiments de production <= nb total de villageois
                         nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
-                        nb_production = sum(1 for b in batiments if b.type != Batiment.TYPE_RESIDENTIEL)
-                        production_pleine = (type_batiment != Batiment.TYPE_RESIDENTIEL and nb_production >= nb_villageois)
+                        nb_production = sum(
+                            1 for b in batiments
+                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                        )
+                        production_pleine = (
+                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                                and nb_production >= nb_villageois
+                        )
 
                         # Portée de pose augmentée
                         if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
@@ -601,8 +620,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         float_msg.update(dt)
 
-        dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS, TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect, skill_btn_rect, raid_manager=raid_manager)
-
+        # === MODIFIEZ CET APPEL TOUT À LA FIN DE .\screens\jeu.py ===
+        dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
+                     TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
+                     save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect,
+                     skill_btn_rect, raid_manager=raid_manager, batiments_list=batiments)
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
