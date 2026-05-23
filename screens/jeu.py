@@ -256,7 +256,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         nouveau.x = grid_x
         nouveau.y = grid_y
         cout = Batiment.DATA[type_batiment][1]["cout"]
-        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+        # Ne compter que les maisons construites (pas celles encore en construction)
+        nb_villageois = sum(
+            b.get_population()
+            for b in batiments
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
         nb_production = sum(
             1 for b in batiments
             if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
@@ -284,8 +289,21 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
             if client_module.CLIENT is not None and online:
                 send_liste_batiments_client(batiments, client_module.CLIENT)
+            # Si on a réussi à placer, s'assurer que la cellule n'est plus marquée comme "occupée" pour messages
+            try:
+                cells_with_occupied_msg.discard((grid_x, grid_y))
+            except NameError:
+                pass
         elif collision(batiments, nouveau):
-            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+            # Afficher le message d'emplacement occupé une seule fois par cellule
+            key = (grid_x, grid_y)
+            try:
+                if key not in cells_with_occupied_msg:
+                    float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+                    cells_with_occupied_msg.add(key)
+            except NameError:
+                # Au cas où la variable ne serait pas définie (sécurité), afficher normalement
+                float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
         else:
             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
@@ -319,6 +337,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     mouse_held_placing = False  # True quand le clic gauche est maintenu en mode placement
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
+
+    # Ensemble des cellules pour lesquelles on a déjà affiché "Emplacement occupe"
+    # lors de ce clic maintenu. Permet d'afficher le message une seule fois par cellule
+    # sans ajouter de délai aux tentatives de placement.
+    cells_with_occupied_msg = set()
 
     rects_icones = calculer_rects_icones(dims, HAUTEUR_BARRE, TAILLE_ICONE, slide_offset)
     en_cours = True
@@ -488,6 +511,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 mouse_held_placing = False
+                # Réinitialiser la mémoire des messages d'emplacement occupé au relâchement
+                cells_with_occupied_msg.clear()
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -658,7 +683,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                     if batiment_selectionne is not None:
                         _essayer_placer_batiment(sx, sy, mx, my)
-
                     else:
                         for B in batiments:
                             rect = B.get_rect_pixel(TAILLE_CASE)

@@ -288,7 +288,11 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
     # 4. Récupération de la population via la liste synchronisée
     if batiments_list is not None:
-        total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+        total_villageois = sum(
+            b.get_population()
+            for b in batiments_list
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
     else:
         total_villageois = 0
 
