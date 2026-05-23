@@ -118,23 +118,27 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ressources_sol = []
     ressources_respawn = []
 
-    for _ in range(120):
-        type_res = random.choices(
-            ["herbe", "coffre", "bois"],
-            weights=[95, 22, 75]
-        )[0]
+    nb_herbe = 180
+    nb_coffre = 25
+    nb_bois = 180
 
-        x = random.randint(-120, 120)
-        y = random.randint(-120, 120)
+    def ajouter_ressources(type_res, quantite):
+        for _ in range(quantite):
+            x = random.randint(-120, 120)
+            y = random.randint(-120, 120)
 
-        if abs(x - 5) < 8 and abs(y - 5) < 8:
-            continue
+            if abs(x - 5) < 8 and abs(y - 5) < 8:
+                continue
 
-        ressources_sol.append({
-            "type": type_res,
-            "x": x,
-            "y": y
-        })
+            ressources_sol.append({
+                "type": type_res,
+                "x": x,
+                "y": y
+            })
+
+    ajouter_ressources("herbe", nb_herbe)
+    ajouter_ressources("coffre", nb_coffre)
+    ajouter_ressources("bois", nb_bois)
 
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
@@ -545,7 +549,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 break
 
                             if res["type"] == "herbe":
-                                gain = random.randint(5, 15)
+                                gain = random.randint(6, 15)
                                 player.food += gain
                                 son_collect.play()
 
