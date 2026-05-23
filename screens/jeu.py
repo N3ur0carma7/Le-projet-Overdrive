@@ -30,6 +30,7 @@ from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
+from screens.ambiance import AmbianceManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
@@ -172,6 +173,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     )
     cloud_manager.load_images()
     cloud_manager.generate_clouds(count=80)
+    ambiance_manager = AmbianceManager()
+
 
     is_new_game = not os.path.exists("save/save.json")
     if not dev_mode and os.path.exists("save/save.json"):
@@ -256,6 +259,28 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         nouveau.x = grid_x
         nouveau.y = grid_y
         cout = Batiment.DATA[type_batiment][1]["cout"]
+
+        collision_ressource = False
+
+        for res in ressources_sol:
+            res_rect = pygame.Rect(
+                res["x"],
+                res["y"],
+                1,
+                1
+            )
+
+            bat_rect = pygame.Rect(
+                nouveau.x,
+                nouveau.y,
+                nouveau.largeur,
+                nouveau.hauteur
+            )
+
+            if bat_rect.colliderect(res_rect):
+                collision_ressource = True
+                break
+
         nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
         nb_production = sum(
             1 for b in batiments
@@ -269,14 +294,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
         elif production_pleine:
             float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
-        elif not collision(batiments, nouveau) and players[indice].money >= cout:
+        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
             players[indice].money -= cout
             batiments.append(nouveau)
             sound.son_placement.play()
             synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
             if client_module.CLIENT is not None and online:
                 send_liste_batiments_client(batiments, client_module.CLIENT)
-        elif collision(batiments, nouveau):
+        elif collision(batiments, nouveau) or collision_ressource:
             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
         else:
             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
@@ -376,6 +401,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager)
         cloud_manager.update(dt)
+        ambiance_manager.update(dt)
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
@@ -740,6 +766,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                        },
                        active_player=player)
         cloud_manager.draw(surface_monde, camera_x, camera_y)
+        ambiance_manager.draw(surface_monde, camera_x, camera_y)
+
 
         if surface_monde_size == (dims[0], dims[1]):
             surface_affichee = surface_monde
@@ -747,6 +775,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_affichee = pygame.transform.scale(surface_monde, (dims[0], dims[1]))
 
         ecran.blit(surface_affichee, (0, 0))
+
+
 
         font_loot = pygame.font.Font("assets/fonts/Minecraft.ttf", 16)
 
