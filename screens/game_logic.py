@@ -1,9 +1,10 @@
 import pygame
 import threading
 import time
-from core.Class.npc import Npc
+from core.Class.npc import Npc, PathFinder
 import multiplayer.client as client_module
 from core.Class.batiments import Batiment
+
 
 
 stop_event = threading.Event()
@@ -49,7 +50,7 @@ def on_message_recu(taille_case=None):
         try:
             if client_module.result is not None:
                 message, msg_type = client_module.result
-                if message != messageprec:
+                if client_module.result != messageprec:
                     if msg_type == "float":
                         connected = message
                     elif msg_type == "int":
@@ -59,12 +60,15 @@ def on_message_recu(taille_case=None):
                     elif msg_type == "liste_joueurs":
                         players = message
                         for player in players:
-                            player.update_anim(dt, players)
-                    messageprec = message
+                            player.update_anim(dt)
+                    messageprec = client_module.result
 
             time.sleep(0.05)
         except (OSError, ConnectionError):
             time.sleep(0.1)
+
+
+
 
 def new_player(taille_case):
     global players
@@ -113,7 +117,7 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
         attendus = population_attendue.get(cle, 0)
 
         while len(actuels) < attendus:
-            npc = Npc(b, taille_case, player)
+            npc = Npc(b, taille_case, player, batiments_list)
             npcs.append(npc)
             actuels.append(npc)
 
@@ -123,29 +127,29 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             if npc in npcs:
                 npcs.remove(npc)
 
-    # Construire la carte id(batiment) → objet batiment pour retrouver les refs
+    # Mettre à jour le pathfinder de tous les NPC (la grille de bâtiments a pu changer)
+    for npc in npcs:
+        npc.batiments_list = batiments_list
+        npc.pathfinder = PathFinder(batiments_list, taille_case)
+
+
     bat_by_id = {id(b): b for b in batiments_list}
 
-    # Lieux disponibles pour le round-robin (bâtiments non résidentiels et non tourelles)
     lieux_travail = [b for b in batiments_list
-                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE)]
+                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE, Batiment.TYPE_TILE)]
 
-    # Séparer NPCs manuels et auto
     npcs_auto = []
     for npc in npcs:
         bat_id = assignations_manuelles.get(id(npc))
         if bat_id is not None:
-            # Le bâtiment manuel existe encore ?
             bat_cible = bat_by_id.get(bat_id)
             if bat_cible is not None:
                 npc.assigner_travail(bat_cible)
                 continue
             else:
-                # Bâtiment supprimé → retirer l'assignation manuelle
                 assignations_manuelles.pop(id(npc), None)
         npcs_auto.append(npc)
 
-    # Round-robin sur les NPCs sans assignation manuelle
     for i, npc in enumerate(npcs_auto):
         if lieux_travail:
             npc.assigner_travail(lieux_travail[i % len(lieux_travail)])
@@ -153,21 +157,24 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             npc.assigner_travail(None)
 
 
-# === REÉCRIRE LA FONCTION DANS .\screens\game_logic.py ===
-def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, raid_manager=None):
+def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, npcs=None, raid_manager=None):
     from core.Class.batiments import Batiment
 
-    # 1. Compter la population totale du joueur (somme des populations des maisons résidentielles)
     total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
 
-    # 2. Calculer la consommation passive des villageois (2 par minute par villageois)
-    # delta_time / 60.0 permet de convertir la valeur "par minute" en valeur "par seconde/frame"
     consommation_food = (total_villageois * 6.0) * delta_time / 60.0
-
-    # On retire passivement la nourriture consommée (sans descendre en dessous de 0)
     player.food = max(0.0, player.food - consommation_food)
 
     food_ok = player.food > 0
+    
+    # Créer un mapping de bâtiments de production vers nombre de villageois assignés
+    batiments_production_accessibles = set()
+    if npcs is not None:
+        for npc in npcs:
+            # Le bâtiment produit seulement quand le villageois est physiquement au travail
+            if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
+                batiments_production_accessibles.add(id(npc.lieu_travail))
+    
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
@@ -175,17 +182,21 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
         rtype = b.get_production_type()
         val = b.get_production() * delta_time / 60.0
 
+        # Si on a des NPCs et ce bâtiment n'est pas accessible, pas de production
+        if npcs is not None and rtype is not None:
+            if id(b) not in batiments_production_accessibles:
+                # Ce bâtiment de production n'est pas accessible
+                continue
+        
         if rtype == "nourriture":
             acc_food += val
         elif not food_ok:
             pass
         elif rtype == "argent":
             acc_argent += val
-
         elif rtype == "vapeur":
             acc_vapeur += val
 
-    # 3. Application des gains accumulés
     gains_argent = int(acc_argent)
     if gains_argent > 0:
         player.money += gains_argent
