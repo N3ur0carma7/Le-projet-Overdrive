@@ -389,7 +389,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     menu_amelioration = None
                     continue
                 if result == "upgrade":
-                    menu_amelioration.batiment.upgrade()
                     synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
                     if client_module.CLIENT is not None and online:
                         send_liste_batiments_client(batiments, client_module.CLIENT)
