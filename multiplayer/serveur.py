@@ -6,6 +6,7 @@ import ast
 from importlib.metadata import pass_none
 
 from core.Class.batiments import *
+from core.Class.monster import Monster
 from core.Class.player import *
 import screens.jeu as jeu
 from screens.game_logic import players, batiments
@@ -136,6 +137,11 @@ def handle_client(client, addr):
                                     payload[0]["path"][j] = list(payload[0]["path"][j])
                                 data = json.dumps({"type": "liste_joueurs", "payload": payload})
                                 send_client(data, clients[i])
+                            elif type == "liste_monstres":
+                                payload = [b.to_dict() for b in message]  # message = liste de Batiment
+                                data = json.dumps({"type": "liste_monstres", "payload": payload})
+                                send_client(data, clients[i])
+
 
         except Exception as e:
             pass
@@ -205,6 +211,11 @@ def handle_message_recieved (msg, addr):
             plays = [Player.from_dict(d) for d in liste_dicts]
             print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
+        elif msg_type == "liste_monstres":
+            liste_dicts = data["payload"]  # liste de dicts
+            monstre = [Monster.from_dict(d) for d in liste_dicts]
+            print(f"[LISTE MONSTRE] {addr} : {[str(b) for b in monstre]}")
+            return monstre, "liste_monstres"
     except json.JSONDecodeError:
         print(f"[ERROR] {addr} : {msg}")
         return ""
@@ -284,6 +295,11 @@ def send_tuple_server(tup, client):
 def send_batiment_server(batiment, client):
     payload = batiment.to_dict()
     data = json.dumps({"type": "batiment", "payload": payload})
+    send_client(data, client)
+
+def send_liste_monstres (liste_monstres, client):
+    payload = [j.to_dict() for j in liste_monstres]
+    data = json.dumps({"type": "liste_monstres", "payload": payload})
     send_client(data, client)
 
 stop_event = threading.Event()

@@ -232,6 +232,7 @@ class Player:
         return True
 
     # ------------------------------------------------------------------
+    # PAS TOUCHE !!!!!!!!
     def to_dict(self):
         return {
             "hp_max": self.hp_max, "hp": self.hp,

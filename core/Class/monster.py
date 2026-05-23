@@ -303,3 +303,45 @@ class Monster:
                 bar_color = (220, 50, 50)
             pygame.draw.rect(surface, bar_color, (bar_x, bar_y, int(bar_w * hp_ratio), bar_h))
         pygame.draw.rect(surface, (180, 180, 180), (bar_x, bar_y, bar_w, bar_h), 1)
+
+
+#------------------------------------------------------------------------------
+# PAS TOUCHE !!!!!!!!
+
+    def to_dict(self):
+        return {
+        "x":                      self.x,
+        "y":                      self.y,
+        "hp":                     self.hp,
+        "alive":                  self.alive,
+        "_attack_timer":          self._attack_timer,
+        "_anim_frame":            self._anim_frame,
+        "_anim_timer":            self._anim_timer,
+        "_is_attacking":          self._is_attacking,
+        "_attack_anim_timer":     self._attack_anim_timer,
+        "_attack_anim_duration":  self._attack_anim_duration,
+        "_attack_damage_applied": self._attack_damage_applied,
+        "_hit_flash_timer":       self._hit_flash_timer,
+        "_hit_flash_duration":    self._hit_flash_duration,
+        "_anim_phase":            self._anim_phase,
+        "_facing_left":           self._facing_left,
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        obj = cls(d["x"], d["y"])
+
+        obj.hp = d.get("hp", obj.HP_MAX)
+        obj.alive = d.get("alive", True)
+        obj._attack_timer = d.get("_attack_timer", 0.0)
+        obj._anim_frame = d.get("_anim_frame", 0)
+        obj._anim_timer = d.get("_anim_timer", 0.0)
+        obj._is_attacking = d.get("_is_attacking", False)
+        obj._attack_anim_timer = d.get("_attack_anim_timer", 0.0)
+        obj._attack_anim_duration = d.get("_attack_anim_duration", 0.4)
+        obj._attack_damage_applied = d.get("_attack_damage_applied", False)
+        obj._hit_flash_timer = d.get("_hit_flash_timer", 0.0)
+        obj._hit_flash_duration = d.get("_hit_flash_duration", 0.15)
+        obj._anim_phase = d.get("_anim_phase", 0.0)
+        obj._facing_left = d.get("_facing_left", False)
+        return obj

@@ -530,9 +530,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
-        for player in players:
-            player.update(TAILLE_CASE, dt)
-            player.update_anim(dt)
+
+
+        for joueur in players:
+            joueur.update(TAILLE_CASE, dt)
+            joueur.update_anim(dt)
 
 
         # mort
@@ -600,6 +602,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if raid_manager is not None:
             for m in raid_manager.monsters:
                 if not m.alive:
+
                     continue
                 dist_joueur = ((player.pos[0] - m.x) ** 2 + (player.pos[1] - m.y) ** 2) ** 0.5
                 if dist_joueur > 80:

@@ -9,6 +9,7 @@ from core.Class.batiments import Batiment
 stop_event = threading.Event()
 batiments = []
 players = []
+monsters = []
 indice = 0
 connected = 0
 dt = 0.0
@@ -40,7 +41,7 @@ def toggle_fullscreen():
         pygame.display.set_mode((1280, 720), pygame.RESIZABLE)
 
 def on_message_recu(taille_case=None):
-    global batiments, players, indice, connected
+    global batiments, players, indice, connected, monsters
     messageprec = None
     if client_module.CLIENT is not None:
         from multiplayer.client import send_str_client
@@ -56,12 +57,14 @@ def on_message_recu(taille_case=None):
                         indice = message
                     elif msg_type == "liste_batiments":
                         batiments = message
+                    elif msg_type == "liste_monstres":
+                        monsters = message
                     elif msg_type == "liste_joueurs":
                         players = message
                         for player in players:
                             player.update_anim(dt)
-                    messageprec = client_module.result
 
+                    messageprec = client_module.result
             time.sleep(0.05)
         except (OSError, ConnectionError):
             time.sleep(0.1)

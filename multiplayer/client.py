@@ -5,6 +5,7 @@ import json
 import ast
 
 from core.Class.batiments import *
+from core.Class.monster import Monster
 from core.Class.player import *
 
 HEADER = 64
@@ -150,6 +151,13 @@ def handle_message_client(msg, client):
             print(f"[LISTE BATIMENTS] reçue : {[str(b) for b in bats]}")
             return bats, "liste_batiments"
 
+        elif msg_type == "liste_monstres":
+            print("ok")
+            liste_dicts = data["payload"]
+            montres = [Monster.from_dict(d) for d in liste_dicts]
+            print(f"[LISTE MONSTRES] reçue : {[str(b) for b in montres]}")
+            return montres, "liste_monstres"
+
         elif msg_type == "liste_joueurs":
             print("arriver")
             liste_dicts = data["payload"]
@@ -278,6 +286,12 @@ def send_liste_joueurs_client(liste_joueurs, client):
     for i in range (len(payload[0]["path"] )):
         payload[0]["path"][i] = list(payload[0]["path"][i])
     data = json.dumps({"type": "liste_joueurs", "payload": payload})
+    send_server(data, client)
+
+
+def send_liste_monstres_client(liste_monstres, client):
+    payload = [b.to_dict() for b in liste_monstres]
+    data = json.dumps({"type": "liste_monstres", "payload": payload})
     send_server(data, client)
 
 
