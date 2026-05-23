@@ -2,17 +2,20 @@ import pygame
 import os
 
 STEPS = [
-    "Bienvenue dans Overdrive ! Cette ville est a toi. Construit, developpe, et prospere.",
-    "Utilise le clic GAUCHE pour placer des batiments depuis la barre du bas.",
-    "Les batiments de PRODUCTION (mine, ferme, generateur) necessitent des villageois.",
-    "Reste a portee dans un carre de 2 cases pour placer ou interagir avec un batiment.",
-    "Scroll molette pour zoomer. Clic molette pour deplacer la camera.",
-    "Appuie sur ECHAP pour acceder au menu pause et sauvegarder ta partie.",
+    "Bienvenue dans Overdrive ! Cette ville est a toi. Construit, developpe et prospere.",
+    "Utilise la molette pour zoomer. Clique DROIT pour deplacer ton personnage.",
+    "Appuie sur ECHAP pour ouvrir le menu pause et sauvegarder ta partie.",
+    "Les bâtiments de PRODUCTION (mine, ferme, generateur) necessitent des villageois.",
+    "Tu peux assigner des villageois à differents batiments pour faire produire des ressources avec la touche TAB. Plus le niveau du batiment est eleve, plus il peut accueillir de villageois et produire de ressources.",
+    "Reste a portee dans un carre de 2 cases pour placer ou interagir avec un bâtiment.",
+    "Ouvre la barre de bâtiments en bas, puis clique GAUCHE sur une icône pour selectionner une construction.",
+    "Clique GAUCHE sur le sol pour poser le bâtiment selectionne. Maintiens le clic pour placer plusieurs bâtiments rapidement.",
+    "Clique DROIT pour annuler la selection de bâtiment si tu changes d'avis.",
     "Tes villageois ont besoin d'une MAISON pour vivre. Commence par en construire une !",
     "Bonne chance, aventurier ! Appuie sur ENTREE pour commencer l'aventure.",
 ]
 
-# Durée d'affichage de chaque caractère
+# Duree d'affichage de chaque caractere
 CHAR_DELAY = 0.032
 #tuto
 # Dimensions du panneau overlay
@@ -108,7 +111,7 @@ def _draw_panel(surface, panel_rect, font_text, font_hint,
     surface.blit(step_surf, (px + pw - step_surf.get_width() - PANEL_PADDING,
                               py + ph - step_surf.get_height() - 12))
 
-    hint_space = font_hint.render("[ ENTREE ] skip", True, COL_HINT)
+    hint_space = font_hint.render("[ ENTREE ] passer", True, COL_HINT)
     surface.blit(hint_space, (px + PANEL_PADDING, py + ph - hint_space.get_height() - 12))
 
 
