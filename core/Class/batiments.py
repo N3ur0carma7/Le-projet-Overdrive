@@ -6,8 +6,11 @@ class Batiment:
     TYPE_GENERATEUR  = "generateur"
     TYPE_MINE        = "mine"
     TYPE_FARM        = "farm"
-    TYPE_TOURELLE = "tourelle"
-    TYPE_TILE = "tile"
+    TYPE_TOURELLE    = "tourelle"
+    TYPE_TILE        = "tile"
+    TYPE_CENTRALE_ARGENT    = "centrale_argent"
+    TYPE_CENTRALE_VAPEUR    = "centrale_vapeur"
+    TYPE_CENTRALE_NOURRITURE = "centrale_nourriture"
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,
@@ -43,7 +46,27 @@ class Batiment:
             "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
             1: {"cout": 10, "temps_construction": 1200},
         },
+        TYPE_CENTRALE_ARGENT: {
+            "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+            1: {"boost": 0.20, "cout": 2000},
+            2: {"boost": 0.25, "cout": 3500},
+            3: {"boost": 0.30, "cout": 5000},
+        },
     }
+
+    """TYPE_CENTRALE_VAPEUR: {
+                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+                1: {"boost": 0.20, "cout": 2000},
+                2: {"boost": 0.25, "cout": 3500},
+                3: {"boost": 0.30, "cout": 5000},
+            },
+            TYPE_CENTRALE_NOURRITURE: {
+                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+                1: {"boost": 0.20, "cout": 2000},
+                2: {"boost": 0.25, "cout": 3500},
+                3: {"boost": 0.30, "cout": 5000},
+            },
+    """
 
     DEFAULT_FOOTPRINT = 5
 
@@ -99,14 +122,14 @@ class Batiment:
 
     def get_production(self):
         stats = self.get_stats()
-        for key in ("vapeur", "argent", "nourriture", "production"):
+        for key in ("vapeur", "argent", "nourriture", "production", "boost"):
             if key in stats:
                 return stats[key]
         return 0
 
     def get_production_type(self):
         stats = self.get_stats()
-        for key in ("vapeur", "argent", "nourriture"):
+        for key in ("vapeur", "argent", "nourriture", "boost"):
             if key in stats:
                 return key
         return None

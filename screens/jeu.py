@@ -94,6 +94,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         },
         Batiment.TYPE_TILE: {
             1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
+        },
+        Batiment.TYPE_CENTRALE_ARGENT: {
+            1: pygame.image.load("assets/buildings/centrale_argent_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_argent_lvl2.png").convert_alpha(),
+            3: pygame.image.load("assets/buildings/centrale_argent_lvl3.png").convert_alpha(),
         }
     }
     construction_gear = pygame.image.load(
@@ -111,6 +116,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_FARM,
         Batiment.TYPE_TOURELLE,
         Batiment.TYPE_TILE,
+        Batiment.TYPE_CENTRALE_ARGENT
     ]
 
     TAILLE_ICONE = 64
@@ -405,7 +411,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
-
 
         for event in pygame.event.get():
 
@@ -865,7 +870,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         pygame.display.flip()
 
         if player.pos != prec[0] or player.path != prec[1]:
-            print(player)
             try:
                 send_liste_joueurs_client(players, client_module.CLIENT)
             except:

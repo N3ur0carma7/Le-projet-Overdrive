@@ -176,7 +176,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     player.food = max(0.0, player.food - consommation_food)
 
     food_ok = player.food > 0
-    
+
     # Créer un mapping de bâtiments de production vers nombre de villageois assignés
     batiments_production_accessibles = set()
     if npcs is not None:
@@ -184,7 +184,9 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             # Le bâtiment produit seulement quand le villageois est physiquement au travail
             if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
                 batiments_production_accessibles.add(id(npc.lieu_travail))
-    
+    multiplicateur_nourriture = 1
+    multiplicateur_vapeur = 1
+    multiplicateur_argent = 1 # Application des multiplicateurs
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
@@ -197,7 +199,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             if id(b) not in batiments_production_accessibles:
                 # Ce bâtiment de production n'est pas accessible
                 continue
-        
+
         if rtype == "nourriture":
             acc_food += val
         elif not food_ok:
@@ -206,20 +208,47 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             acc_argent += val
         elif rtype == "vapeur":
             acc_vapeur += val
+        elif rtype == "boost":
+            if b.type == Batiment.TYPE_CENTRALE_ARGENT:
+                multiplicateur_argent += val
+            elif b.type == Batiment.TYPE_CENTRALE_VAPEUR:
+                multiplicateur_vapeur += val
+            elif b.type == Batiment.TYPE_CENTRALE_NOURRITURE:
+                multiplicateur_nourriture += val
 
+    acc_argent *= multiplicateur_argent
+    acc_vapeur *= multiplicateur_vapeur
+    acc_food *= multiplicateur_nourriture
+
+    # 3. Application des gains accumulés
     gains_argent = int(acc_argent)
     if gains_argent > 0:
-        player.money += gains_argent
+        if player.money > player.max_money:
+            player.money = player.money # me tappez pas svp
+        elif gains_argent + player.money > player.max_money:
+            player.money = player.max_money
+        else:
+            player.money += gains_argent
         acc_argent -= gains_argent
 
     gains_food = int(acc_food)
     if gains_food > 0:
-        player.food += gains_food
+        if player.food > player.max_food:
+            player.food = player.food
+        elif gains_food + player.food > player.max_food:
+            player.food = player.max_food
+        else:
+            player.food += gains_food
         acc_food -= gains_food
 
     gains_vapeur = int(acc_vapeur)
     if gains_vapeur > 0:
-        player.vapeur += gains_vapeur
+        if player.vapeur > player.max_vapeur:
+            player.vapeur = player.vapeur
+        elif gains_vapeur + player.vapeur > player.max_vapeur:
+            player.vapeur = player.max_vapeur
+        else:
+            player.vapeur += gains_vapeur
         acc_vapeur -= gains_vapeur
 
     return acc_argent, acc_food, acc_vapeur
