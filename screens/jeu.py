@@ -691,6 +691,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
                                     break
+                                # Ne pas ouvrir le menu d'amélioration pour les tiles (type 'tile')
+                                if getattr(B, "type", None) == Batiment.TYPE_TILE:
+                                    break
                                 menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
