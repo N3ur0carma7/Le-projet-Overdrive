@@ -194,7 +194,12 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
                     collision_ressource = True
                     break
 
-        if collision(batiments, test_batiment) or collision_ressource:
+        tourelle_bloquee = (
+                type_batiment == Batiment.TYPE_TOURELLE
+                and not Batiment.DATA[Batiment.TYPE_TOURELLE].get("unlocked", False)
+        )
+
+        if collision(batiments, test_batiment) or collision_ressource or tourelle_bloquee:
             image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
         else:
             player_for_range = active_player
@@ -283,7 +288,11 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
     # 4. Récupération de la population via la liste synchronisée
     if batiments_list is not None:
-        total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+        total_villageois = sum(
+            b.get_population()
+            for b in batiments_list
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
     else:
         total_villageois = 0
 

@@ -88,10 +88,16 @@ def draw_players(surface, camera_x, camera_y):
 
 def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
+    # Mettre à jour l'état de construction des bâtiments avant toute logique
+    for b in batiments_list:
+        if hasattr(b, "en_construction") and b.en_construction:
+            b.construction_finie()
+
+    # Calculer la population attendue uniquement pour les maisons finies
     population_attendue = {}
     for b in batiments_list:
         if b.type == Batiment.TYPE_RESIDENTIEL:
-            population_attendue[id(b)] = b.get_population()
+            population_attendue[id(b)] = 0 if (hasattr(b, "en_construction") and b.en_construction) else b.get_population()
 
     npcs_par_maison = {}
     for npc in list(npcs):
@@ -160,7 +166,11 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, npcs=None, raid_manager=None):
     from core.Class.batiments import Batiment
 
-    total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+    total_villageois = sum(
+        b.get_population()
+        for b in batiments_list
+        if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+    )
 
     consommation_food = (total_villageois * 6.0) * delta_time / 60.0
     player.food = max(0.0, player.food - consommation_food)
