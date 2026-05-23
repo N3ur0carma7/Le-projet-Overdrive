@@ -4,6 +4,8 @@ import time
 from core.Class.npc import Npc
 import multiplayer.client as client_module
 from core.Class.batiments import Batiment
+import core.pve as pve
+import screens.jeu as jeu
 
 
 stop_event = threading.Event()
@@ -59,6 +61,10 @@ def on_message_recu(taille_case=None):
                         batiments = message
                     elif msg_type == "liste_monstres":
                         monsters = message
+                        if jeu.raid_manager is not None and not jeu.raid_manager._raid_active:
+                            jeu.raid_manager.trigger_raid()
+
+
                     elif msg_type == "liste_joueurs":
                         players = message
                         for player in players:

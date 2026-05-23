@@ -34,8 +34,9 @@ from screens.floating_messages import FloatingMessageManager
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
 batiments = []
+raid_manager = None
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments
+    global batiments, raid_manager
     global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100
