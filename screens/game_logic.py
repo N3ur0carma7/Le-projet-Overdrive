@@ -129,7 +129,7 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
     bat_by_id = {id(b): b for b in batiments_list}
 
     lieux_travail = [b for b in batiments_list
-                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE)]
+                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE, Batiment.TYPE_TILE)]
 
     npcs_auto = []
     for npc in npcs:

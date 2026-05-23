@@ -91,7 +91,8 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
             b for b in batiments
             if b.type not in (
                 Batiment.TYPE_RESIDENTIEL,
-                Batiment.TYPE_TOURELLE
+                Batiment.TYPE_TOURELLE,
+                Batiment.TYPE_TILE
             )
         ]
 
@@ -547,7 +548,8 @@ def _auto_assigner(batiments, npcs):
         b for b in batiments
         if b.type not in (
             Batiment.TYPE_RESIDENTIEL,
-            Batiment.TYPE_TOURELLE
+            Batiment.TYPE_TOURELLE,
+            Batiment.TYPE_TILE
         )
     ]
 
