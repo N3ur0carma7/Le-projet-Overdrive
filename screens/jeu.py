@@ -30,7 +30,6 @@ from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
-from screens.ambiance import AmbianceManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
@@ -173,8 +172,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     )
     cloud_manager.load_images()
     cloud_manager.generate_clouds(count=80)
-    ambiance_manager = AmbianceManager()
-
 
     is_new_game = not os.path.exists("save/save.json")
     if not dev_mode and os.path.exists("save/save.json"):
@@ -259,29 +256,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         nouveau.x = grid_x
         nouveau.y = grid_y
         cout = Batiment.DATA[type_batiment][1]["cout"]
-
-        collision_ressource = False
-
-        for res in ressources_sol:
-            res_rect = pygame.Rect(
-                res["x"],
-                res["y"],
-                1,
-                1
-            )
-
-            bat_rect = pygame.Rect(
-                nouveau.x,
-                nouveau.y,
-                nouveau.largeur,
-                nouveau.hauteur
-            )
-
-            if bat_rect.colliderect(res_rect):
-                collision_ressource = True
-                break
-
-        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+        # Ne compter que les maisons construites (pas celles encore en construction)
+        nb_villageois = sum(
+            b.get_population()
+            for b in batiments
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
         nb_production = sum(
             1 for b in batiments
             if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
@@ -290,19 +270,40 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
             and nb_production >= nb_villageois
         )
-        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+        tourelle_bloquee = (
+                type_batiment == Batiment.TYPE_TOURELLE
+                and not Batiment.DATA[Batiment.TYPE_TOURELLE].get("unlocked", False)
+        )
+
+        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur,
+                               height=nouveau.hauteur):
             float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+        elif tourelle_bloquee:
+            float_msg.warning("Upgrade non debloque", sx, sy - 30, player_id=indice)
         elif production_pleine:
             float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
-        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
+        elif not collision(batiments, nouveau) and players[indice].money >= cout:
             players[indice].money -= cout
             batiments.append(nouveau)
             sound.son_placement.play()
             synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
             if client_module.CLIENT is not None and online:
                 send_liste_batiments_client(batiments, client_module.CLIENT)
-        elif collision(batiments, nouveau) or collision_ressource:
-            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+            # Si on a réussi à placer, s'assurer que la cellule n'est plus marquée comme "occupée" pour messages
+            try:
+                cells_with_occupied_msg.discard((grid_x, grid_y))
+            except NameError:
+                pass
+        elif collision(batiments, nouveau):
+            # Afficher le message d'emplacement occupé une seule fois par cellule
+            key = (grid_x, grid_y)
+            try:
+                if key not in cells_with_occupied_msg:
+                    float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+                    cells_with_occupied_msg.add(key)
+            except NameError:
+                # Au cas où la variable ne serait pas définie (sécurité), afficher normalement
+                float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
         else:
             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
@@ -336,6 +337,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     mouse_held_placing = False  # True quand le clic gauche est maintenu en mode placement
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
+
+    # Ensemble des cellules pour lesquelles on a déjà affiché "Emplacement occupe"
+    # lors de ce clic maintenu. Permet d'afficher le message une seule fois par cellule
+    # sans ajouter de délai aux tentatives de placement.
+    cells_with_occupied_msg = set()
 
     rects_icones = calculer_rects_icones(dims, HAUTEUR_BARRE, TAILLE_ICONE, slide_offset)
     en_cours = True
@@ -401,7 +407,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager)
         cloud_manager.update(dt)
-        ambiance_manager.update(dt)
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
@@ -506,6 +511,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 mouse_held_placing = False
+                # Réinitialiser la mémoire des messages d'emplacement occupé au relâchement
+                cells_with_occupied_msg.clear()
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -676,7 +683,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                     if batiment_selectionne is not None:
                         _essayer_placer_batiment(sx, sy, mx, my)
-
                     else:
                         for B in batiments:
                             rect = B.get_rect_pixel(TAILLE_CASE)
@@ -690,6 +696,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             if rect.collidepoint(mx, my):
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+                                    break
+                                if B.en_construction:
+                                    float_msg.error("Batiment en construction !", sx, sy - 30, player_id=indice)
                                     break
                                 menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
                                 break
@@ -766,8 +775,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                        },
                        active_player=player)
         cloud_manager.draw(surface_monde, camera_x, camera_y)
-        ambiance_manager.draw(surface_monde, camera_x, camera_y)
-
 
         if surface_monde_size == (dims[0], dims[1]):
             surface_affichee = surface_monde
@@ -775,8 +782,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_affichee = pygame.transform.scale(surface_monde, (dims[0], dims[1]))
 
         ecran.blit(surface_affichee, (0, 0))
-
-
 
         font_loot = pygame.font.Font("assets/fonts/Minecraft.ttf", 16)
 
