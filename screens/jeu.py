@@ -44,7 +44,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     indice = 0
     herbe = None
     TAILLE_CASE = 40
-
     def _pos_centre_case(cx: int, cy: int):
         return ((cx + 0.5) * TAILLE_CASE, (cy + 0.5) * TAILLE_CASE)
 
@@ -256,6 +255,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             batiments = gl.batiments
         if indice != gl.indice:
             indice = gl.indice
+
+        prec = (players[indice].pos, players[indice].path)
 
         """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
@@ -514,6 +515,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         player.update(TAILLE_CASE, dt)
         player.update_anim(dt)
 
+
         # mort
         if player.hp <= 0:
             from screens.game_over import afficher_game_over
@@ -607,9 +609,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         pygame.display.flip()
 
-        print(players)
-        if players[indice] != gl.players[indice]:
-            send_liste_joueurs_client(players, CLIENT)
+        if player.pos != prec[0] or player.path != prec[1]:
+            print(player)
+            try:
+                send_liste_joueurs_client(players, client_module.CLIENT)
+            except:
+                pass
+
     stop_event.set()
     sound.stop_ambient()
     return True

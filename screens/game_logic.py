@@ -33,7 +33,7 @@ def on_message_recu(taille_case=None):
         try:
             if client_module.result is not None:
                 message, msg_type = client_module.result
-                if message != messageprec:
+                if client_module.result != messageprec:
                     if msg_type == "float":
                         connected = message
                     elif msg_type == "int":
@@ -44,11 +44,14 @@ def on_message_recu(taille_case=None):
                         players = message
                         for player in players:
                             player.update_anim(dt)
-                    messageprec = message
+                    messageprec = client_module.result
 
             time.sleep(0.05)
         except (OSError, ConnectionError):
             time.sleep(0.1)
+
+
+
 
 def new_player(taille_case):
     global players

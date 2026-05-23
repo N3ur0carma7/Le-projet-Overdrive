@@ -3,6 +3,8 @@ import threading
 import json
 import time
 import ast
+from importlib.metadata import pass_none
+
 from core.Class.batiments import *
 from core.Class.player import *
 import screens.jeu as jeu
@@ -211,7 +213,12 @@ def disconnect (client):
     global clients, clients_indice
     print(f"[STOP] client disconnected")
     print(clients_indice[client])
+    i = clients_indice[client]
     players.pop(clients_indice[client])
+    for client in clients_indice:
+        clients_indice[client] -= 1 if clients_indice[client] > i else 0
+    for client in clients_indice:
+        send_int_server(clients_indice[client], client)
     for sujet in clients.keys():
         payload = [p.to_dict() for p in players]
         payload[0]["pos"] = list(payload[0]["pos"])
@@ -219,6 +226,7 @@ def disconnect (client):
             payload[0]["path"][j] = list(payload[0]["path"][j])
         data = json.dumps({"type": "liste_joueurs", "payload": payload})
         send_client(data, clients[sujet])
+    number_connected =-1
     client.close()
 
 def send_client (msg, client):

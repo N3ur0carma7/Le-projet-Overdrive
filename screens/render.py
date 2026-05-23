@@ -2,7 +2,7 @@ import pygame
 import core.Class.batiments as Batiment
 import math
 from screens.utils import collision, souris_vers_case, joueur_a_portee
-
+import screens.game_logic as gl
 def corriger_transparence(surface):
     width, height = surface.get_size()
     for x in range(width):
@@ -57,7 +57,7 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
 
     # Cache par frame pour éviter de rescaler en boucle
     scaled_cache = {}
-
+    player = players[gl.indice]
     for B in batiments:
         footprint_w_px = B.largeur * TAILLE_CASE
         footprint_h_px = B.hauteur * TAILLE_CASE

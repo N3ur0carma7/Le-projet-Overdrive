@@ -176,7 +176,7 @@ class Player:
             return
         if players is not None and client_module.CLIENT is not None:
             try:
-                client_module.send_liste_joueurs_client(players, client_module)
+                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except :
                 pass
 
