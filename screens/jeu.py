@@ -206,7 +206,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     unlocked_skills = set()
     menu_amelioration = None
 
-    terminal = Terminal()
+    terminal = Terminal(dev_mode=dev_mode)
 
     # Fonction utilitaire : tenter de placer un bâtiment aux coordonnées monde (mx, my)
     def _essayer_placer_batiment(sx, sy, mx, my):
@@ -359,8 +359,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 game_logic.toggle_fullscreen()
                 continue
 
-            # terminal toggle
-            if event.type == pygame.KEYDOWN and event.unicode == "²":
+            # terminal toggle (mode dev uniquement)
+            if event.type == pygame.KEYDOWN and event.unicode == "²" and dev_mode:
                 terminal.toggle()
                 continue
 
