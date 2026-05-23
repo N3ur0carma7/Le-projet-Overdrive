@@ -5,6 +5,8 @@ import random
 from core.Class.monster import Monster
 
 import multiplayer.client as client_module
+
+
 TAILLE_CASE_DEFAULT = 64   # fallback si non transmis
 import screens.game_logic as gl
 
@@ -78,6 +80,10 @@ class RaidManager:
     def trigger_raid(self) -> str:
         if self._raid_active:
             return "Un raid est deja en cours !"
+        try:
+            client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
+        except Exception as e:
+            pass
         self._start_raid()
         return f"RAID #{self._raid_count} DECLENCHE ! Preparez-vous..."
 

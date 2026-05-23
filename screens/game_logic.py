@@ -63,7 +63,7 @@ def on_message_recu(taille_case=None):
                         monsters = message
                         if jeu.raid_manager is not None and not jeu.raid_manager._raid_active:
                             jeu.raid_manager.trigger_raid()
-
+                            jeu.raid_manager.monsters = monsters
 
                     elif msg_type == "liste_joueurs":
                         players = message
