@@ -121,7 +121,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     for _ in range(120):
         type_res = random.choices(
             ["herbe", "coffre", "bois"],
-            weights=[90, 20, 70]
+            weights=[95, 22, 75]
         )[0]
 
         x = random.randint(-120, 120)
