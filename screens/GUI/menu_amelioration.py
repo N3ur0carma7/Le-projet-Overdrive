@@ -40,7 +40,10 @@ class MenuAmelioration:
             ""
         )
         upgrade_cost = self.batiment.get_upgrade_cost()
-        if self.batiment.est_max_level() or upgrade_cost is None or self.player.money <= upgrade_cost:
+        max_debloque = Batiment.DATA[self.batiment.type].get("max_level", 1)
+
+        if (
+                self.batiment.niveau >= max_debloque) or self.batiment.est_max_level() or upgrade_cost is None or self.player.money <= upgrade_cost:
             self.btn_ameliorer = BoutonImage(
                 self.menu_x + 70 + self.offset_block,
                 self.menu_y + 180 + self.offset_block,
@@ -104,8 +107,13 @@ class MenuAmelioration:
         couleur_next = (0, 0, 0)
         new_number = self.police_stat.render(f"{val_suivante}{unite}", True, couleur_next)
 
-        if self.batiment.est_max_level():
+        max_debloque = Batiment.DATA[self.batiment.type].get("max_level", 1)
+        existe_niveau_suivant = (self.batiment.niveau + 1) in Batiment.DATA[self.batiment.type]
+
+        if self.batiment.niveau >= 3 or not existe_niveau_suivant:
             texte_cout = self.police_cout.render("Niveau MAX", True, (150, 40, 40))
+        elif self.batiment.niveau >= max_debloque:
+            texte_cout = self.police_cout.render("Amelioration non debloquee", True, (150, 40, 40))
         else:
             cout_val = self.batiment.get_upgrade_cost()
             texte_cout = self.police_cout.render(f"Upgrade : {cout_val} gold", True, (180, 130, 0))
@@ -132,7 +140,9 @@ class MenuAmelioration:
 
             if self.btn_ameliorer and self.btn_ameliorer.clic():
                 upgrade_cost = self.batiment.get_upgrade_cost()
-                if upgrade_cost is not None and self.player.money >= upgrade_cost:
+                max_debloque = Batiment.DATA[self.batiment.type].get("max_level", 1)
+
+                if self.batiment.niveau < max_debloque and upgrade_cost is not None and self.player.money >= upgrade_cost:
                     sound.son_upgrade.play()
                     self.player.money -= upgrade_cost
                     self.batiment.upgrade()

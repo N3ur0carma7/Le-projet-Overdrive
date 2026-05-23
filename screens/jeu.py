@@ -265,8 +265,16 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
             and nb_production >= nb_villageois
         )
-        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+        tourelle_bloquee = (
+                type_batiment == Batiment.TYPE_TOURELLE
+                and not Batiment.DATA[Batiment.TYPE_TOURELLE].get("unlocked", False)
+        )
+
+        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur,
+                               height=nouveau.hauteur):
             float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+        elif tourelle_bloquee:
+            float_msg.warning("Upgrade non debloque", sx, sy - 30, player_id=indice)
         elif production_pleine:
             float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
         elif not collision(batiments, nouveau) and players[indice].money >= cout:
