@@ -10,8 +10,9 @@ from core.Class.batiments import *
 import time
 import random
 from screens.environment import CloudManager
-from screens.game_logic import stop_event, on_message_recu, new_player, draw_players, players
+from screens.game_logic import stop_event, on_message_recu, new_player, draw_players
 from screens.render import corriger_transparence
+import screens.game_logic as gl
 
 from core.Class.player import Player
 from core.Class.batiments import Batiment
@@ -32,17 +33,20 @@ from screens.floating_messages import FloatingMessageManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
+batiments = []
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments, indice
-    global players, TAILLE_CASE
+    global batiments
+    global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     dims = [LARGEUR_ECRAN, HAUTEUR_ECRAN]  # mutable pour mise a jour au resize
+    players = []
+    indice = 0
+    herbe = None
 
     herbe = pygame.image.load("assets/environment/ground.png").convert()
     TAILLE_CASE = 40
-
     def _pos_centre_case(cx: int, cy: int):
         return ((cx + 0.5) * TAILLE_CASE, (cy + 0.5) * TAILLE_CASE)
 
@@ -107,13 +111,17 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ]
 
     TAILLE_ICONE = 64
-    batiments = []
     npcs = []
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
         update = threading.Thread(target=on_message_recu, args=(TAILLE_CASE,), daemon=True)
         update.start()
         time.sleep(1)
+
+    players = gl.players
+    batiments = gl.batiments
+    indice = gl.indice
+
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
@@ -249,7 +257,16 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         save_done_timer = max(0, save_done_timer - dt)
         attack_cooldown = max(0.0, attack_cooldown - dt)
 
-        # Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
+        if players != gl.players:
+            players = gl.players
+        if batiments != gl.batiments:
+            batiments = gl.batiments
+        if indice != gl.indice:
+            indice = gl.indice
+
+        prec = (players[indice].pos, players[indice].path)
+
+        """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
             Player.load_sprites()
             p = Player()
@@ -257,7 +274,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             players.append(p)
             indice = 0
         elif indice < 0 or indice >= len(players):
-            indice = max(0, min(indice, len(players) - 1))
+            indice = max(0, min(indice, len(players) - 1))"""
         player = players[indice]
 
         # animation d'ouverture/fermeture de la barre de batiments
@@ -514,9 +531,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
-
         player.update(TAILLE_CASE, dt)
         player.update_anim(dt)
+
 
         # mort
         if player.hp <= 0:
@@ -558,12 +575,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_monde = pygame.Surface(needed_size).convert()
             surface_monde_size = needed_size
 
+
         dessiner_grille(surface_monde, camera_x, camera_y, dims, 0, zoom, herbe, TAILLE_CASE)
 
         cloud_manager.draw(surface_monde, camera_x, camera_y)
 
         dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE,
-                       batiment_selectionne, TYPES_BATIMENTS, player, npcs, image_pnj, dt, zoom,
+                       batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom,
                        raid_manager=raid_manager)
 
         if surface_monde_size == (dims[0], dims[1]):
@@ -612,6 +630,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         terminal.draw(ecran, dt)
 
         pygame.display.flip()
+
+        if player.pos != prec[0] or player.path != prec[1]:
+            print(player)
+            try:
+                send_liste_joueurs_client(players, client_module.CLIENT)
+            except:
+                pass
+
     stop_event.set()
     sound.stop_ambient()
     return True
