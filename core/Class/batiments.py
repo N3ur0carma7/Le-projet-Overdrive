@@ -11,37 +11,37 @@ class Batiment:
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,
-            1: {"population": 1, "cout": 125},
-            2: {"population": 3, "cout": 250},
-            3: {"population": 5, "cout": 750},
+            1: {"population": 1, "cout": 125, "temps_construction": 5000},
+            2: {"population": 3, "cout": 250,"temps_construction": 15000},
+            3: {"population": 5, "cout": 750, "temps_construction": 30000},
         },
         TYPE_GENERATEUR: {
-            "hitbox_l": 3, "hitbox_h": 5, "scale_visuel": 1.6,
-            1: {"vapeur": 30, "cout": 200},
-            2: {"vapeur": 60, "cout": 500},
-            3: {"vapeur": 120, "cout": 1000},
+            "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1,
+            1: {"vapeur": 30, "cout": 200, "temps_construction": 5000},
+            2: {"vapeur": 60, "cout": 500,"temps_construction": 15000},
+            3: {"vapeur": 120, "cout": 1000, "temps_construction": 30000},
         },
         TYPE_MINE: {
-            "hitbox_l": 3 , "hitbox_h": 3, "scale_visuel": 2,
-            1: {"argent": 30, "cout": 250},
-            2: {"argent": 60, "cout": 600},
-            3: {"argent": 120, "cout": 1200},
+            "hitbox_l": 5 , "hitbox_h": 5, "scale_visuel": 1,
+            1: {"argent": 30, "cout": 250, "temps_construction": 5000},
+            2: {"argent": 60, "cout": 600,"temps_construction": 15000},
+            3: {"argent": 120, "cout": 1200, "temps_construction": 30000},
         },
         TYPE_FARM: {
-            "hitbox_l": 3, "hitbox_h": 2, "scale_visuel": 2,
-            1: {"nourriture": 30, "cout": 150},
-            2: {"nourriture": 60, "cout": 400},
-            3: {"nourriture": 120, "cout": 800},
+            "hitbox_l": 3, "hitbox_h": 6, "scale_visuel": 2.0,
+            1: {"nourriture": 30, "cout": 150, "temps_construction": 5000},
+            2: {"nourriture": 60, "cout": 400, "temps_construction": 15000},
+            3: {"nourriture": 120, "cout": 800, "temps_construction": 30000},
         },
         TYPE_TOURELLE: {
             "hitbox_l": 2, "hitbox_h": 2, "scale_visuel": 3,
-            1: {"degat": 30, "cout": 150},
-            2: {"degat": 60, "cout": 400},
-            3: {"degat": 120, "cout": 800},
+            1: {"degat": 30, "cout": 150 , "temps_construction": 5000},
+            2: {"degat": 60, "cout": 400, "temps_construction": 15000},
+            3: {"degat": 120, "cout": 800, "temps_construction": 30000},
         },
         TYPE_TILE: {
             "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
-            1: {"cout": 10},
+            1: {"cout": 10, "temps_construction": 1200},
         },
     }
 
@@ -55,8 +55,36 @@ class Batiment:
         self.x = x
         self.y = y
 
+        self.en_construction = True
+        self.debut_construction = pygame.time.get_ticks()
+        self.duree_construction = Batiment.DATA[type_batiment][1].get("temps_construction", 5000)
+
         self.largeur = Batiment.DATA[type_batiment].get("hitbox_l", Batiment.DEFAULT_FOOTPRINT)
         self.hauteur = Batiment.DATA[type_batiment].get("hitbox_h", Batiment.DEFAULT_FOOTPRINT)
+
+    def construction_finie(self):
+        if not self.en_construction:
+            return True
+
+        temps = pygame.time.get_ticks() - self.debut_construction
+
+        if temps >= self.duree_construction:
+            self.en_construction = False
+
+            if hasattr(self, "niveau_en_attente"):
+                self.niveau = self.niveau_en_attente
+                del self.niveau_en_attente
+
+            return True
+
+        return False
+
+    def progression_construction(self):
+        if not self.en_construction:
+            return 1
+
+        temps = pygame.time.get_ticks() - self.debut_construction
+        return min(temps / self.duree_construction, 1)
 
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]
