@@ -70,18 +70,21 @@ def pos(client):
 
 monsters = []
 monster_director = None
-def handle_monsters(liste_monstres, addr):
+def handle_monsters(liste_monsters, client):
     global monsters, monster_director
     if monster_director is None:
-        monster_director = addr
-    elif monster_director != addr:
-        if len(liste_monstres) > len(monsters):
-            send_liste_monstres(monsters, addr)
-        else :
-            send_liste_monstres(liste_monstres, monster_director)
-    else:
-        send_liste_monstres(monsters, addr)
-
+        monster_director = client
+    if len(liste_monsters) > len(monsters):
+        if monster_director == client:
+            monsters = liste_monsters
+    elif len(liste_monsters) < len(monsters):
+            monsters = liste_monsters
+    for Client in clients.keys():
+        if clients[Client] != client:
+            try :
+                send_liste_monstres(monsters, clients[Client])
+            except:
+                pass
 
 
 
