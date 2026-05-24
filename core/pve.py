@@ -93,7 +93,7 @@ class RaidManager:
             self._auto_timer -= dt
             if self._auto_timer <= 0:
                 self._start_raid()
-        old_monsters = len(self.monsters)
+        old_monsters = self.monsters
         # Mise à jour des monstres vivants
         for m in self.monsters:
             m.update(players, dt)
@@ -102,7 +102,7 @@ class RaidManager:
 
         self.monsters = [m for m in self.monsters if m.alive]
 
-        if len(self.monsters) != old_monsters:
+        if self.monsters != old_monsters:
             try:
                 client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
             except Exception as e:
@@ -155,7 +155,10 @@ class RaidManager:
 
         if self.on_wave_spawn:
             self.on_wave_spawn(self._wave_index, spawned)
-
+        try:
+            client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
+        except Exception as e:
+            print(e)
         # Délai avant la prochaine vague
         self._wave_timer = self.WAVE_DELAY
 
