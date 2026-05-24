@@ -634,6 +634,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         terminal.draw(ecran, dt)
 
         pygame.display.flip()
+        if raid_manager is not None and indice == 0:
+            raid_manager.leader = True
+
 
         if player.pos != prec[0] or player.path != prec[1]:
             print(player)

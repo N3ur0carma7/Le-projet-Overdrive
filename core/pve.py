@@ -64,7 +64,7 @@ class RaidManager:
         self.taille_case    = taille_case
         self.monsters: list = gl.monsters
         self.damage_numbers: list = []
-
+        self.leader = False
         self._raid_active   = False
         self._wave_index    = 0          # vague en cours
         self._wave_timer    = 0.0        # temps restant avant prochaine vague
@@ -116,7 +116,7 @@ class RaidManager:
         if self._raid_active:
             self._wave_timer -= dt
             if self._wave_timer <= 0:
-                if self._wave_index < self.WAVES_PER_RAID:
+                if self._wave_index < self.WAVES_PER_RAID and self.leader == True:
                     self._spawn_wave(players)
                 else:
                     # Toutes les vagues lancées ; attendre fin des monstres
