@@ -168,6 +168,10 @@ class RaidManager:
         if self.on_raid_end:
             self.on_raid_end()
 
+    @property
+    def time_to_next_raid(self) -> float:
+        return max(0.0, self._auto_timer) if not self._raid_active else 0.0
+
     @staticmethod
     def _random_auto_delay() -> float:
         return random.uniform(RaidManager.AUTO_RAID_MIN, RaidManager.AUTO_RAID_MAX)

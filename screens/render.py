@@ -400,7 +400,19 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     ecran.blit(hp_txt, (hp_bar_x + 4, hp_bar_y - hp_txt.get_height() - 2))
 
     # 10. Indicateur de raid
-    if raid_manager is not None and raid_manager._raid_active:
+    if raid_manager is not None and not raid_manager._raid_active:
+        time_left = int(raid_manager.time_to_next_raid)
+        minutes = time_left // 60
+        seconds = time_left % 60
+        raid_txt = f"Prochain raid dans {minutes}:{seconds:02d}"
+        raid_surf = font_argent.render(raid_txt, True, (255, 210, 120))
+        rx = dims[0] // 2 - raid_surf.get_width() // 2
+        ry = 6
+        bg = pygame.Surface((raid_surf.get_width() + 16, raid_surf.get_height() + 8), pygame.SRCALPHA)
+        bg.fill((0, 0, 0, 160))
+        ecran.blit(bg, (rx - 8, ry - 4))
+        ecran.blit(raid_surf, (rx, ry))
+    elif raid_manager is not None and raid_manager._raid_active:
         nb_monstres = len(raid_manager.monsters)
         wave_txt = f"RAID  Vague {raid_manager._wave_index}/{raid_manager.WAVES_PER_RAID}  Monstres: {nb_monstres}"
         raid_surf = font_argent.render(wave_txt, True, (255, 80, 80))
