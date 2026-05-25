@@ -156,7 +156,7 @@ class RaidManager:
         if self.on_wave_spawn:
             self.on_wave_spawn(self._wave_index, spawned)
         try:
-            client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
+            client_module.send_raid_client(self, client_module.CLIENT)
         except Exception as e:
             print(e)
         # Délai avant la prochaine vague
@@ -171,3 +171,29 @@ class RaidManager:
     @staticmethod
     def _random_auto_delay() -> float:
         return random.uniform(RaidManager.AUTO_RAID_MIN, RaidManager.AUTO_RAID_MAX)
+
+    #----------------------------------------------------------------------------------------------------------------
+    def to_dict(self):
+        return {
+            "taille_case": self.taille_case,
+            "leader": self.leader,
+            "_raid_active": self._raid_active,
+            "_wave_index": self._wave_index,
+            "_wave_timer": self._wave_timer,
+            "_auto_timer": self._auto_timer,
+            "_raid_count": self._raid_count,
+            "monsters": [m.to_dict() for m in self.monsters],
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        obj = cls(d.get("taille_case", TAILLE_CASE_DEFAULT))
+        obj.leader = d.get("leader", False)
+        obj._raid_active = d.get("_raid_active", False)
+        obj._wave_index = d.get("_wave_index", 0)
+        obj._wave_timer = d.get("_wave_timer", 0.0)
+        obj._auto_timer = d.get("_auto_timer", 0.0)
+        obj._raid_count = d.get("_raid_count", 0)
+        obj.monsters = [Monster.from_dict(m) for m in d.get("monsters", [])]
+
+        return obj

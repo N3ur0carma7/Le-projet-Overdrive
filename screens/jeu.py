@@ -4,13 +4,12 @@ import os
 import threading
 from multiplayer.serveur import *
 import multiplayer.client as client_module
-from multiplayer.client import send_list_client, receive_loop, send_batiment_client, send_liste_batiments_client, \
-    send_liste_joueurs_client, CLIENT, send_str_client, is_connected
+
 from core.Class.batiments import *
 import time
 import random
 from screens.environment import CloudManager
-from screens.game_logic import stop_event, on_message_recu, new_player, draw_players
+
 from screens.render import corriger_transparence
 import screens.game_logic as gl
 
@@ -22,9 +21,9 @@ from core.saves import load_save
 from screens.tutorial import run_tutorial
 from screens.terminal import Terminal
 from screens.utils import collision, calculer_rects_icones, souris_vers_case, joueur_a_portee, dessiner_grille, dessiner_grille_overlay, dessiner_grille_overlay_monde, dessiner_grille_overlay_ecran
-from screens.game_logic import synchroniser_npcs, calculer_production
+
 from screens.render import dessiner_monde, dessiner_hud
-from core.pve import RaidManager
+import core.pve as pve
 
 from screens.GUI.menu_amelioration import afficher_menu_amelioration
 from screens.GUI.menu_travail import afficher_menu_travail
@@ -115,7 +114,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     npcs = []
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
-        update = threading.Thread(target=on_message_recu, args=(TAILLE_CASE,), daemon=True)
+        update = threading.Thread(target=gl.on_message_recu, args=(TAILLE_CASE,), daemon=True)
         update.start()
         time.sleep(1)
 
@@ -163,7 +162,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     player = players[indice]
 
-    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+    gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
     # Camera et zoom
     camera_x = player.pos[0] - dims[0] / 2
@@ -209,13 +208,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     terminal = Terminal()
 
     # PVE
-    raid_manager = RaidManager(taille_case=TAILLE_CASE)
+    raid_manager = pve.RaidManager(taille_case=TAILLE_CASE)
 
     def _log_raid_start(n):
         terminal._log(f"[RAID] RAID #{n} en approche ! Defendez-vous !")
 
     def _log_wave(wave, nb):
-        terminal._log(f"  [VAGUE] Vague {wave}/{RaidManager.WAVES_PER_RAID} - {nb} monstre(s) spawne(s)")
+        terminal._log(f"  [VAGUE] Vague {wave}/{pve.RaidManager.WAVES_PER_RAID} - {nb} monstre(s) spawne(s)")
 
     def _log_raid_end():
         terminal._log("[OK] Raid termine. Vous avez survecu !")
@@ -298,7 +297,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     current_playlist_index = 0
                 ambient_delay_timer = 3.0
 
-        acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, raid_manager=raid_manager)
+        acc_argent, acc_food, acc_vapeur = gl.calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, raid_manager=raid_manager)
         cloud_manager.update(dt)
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
@@ -489,10 +488,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             players[indice].money -= cout
                             batiments.append(nouveau)
                             sound.son_placement.play()
-                            synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                            gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
                             if client_module.CLIENT is not None and online:
                                 print(f"envoi en cours {batiments}")
-                                send_liste_batiments_client(batiments, client_module.CLIENT)
+                                client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
                         elif collision(batiments, nouveau):
                             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
                         else:
@@ -521,12 +520,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                         cashback += Batiment.DATA[B.type][1+k]["cout"]
                                     players[indice].money += cashback
                                     if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
                                 elif resultat == "upgrade":
                                     if client_module.CLIENT is not None and online:
-                                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
 
-                                synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                                gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
@@ -641,7 +640,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if player.pos != prec[0] or player.path != prec[1]:
             print(player)
             try:
-                send_liste_joueurs_client(players, client_module.CLIENT)
+                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
                 pass
 
