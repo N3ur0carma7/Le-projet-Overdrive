@@ -227,7 +227,7 @@ class MenuAmelioration:
         can = self._can_upgrade()
 
         self.btn_ameliorer = BoutonBlit(
-            px + 30, py + H - 68, 200, 44,
+            px + 30, py + H - 60, 200, 44,
             "AMELIORER",
             VERT_OK if can else FUMEE,
             VERT_HOVER if can else FUMEE,
@@ -235,7 +235,7 @@ class MenuAmelioration:
             enabled=can
         )
         self.btn_sell = BoutonBlit(
-            px + W - 150, py + H - 68, 120, 44,
+            px + W - 150, py + H - 60, 120, 44,
             "VENDRE",
             ROUGE_DANGER, ROUGE_HOVER, CHARBON
         )
@@ -410,19 +410,16 @@ class MenuAmelioration:
         ].get("max_level",1)
 
         if not self.batiment.construction_finie():
-
             cout = "EN CONSTRUCTION"
             color = FUMEE_CLAIR
 
-        elif self.batiment.est_max_level():
+        elif self.batiment.niveau >= max_debloque:
+            cout = "Upgrade non debloque"
+            color = ROUGE_DANGER
 
+        elif self.batiment.niveau >= 3:
             cout = "NIVEAU MAXIMUM"
             color = FUMEE_CLAIR
-
-        elif self.batiment.niveau >= max_debloque:
-
-            cout = "NON DEBLOQUE"
-            color = ROUGE_DANGER
 
         else:
 
