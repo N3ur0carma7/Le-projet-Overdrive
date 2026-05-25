@@ -70,6 +70,9 @@ def on_message_recu(taille_case=None):
                         for player in players:
                             player.update_anim(dt)
 
+                    elif msg_type == "raid":
+                        jeu.raid_manager = message
+
                     messageprec = client_module.result
             time.sleep(0.05)
         except (OSError, ConnectionError):
