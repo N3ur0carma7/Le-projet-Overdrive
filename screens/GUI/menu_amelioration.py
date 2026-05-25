@@ -95,6 +95,11 @@ class MenuAmelioration:
             unite = ""
             if not self.batiment.est_max_level():
                 val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["degat"]
+        elif self.batiment.type == Batiment.TYPE_CENTRALE_VAPEUR or self.batiment.type == Batiment.TYPE_CENTRALE_ARGENT or self.batiment.type == Batiment.TYPE_CENTRALE_NOURRITURE:
+            info = "Boost"
+            val_actuelle = self.batiment.get_production() * 100
+            if not self.batiment.est_max_level():
+                val_suivante = Batiment.DATA[self.batiment.type][self.batiment.niveau + 1]["boost"] * 100
         else:
             info = "Production"
             val_actuelle = self.batiment.get_production()

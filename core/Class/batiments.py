@@ -50,23 +50,18 @@ class Batiment:
             "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
             1: {"boost": 0.20, "cout": 2000},
             2: {"boost": 0.25, "cout": 3500},
-            3: {"boost": 0.30, "cout": 5000},
+        },
+        TYPE_CENTRALE_VAPEUR: {
+                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+                1: {"boost": 0.20, "cout": 2000},
+                2: {"boost": 0.25, "cout": 3500},
+        },
+        TYPE_CENTRALE_NOURRITURE: {
+            "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+            1: {"boost": 0.20, "cout": 2000},
+            2: {"boost": 0.25, "cout": 3500},
         },
     }
-
-    """TYPE_CENTRALE_VAPEUR: {
-                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
-                1: {"boost": 0.20, "cout": 2000},
-                2: {"boost": 0.25, "cout": 3500},
-                3: {"boost": 0.30, "cout": 5000},
-            },
-            TYPE_CENTRALE_NOURRITURE: {
-                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
-                1: {"boost": 0.20, "cout": 2000},
-                2: {"boost": 0.25, "cout": 3500},
-                3: {"boost": 0.30, "cout": 5000},
-            },
-    """
 
     DEFAULT_FOOTPRINT = 5
 
@@ -108,7 +103,6 @@ class Batiment:
 
         temps = pygame.time.get_ticks() - self.debut_construction
         return min(temps / self.duree_construction, 1)
-
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]
 
@@ -158,7 +152,9 @@ class Batiment:
             self.niveau += 1
 
     def est_max_level(self):
-        if self.niveau >= 3:
+        type = self.type
+        niveau_max = len(Batiment.DATA[type]) - 3
+        if self.niveau >= niveau_max:
             return True
         cap = get_max_level(self.type)
         return self.niveau >= cap

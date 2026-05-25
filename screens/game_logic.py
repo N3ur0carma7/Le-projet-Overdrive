@@ -4,6 +4,7 @@ import time
 from core.Class.npc import Npc, PathFinder
 import multiplayer.client as client_module
 from core.Class.batiments import Batiment
+from math import ceil
 
 
 
@@ -221,7 +222,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     acc_food *= multiplicateur_nourriture
 
     # 3. Application des gains accumulés
-    gains_argent = int(acc_argent)
+    gains_argent = ceil(acc_argent)
     if gains_argent > 0:
         if player.money > player.max_money:
             player.money = player.money # me tappez pas svp
@@ -231,7 +232,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             player.money += gains_argent
         acc_argent -= gains_argent
 
-    gains_food = int(acc_food)
+    gains_food = ceil(acc_food)
     if gains_food > 0:
         if player.food > player.max_food:
             player.food = player.food
@@ -241,7 +242,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
             player.food += gains_food
         acc_food -= gains_food
 
-    gains_vapeur = int(acc_vapeur)
+    gains_vapeur = ceil(acc_vapeur)
     if gains_vapeur > 0:
         if player.vapeur > player.max_vapeur:
             player.vapeur = player.vapeur

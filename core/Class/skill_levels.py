@@ -8,6 +8,9 @@ MAX_LEVELS = {
     "mine":        1,
     "farm":       1,
     "tourelle":     1,
+    "centrale_argent": 1,
+    "centrale_vapeur": 1,
+    "centrale_nourriture": 1,
 }
 
 def get_max_level(building_type):
