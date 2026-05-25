@@ -8,9 +8,9 @@ class Batiment:
     TYPE_FARM        = "farm"
     TYPE_TOURELLE    = "tourelle"
     TYPE_TILE        = "tile"
-    TYPE_CENTRALE_ARGENT    = "centrale_argent"
-    TYPE_CENTRALE_VAPEUR    = "centrale_vapeur"
-    TYPE_CENTRALE_NOURRITURE = "centrale_nourriture"
+    TYPE_CENTRALE_ARGENT    = "centrale arg"
+    TYPE_CENTRALE_VAPEUR    = "centrale vap"
+    TYPE_CENTRALE_NOURRITURE = "centrale nour"
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,

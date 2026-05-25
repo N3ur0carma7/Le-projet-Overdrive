@@ -244,7 +244,7 @@ def apply_skill_effect(skill, player, batiments_data):
 
 
 def unlock_all_skills(player, batiments_data):
-    unlocked = set()
+    unlocked = []
     all_skills = []
     for cat in SKILLS_DATA.values():
         all_skills.extend(cat["skills"])
@@ -256,7 +256,7 @@ def unlock_all_skills(player, batiments_data):
                 continue
             prereqs = skill.get("prerequisites", [])
             if all(p in unlocked for p in prereqs):
-                unlocked.add(skill["id"])
+                unlocked.append(skill["id"])
                 apply_skill_effect(skill, player, batiments_data)
                 changed = True
     return unlocked
@@ -449,7 +449,7 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
                         if get_state(skill) == "locked" and player.vapeur >= skill["cost"]:
                             player.vapeur -= skill["cost"]
 
-                            unlocked_skills.add(skill["id"])
+                            unlocked_skills.append(skill["id"])
 
                             apply_skill_effect(skill, player, batiments_data)
 
@@ -488,7 +488,7 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
                         skill = selected_skill
                         if get_state(skill) == "locked" and player.vapeur >= skill["cost"]:
                             player.vapeur -= skill["cost"]
-                            unlocked_skills.add(skill["id"])
+                            unlocked_skills.append(skill["id"])
                             apply_skill_effect(skill, player, batiments_data)
                             selected_skill = None
                             buy_btn_rect = None

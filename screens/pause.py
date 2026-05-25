@@ -14,7 +14,7 @@ import screens.game_logic as gl
 save = pygame.image.load("assets/save_done.png")
 
 
-def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, screenshot):
+def menu_pause(ecran, horloge, FPS, buildings, online_data, unlocked_skills, player: Player, screenshot):
     LARGEUR_ECRAN, HAUTEUR_ECRAN = ecran.get_size()
     en_pause = True
 
@@ -84,7 +84,7 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
                         gl.indice = 0
                     return "menu"
                 if boutons[1].clic():
-                    if not save_game(buildings, player, online_data):
+                    if not save_game(buildings, player, online_data, unlocked_skills):
                         print("ERREUR CRITIQUE: Ecriture du fichier save/save.json")
                         return False
                     print("Sauvegarde reussie, retour au jeu")

@@ -171,6 +171,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     players = gl.players
     batiments = gl.batiments
+    unlocked_skills = []
     indice = gl.indice
 
 
@@ -226,10 +227,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             p.pos = _pos_centre_case(5, 5)
             players[:] = [p]
             indice = 0
-        if not load_save(batiments, players[indice]):
+        if not load_save(batiments, players[indice], unlocked_skills):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
-
     if dev_mode:
         if not players:
             Player.load_sprites()
@@ -286,8 +286,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     if dev_mode:
         from screens.skill_tree import unlock_all_skills
         unlocked_skills = unlock_all_skills(player, Batiment.DATA)
-    else:
-        unlocked_skills = set()
     menu_amelioration = None
 
     terminal = Terminal(dev_mode=dev_mode)
@@ -430,7 +428,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         player = players[indice]
-
         # animation d'ouverture/fermeture de la barre de batiments
         cible_offset = 0 if barre_ouverte else HAUTEUR_BARRE
         if slide_offset < cible_offset:
@@ -568,10 +565,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 from screens.pause import menu_pause
                 screenshot = ecran.copy()
                 if online:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, players[indice], screenshot)
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, unlocked_skills, players[indice], screenshot)
                     pass
                 else:
-                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, players[indice], screenshot)
+                    etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, unlocked_skills, players[indice], screenshot)
                 if etat_pause == "jeu_save_done":
                     save_done_timer = 1.5  # show for 1.5 seconds
                 elif not etat_pause:

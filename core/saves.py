@@ -2,7 +2,7 @@ import json
 from core.Class.player import Player
 from core.Class.batiments import Batiment
 
-def save_game(buildings: list, player: Player, online_data):
+def save_game(buildings: list, player: Player, online_data, unlocked_skills):
     # Sauvegarde la partie
     try:
         batiments_real = []
@@ -27,6 +27,7 @@ def save_game(buildings: list, player: Player, online_data):
             },
             "Builds": batiments_real,
             "Online": online_data if online_data is not None else None,
+            "Skills": unlocked_skills,
         }
         # Écriture de la save (indent -> plus lisible)
         with open('save/save.json', 'w') as file:
@@ -36,7 +37,7 @@ def save_game(buildings: list, player: Player, online_data):
         return False
 
 
-def load_save(buildings: list, player: Player):
+def load_save(buildings: list, player: Player, unlocked_skills):
     # Charge la sauvegarde
     try:
         with open('save/save.json', 'r') as file:
@@ -73,6 +74,8 @@ def load_save(buildings: list, player: Player):
         # Charger les données en ligne | À FAIRE
         for bat in buildings:
             bat.en_construction = False
+        for skill in save_data["Skills"]:
+            unlocked_skills.append(skill)
         return True
     except Exception:
         return False
