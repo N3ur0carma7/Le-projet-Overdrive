@@ -423,10 +423,10 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
 
     if save_done_timer > 0:
-        popup_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
+        popup_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 24)
         popup_text = "Partie sauvegardee !"
         text_surf = popup_font.render(popup_text, True, (255, 255, 200))
-        padding_x, padding_y = 14, 10
+        padding_x, padding_y = 28, 20
         popup_w = text_surf.get_width() + padding_x * 2
         popup_h = text_surf.get_height() + padding_y * 2
         popup_x = (ecran.get_width() - popup_w) // 2   # centré horizontalement
