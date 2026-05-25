@@ -556,6 +556,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                inventory_ouvert = not inventory_ouvert
+                continue
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
                 screenshot = ecran.copy()
