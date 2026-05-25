@@ -32,8 +32,6 @@ def afficher_game_over(ecran: pygame.Surface, player=None, font_path: str = "ass
     btn_menu    = btn_menu_img.get_rect(center=(W // 2, H // 2 + 240))
 
     t = 0.0
-    FADE_IN = 1.2
-    SKULL_ANIM = 1.8
 
     particles = []
 
@@ -82,16 +80,13 @@ def afficher_game_over(ecran: pygame.Surface, player=None, font_path: str = "ass
                 if btn_menu.collidepoint(mx, my):
                     return "menu"
 
-        alpha = min(1.0, t / FADE_IN)
 
         overlay = screenshot.copy()
 
         dark = pygame.Surface((W, H), pygame.SRCALPHA)
-        dark.fill((0, 0, 0, int(200 * alpha)))
         overlay.blit(dark, (0, 0))
 
         red_tint = pygame.Surface((W, H), pygame.SRCALPHA)
-        red_tint.fill((80, 0, 0, int(80 * alpha)))
         overlay.blit(red_tint, (0, 0))
 
         ecran.blit(overlay, (0, 0))
@@ -107,21 +102,13 @@ def afficher_game_over(ecran: pygame.Surface, player=None, font_path: str = "ass
                 continue
 
             life_ratio = p[4] / p[5]
-            a = int(255 * life_ratio * alpha)
             r = max(2, int(3 * life_ratio))
 
             s = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
-            pygame.draw.circle(s, (*p[6], a), (r, r), r)
             ecran.blit(s, (int(p[0]) - r, int(p[1]) - r))
 
-        skull_t  = min(1.0, t / SKULL_ANIM)
-        skull_scale = 0.3 + 0.7 * (1 - (1 - skull_t) ** 3)
-        skull_alpha = int(255 * min(1.0, skull_t * 2))
         pulse = 1.0 + 0.03 * math.sin(t * 4)
 
-        _draw_skull(ecran, W // 2, H // 2 - 80,
-                    int(80 * skull_scale * pulse),
-                    skull_alpha)
 
         title_alpha = int(255 * max(0.0, (t - 0.5) / 0.8))
 
@@ -165,50 +152,3 @@ def afficher_game_over(ecran: pygame.Surface, player=None, font_path: str = "ass
 
         pygame.display.flip()
 
-
-def _draw_skull(surface: pygame.Surface, cx: int, cy: int, size: int, alpha: int):
-    if size < 10:
-        return
-
-    s = pygame.Surface((size * 4, size * 4), pygame.SRCALPHA)
-    sc = size * 2
-    r = size
-
-    pygame.draw.circle(s, (0, 0, 0, int(alpha * 0.3)), (sc + 4, sc + 6), r + 2)
-
-    pygame.draw.circle(s, (240, 240, 240, alpha), (sc, sc), r)
-    pygame.draw.circle(s, (180, 180, 180, alpha), (sc, sc), r, 3)
-
-    pygame.draw.circle(s, (255, 255, 255, int(alpha * 0.1)), (sc, sc), r + 6, 2)
-
-    eye_w = int(r * 0.5)
-    eye_h = int(r * 0.35)
-
-    pygame.draw.ellipse(s, (10, 10, 10, alpha),
-        (sc - int(r * 0.7), sc - int(r * 0.2), eye_w, eye_h))
-
-    pygame.draw.ellipse(s, (10, 10, 10, alpha),
-        (sc + int(r * 0.2), sc - int(r * 0.2), eye_w, eye_h))
-
-    pygame.draw.ellipse(s, (200, 30, 30, int(alpha * 0.4)),
-        (sc - int(r * 0.7), sc - int(r * 0.2), eye_w, eye_h))
-
-    pygame.draw.ellipse(s, (200, 30, 30, int(alpha * 0.4)),
-        (sc + int(r * 0.2), sc - int(r * 0.2), eye_w, eye_h))
-
-    pygame.draw.polygon(s, (20, 20, 20, alpha), [
-        (sc, sc),
-        (sc - int(r * 0.2), sc + int(r * 0.4)),
-        (sc + int(r * 0.2), sc + int(r * 0.4))
-    ])
-
-    jaw_rect = pygame.Rect(sc - int(r * 0.7), sc + int(r * 0.5),
-                           int(r * 1.4), int(r * 0.6))
-    pygame.draw.rect(s, (240, 240, 240, alpha), jaw_rect, border_radius=6)
-
-    for i in range(4):
-        x = jaw_rect.x + 10 + i * int(r * 0.3)
-        pygame.draw.rect(s, (30, 30, 30, alpha),
-                         (x, jaw_rect.y, int(r * 0.15), int(r * 0.4)))
-
-    surface.blit(s, (cx - sc, cy - sc))
