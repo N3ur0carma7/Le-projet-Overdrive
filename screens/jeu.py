@@ -425,15 +425,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         prec = players[indice].pos
 
-        """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
-        if not players:
-            Player.load_sprites()
-            p = Player()
-            p.pos = _pos_centre_case(5, 5)
-            players.append(p)
-            indice = 0
-        elif indice < 0 or indice >= len(players):
-            indice = max(0, min(indice, len(players) - 1))"""
+
         player = players[indice]
 
         # animation d'ouverture/fermeture de la barre de batiments
@@ -925,7 +917,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             sound.son_placement.play()
                             gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
                             if client_module.CLIENT is not None and online:
-                                print(f"envoi en cours {batiments}")
+                                #print(f"envoi en cours {batiments}")
                                 client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
                         elif collision(batiments, nouveau) or collision_ressource:
                             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)

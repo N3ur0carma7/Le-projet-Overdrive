@@ -71,6 +71,8 @@ def load_save(buildings: list, player: Player):
         for b in save_data["Builds"]:
             buildings.append(Batiment.from_dict(b))
         # Charger les données en ligne | À FAIRE
+        for bat in buildings:
+            bat.en_construction = False
         return True
     except Exception:
         return False

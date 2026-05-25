@@ -69,8 +69,7 @@ def on_message_recu(taille_case=None):
 
                     elif msg_type == "liste_joueurs":
                         players = message
-                        for player in players:
-                            player.update_anim(dt)
+
 
                     elif msg_type == "raid":
                         jeu.raid_manager = message
