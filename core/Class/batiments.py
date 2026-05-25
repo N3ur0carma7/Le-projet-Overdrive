@@ -25,7 +25,7 @@ class Batiment:
             3: {"vapeur": 120, "cout": 1000, "temps_construction": 30000},
         },
         TYPE_MINE: {
-            "hitbox_l": 5 , "hitbox_h": 5, "scale_visuel": 1,
+            "hitbox_l": 4 , "hitbox_h": 5, "scale_visuel": 1.2,
             1: {"argent": 30, "cout": 250, "temps_construction": 5000},
             2: {"argent": 60, "cout": 600,"temps_construction": 15000},
             3: {"argent": 120, "cout": 1200, "temps_construction": 30000},
