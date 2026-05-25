@@ -407,7 +407,7 @@ class Npc:
         orig_w, orig_h = image.get_size()
         affichage_h = max(4, int(self.TAILLE_AFFICHAGE * zoom))
         affichage_w = int(orig_w * affichage_h / orig_h)
-        sprite = pygame.transform.smoothscale(image, (affichage_w, affichage_h))
+        sprite = pygame.transform.scale(image, (affichage_w, affichage_h))
         ecran.blit(sprite, (ex - affichage_w // 2, ey - affichage_h))
 
     def dessiner_monde(self, surface, camera_x, camera_y, image=None):
