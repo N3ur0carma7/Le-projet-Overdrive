@@ -62,6 +62,20 @@ class Player:
         self.pos    = (0, 0)
         self.path   = []
 
+        self.inventory = {
+            "potion_money": 0,
+            "potion_food": 0,
+            "potion_vapeur": 0,
+            "potion_heal": 0
+        }
+
+        self.active_effects = {
+            "money": 0,
+            "food": 0,
+            "vapeur": 0,
+            "heal": 0
+        }
+
         self.speed = 420   # px/s
         self.size  = 40
 

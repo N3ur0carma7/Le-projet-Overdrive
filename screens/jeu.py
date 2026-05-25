@@ -126,14 +126,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ressources_sol = []
     ressources_respawn = []
 
-    nb_herbe = 180
-    nb_coffre = 25
-    nb_bois = 180
+    nb_herbe = 720
+    nb_coffre = 110
+    nb_bois = 830
 
     def ajouter_ressources(type_res, quantite):
         for _ in range(quantite):
-            x = random.randint(-120, 120)
-            y = random.randint(-120, 120)
+            x = random.randint(-320, 320)
+            y = random.randint(-320, 320)
 
             if abs(x - 5) < 8 and abs(y - 5) < 8:
                 continue
@@ -169,17 +169,23 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     hud_vapeur_img = pygame.image.load("assets/icones/vapeur_icone.png").convert_alpha()
     hud_pop_img = pygame.image.load("assets/pnj.png").convert_alpha()
     save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
+    potion_money_img = pygame.image.load("assets/icones/potion_money.png").convert_alpha()
+    potion_food_img = pygame.image.load("assets/icones/potion_food.png").convert_alpha()
+    potion_vapeur_img = pygame.image.load("assets/icones/potion_vapeur.png").convert_alpha()
+    potion_heal_img = pygame.image.load("assets/icones/potion_heal.png").convert_alpha()
     son_collect = pygame.mixer.Sound("assets/sounds/collect_food.wav")
+    son_footstep = pygame.mixer.Sound("assets/sounds/footstep.wav")
+    son_footstep.set_volume(0.75)
     son_coffre = pygame.mixer.Sound("assets/sounds/collect_gold.wav")
     son_coffre.set_volume(0.7)
     son_collect.set_volume(0.5)
 
     cloud_manager = CloudManager(
-        -4000, 4000,
-        -4000, 4000
+        -8000, 8000,
+        -8000, 8000
     )
     cloud_manager.load_images()
-    cloud_manager.generate_clouds(count=80)
+    cloud_manager.generate_clouds(count=200)
     ambiance_manager = AmbianceManager()
 
     # ── Système jour / nuit ──────────────────────────────────
@@ -358,6 +364,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
 
+    inventory_btn_rect = pygame.Rect(0, 0, 60, 60)
+
+    inventory_ouvert = False
+
+    inventory_slots = []
+
     rects_icones = calculer_rects_icones(dims, HAUTEUR_BARRE, TAILLE_ICONE, slide_offset)
     en_cours = True
     acc_argent   = 0.0
@@ -374,7 +386,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     surface_monde = None
     surface_monde_size = None  # (w, h) en px monde (avant scaling écran)
-
+    footstep_timer = 0.0
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0
         save_done_timer = max(0, save_done_timer - dt)
@@ -420,7 +432,22 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     current_playlist_index = 0
                 ambient_delay_timer = 3.0
 
-        acc_argent, acc_food, acc_vapeur = gl.calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager, day_night=None)
+        acc_argent, acc_food, acc_vapeur = gl.calculer_production(
+            batiments,
+            players[indice],
+            dt,
+            acc_argent,
+            acc_food,
+            acc_vapeur,
+            npcs=npcs,
+            raid_manager=raid_manager
+        )
+
+        maintenant = pygame.time.get_ticks()
+
+        if player.active_effects["heal"] > maintenant:
+            player.hp = min(player.hp_max, player.hp + 8 * dt)
+
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
 
@@ -556,7 +583,52 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
 # Clic gauche
+
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                sx, sy = pygame.mouse.get_pos()
+
+                if inventory_ouvert:
+                    items_inventaire = [
+                        "potion_money",
+                        "potion_food",
+                        "potion_vapeur",
+                        "potion_heal"
+                    ]
+
+                    potion_utilisee = False
+
+                    for slot_rect, slot_index in inventory_slots:
+                        if slot_rect.collidepoint(sx, sy):
+                            if slot_index < len(items_inventaire):
+                                item_id = items_inventaire[slot_index]
+
+                                if player.inventory.get(item_id, 0) > 0:
+                                    player.inventory[item_id] -= 1
+                                    maintenant = pygame.time.get_ticks()
+
+                                    if item_id == "potion_money":
+                                        effet = "money"
+                                        duree = 300000
+                                    elif item_id == "potion_food":
+                                        effet = "food"
+                                        duree = 300000
+                                    elif item_id == "potion_vapeur":
+                                        effet = "vapeur"
+                                        duree = 300000
+                                    elif item_id == "potion_heal":
+                                        effet = "heal"
+                                        duree = 120000
+
+                                    if player.active_effects[effet] > maintenant:
+                                        player.active_effects[effet] += duree
+                                    else:
+                                        player.active_effects[effet] = maintenant + duree
+
+                                    potion_utilisee = True
+                            break
+
+                    if potion_utilisee:
+                        continue
                 if batiment_selectionne is not None:
                     mouse_held_placing = True  # démarrer le placement continu
 
@@ -571,6 +643,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 if skill_btn_rect.collidepoint(sx, sy):
                     from screens.skill_tree import afficher_skill_tree
                     unlocked_skills = afficher_skill_tree(ecran, player, unlocked_skills, Batiment.DATA)
+                    continue
+
+                if inventory_btn_rect.collidepoint(sx, sy):
+                    inventory_ouvert = not inventory_ouvert
                     continue
 
                 clic_barre = False
@@ -605,34 +681,103 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 ressource_cliquee = True
                                 break
 
+                            maintenant = pygame.time.get_ticks()
+
+                            food_mult = 2 if player.active_effects["food"] > maintenant else 1
+                            money_mult = 2 if player.active_effects["money"] > maintenant else 1
+
                             if res["type"] == "herbe":
-                                gain = random.randint(6, 15)
+                                gain = random.randint(6, 15) * food_mult
                                 player.food += gain
                                 son_collect.play()
 
+
                             elif res["type"] == "coffre":
-                                gain = random.randint(50, 200)
+
+                                gain = random.randint(50, 200) * money_mult
+
                                 player.money += gain
+
                                 son_coffre.play()
 
+                                loot_popups.append({
+
+                                    "texte": f"+{gain}",
+
+                                    "icone": hud_or_img,
+
+                                    "x": res["x"] * TAILLE_CASE,
+
+                                    "y": res["y"] * TAILLE_CASE,
+
+                                    "timer": 1.0,
+
+                                    "couleur": (255, 230, 80)
+
+                                })
+
+                                if random.randint(1, 2) == 1:
+                                    potion_random = random.choice([
+
+                                        "potion_money",
+
+                                        "potion_food",
+
+                                        "potion_vapeur",
+
+                                        "potion_heal"
+
+                                    ])
+
+                                    player.inventory[potion_random] += 1
+
+                                    noms_potions = {
+
+                                        "potion_money": "Potion OR x2",
+
+                                        "potion_food": "Potion FOOD x2",
+
+                                        "potion_vapeur": "Potion VAPEUR x2",
+
+                                        "potion_heal": "Potion SOIN"
+
+                                    }
+
+                                    loot_popups.append({
+
+                                        "texte": noms_potions[potion_random],
+
+                                        "icone": {
+                                            "potion_money": potion_money_img,
+                                            "potion_food": potion_food_img,
+                                            "potion_vapeur": potion_vapeur_img,
+                                            "potion_heal": potion_heal_img
+                                        }[potion_random],
+
+                                        "x": res["x"] * TAILLE_CASE,
+
+                                        "y": res["y"] * TAILLE_CASE + 24,
+
+                                        "timer": 1.5,
+
+                                        "couleur": (180, 120, 255)
+
+                                    })
+
                             else:
-                                gain = random.randint(2, 7)
+                                gain = random.randint(2, 7) * food_mult
                                 player.food += gain
                                 son_collect.play()
 
                             if res["type"] in ["herbe", "bois"]:
-                                icone = hud_food_img
-                            else:
-                                icone = hud_or_img
-
-                            loot_popups.append({
-                                "texte": f"+{gain}",
-                                "icone": icone,
-                                "x": res["x"] * TAILLE_CASE,
-                                "y": res["y"] * TAILLE_CASE,
-                                "timer": 1.0,
-                                "couleur": (255, 230, 80)
-                            })
+                                loot_popups.append({
+                                    "texte": f"+{gain}",
+                                    "icone": hud_food_img,
+                                    "x": res["x"] * TAILLE_CASE,
+                                    "y": res["y"] * TAILLE_CASE,
+                                    "timer": 1.0,
+                                    "couleur": (255, 230, 80)
+                                })
                             ressources_respawn.append({
                                 "type": res["type"],
                                 "timer": random.uniform(5, 10)
@@ -777,6 +922,18 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             joueur.update(TAILLE_CASE, dt)
             joueur.update_anim(dt)
 
+        footstep_timer -= dt
+
+        joueur_bouge = len(player.path) > 0
+
+        if joueur_bouge:
+            if footstep_timer <= 0:
+                son_footstep.play()
+                footstep_timer = son_footstep.get_length()
+        else:
+            son_footstep.stop()
+            footstep_timer = 0
+
         # Placement continu quand le clic est maintenu (drag)
         if mouse_held_placing and batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
@@ -874,7 +1031,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             ecran.blit(texte, (px, py))
 
             if popup["icone"] is not None:
-                icone_size = 64
+                potion_imgs = [potion_money_img, potion_food_img, potion_vapeur_img, potion_heal_img]
+
+                if popup["icone"] in potion_imgs:
+                    icone_size = 32
+                else:
+                    icone_size = 64
 
                 icone = pygame.transform.smoothscale(
                     popup["icone"],
@@ -926,8 +1088,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             respawn["timer"] -= dt
 
             if respawn["timer"] <= 0:
-                x = random.randint(-120, 120)
-                y = random.randint(-120, 120)
+                x = random.randint(-240, 240)
+                y = random.randint(-240, 240)
 
                 ressources_sol.append({
                     "type": respawn["type"],
@@ -937,17 +1099,176 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                 ressources_respawn.remove(respawn)
         float_msg.update(dt)
+        maintenant = pygame.time.get_ticks()
+        effet_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
 
+        effets_affiches = []
+
+        if player.active_effects["money"] > maintenant:
+            effets_affiches.append(("x2 Or", player.active_effects["money"] - maintenant))
+
+        if player.active_effects["food"] > maintenant:
+            effets_affiches.append(("x2 Nourriture", player.active_effects["food"] - maintenant))
+
+        if player.active_effects["vapeur"] > maintenant:
+            effets_affiches.append(("x2 Vapeur", player.active_effects["vapeur"] - maintenant))
+
+        if player.active_effects["heal"] > maintenant:
+            effets_affiches.append(("Soin", player.active_effects["heal"] - maintenant))
+
+        for i, (nom_effet, temps_restant) in enumerate(effets_affiches):
+            secondes = int(temps_restant / 1000)
+            minutes = secondes // 60
+            sec = secondes % 60
+
+            texte = effet_font.render(
+                f"{nom_effet} {minutes}:{sec:02d}",
+                True,
+                (220, 180, 30)
+            )
+
+            ecran.blit(texte, (20, dims[1] - 180 + i * 22))
         # === MODIFIEZ CET APPEL TOUT À LA FIN DE .\screens\jeu.py ===
         dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
                      TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
                      save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect,
-                     skill_btn_rect, raid_manager=raid_manager, batiments_list=batiments)
+                     skill_btn_rect, inventory_btn_rect, raid_manager=raid_manager, batiments_list=batiments)
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
         if menu_amelioration:
             menu_amelioration.draw(ecran)
+        if inventory_ouvert:
+            slot_size = 84
+            marge = 12
+            nb_colonnes = 3
+            nb_lignes = 4
+
+            start_x = 20
+            start_y = 70
+
+            inv_w = start_x * 2 + nb_colonnes * slot_size + (nb_colonnes - 1) * marge
+            inv_h = start_y + nb_lignes * slot_size + (nb_lignes - 1) * marge + 30
+
+            inv_x = 20
+            inv_y = dims[1] // 2 - inv_h // 2
+
+            fond = pygame.Surface((inv_w, inv_h), pygame.SRCALPHA)
+
+            pygame.draw.rect(
+                fond,
+                (25, 25, 35, 235),
+                (0, 0, inv_w, inv_h),
+                border_radius=16
+            )
+            border = (170, 135, 20)
+            pygame.draw.rect(
+                fond,
+                border,
+                (0, 0, inv_w, inv_h),
+                2,
+                border_radius=16
+            )
+
+            titre_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 24)
+            titre = titre_font.render("INVENTAIRE", True, (170, 135, 20))
+            fond.blit(titre, (20, 18))
+
+            slot_size = 72
+            marge = 12
+            start_x = 20
+            start_y = 70
+            items_inventaire = [
+                ("potion_money", potion_money_img),
+                ("potion_food", potion_food_img),
+                ("potion_vapeur", potion_vapeur_img),
+                ("potion_heal", potion_heal_img),
+            ]
+            inventory_slots.clear()
+            for i in range(nb_colonnes * nb_lignes):
+                col = i % nb_colonnes
+                row = i // nb_colonnes
+
+                x = start_x + col * (slot_size + marge)
+                y = start_y + row * (slot_size + marge)
+
+                slot_rect = pygame.Rect(
+                    inv_x + x,
+                    inv_y + y,
+                    slot_size,
+                    slot_size
+                )
+
+                inventory_slots.append((slot_rect, i))
+
+                pygame.draw.rect(
+                    fond,
+                    (60, 60, 75),
+                    (x, y, slot_size, slot_size),
+                    border_radius=8
+                )
+
+                pygame.draw.rect(
+                    fond,
+                    (170, 135, 20),
+                    (x, y, slot_size, slot_size),
+                    1,
+                    border_radius=8
+                )
+                if i < len(items_inventaire):
+                    item_id, item_img = items_inventaire[i]
+                    quantite = player.inventory.get(item_id, 0)
+
+                    if quantite > 0:
+                        # Image potion
+                        item_icon = pygame.transform.smoothscale(
+                            item_img,
+                            (42, 42)
+                        )
+
+                        icon_x = x + slot_size // 2 - item_icon.get_width() // 2
+                        icon_y = y + 8
+
+                        fond.blit(item_icon, (icon_x, icon_y))
+                        nom_font = pygame.font.Font(
+                            "assets/fonts/Minecraft.ttf",
+                            10
+                        )
+
+                        noms_potions = {
+                            "potion_money": "OR x2",
+                            "potion_food": "FOOD x2",
+                            "potion_vapeur": "VAPEUR x2",
+                            "potion_heal": "SOIN"
+                        }
+
+                        nom_txt = nom_font.render(
+                            noms_potions[item_id],
+                            True,
+                            (220, 190, 90)
+                        )
+
+                        nom_x = x + slot_size // 2 - nom_txt.get_width() // 2
+                        nom_y = y + 52
+
+                        fond.blit(nom_txt, (nom_x, nom_y))
+                        # Quantité
+                        q_font = pygame.font.Font(
+                            "assets/fonts/Minecraft.ttf",
+                            14
+                        )
+
+                        q_txt = q_font.render(
+                            str(quantite),
+                            True,
+                            (255, 255, 255)
+                        )
+
+                        q_x = x + 5
+                        q_y = y + 4
+
+                        fond.blit(q_txt, (q_x, q_y))
+            ecran.blit(fond, (inv_x, inv_y))
 
         # ── HUD jour/nuit et météo ───────────────────────────
         # day_night.draw_clock(ecran, 15, 15, font_clock)  # Chrono de temps caché

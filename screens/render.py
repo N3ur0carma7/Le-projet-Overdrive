@@ -241,7 +241,7 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
 def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
                  taille_icone, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
                  save_done_img, save_done_timer, barre_ouverte=True, slide_offset=0, btn_batiments_rect=None,
-                 skill_btn_rect=None, raid_manager=None, batiments_list=None):
+                 skill_btn_rect=None, inventory_btn_rect=None, raid_manager=None, batiments_list=None):
     # 1. Dessin de la barre du bas
     if slide_offset < hauteur_barre:
         barre_surf = pygame.Surface((dims[0], hauteur_barre), pygame.SRCALPHA)
@@ -368,6 +368,22 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
     if skill_btn_rect is not None:
         skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
+    # 8. Bouton inventaire (INV)
+    inv_btn_x = skill_btn_x - BTN_SIZE - BTN_MARGE
+    inv_btn_y = btn_y
+    inv_btn_couleur = (140, 90, 180)
+
+    pygame.draw.rect(ecran, inv_btn_couleur, pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
+    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
+
+    inv_label = "INV"
+    inv_lbl_surf = btn_font.render(inv_label, True, (255, 255, 255))
+    inv_lbl_x = inv_btn_x + (BTN_SIZE - inv_lbl_surf.get_width()) // 2
+    inv_lbl_y = inv_btn_y + (BTN_SIZE - inv_lbl_surf.get_height()) // 2
+    ecran.blit(inv_lbl_surf, (inv_lbl_x, inv_lbl_y))
+
+    if inventory_btn_rect is not None:
+        inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
 
     # 8. Affichage de la notification de sauvegarde
     if save_done_timer > 0:

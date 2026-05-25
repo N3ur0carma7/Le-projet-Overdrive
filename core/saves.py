@@ -21,7 +21,9 @@ def save_game(buildings: list, player: Player, online_data):
                 "money": player.money,
                 "food": player.food,
                 "vapeur": player.vapeur,
-                "pos": player.pos
+                "pos": player.pos,
+                "inventory": getattr(player, "inventory", {}),
+                "active_effects": getattr(player, "active_effects", {})
             },
             "Builds": batiments_real,
             "Online": online_data if online_data is not None else None,
@@ -51,6 +53,20 @@ def load_save(buildings: list, player: Player):
         player.food = save_data["Player"].get("food", 0)
         player.vapeur = save_data["Player"].get("vapeur", 0)
         player.pos = save_data["Player"]["pos"]
+
+        player.inventory = save_data["Player"].get("inventory", {
+            "potion_money": 0,
+            "potion_food": 0,
+            "potion_vapeur": 0,
+            "potion_heal": 0
+        })
+
+        player.active_effects = save_data["Player"].get("active_effects", {
+            "money": 0,
+            "food": 0,
+            "vapeur": 0,
+            "heal": 0
+        })
         # Loading buildings data
         for b in save_data["Builds"]:
             buildings.append(Batiment.from_dict(b))
