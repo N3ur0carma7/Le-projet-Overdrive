@@ -113,12 +113,7 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
         if b.type == Batiment.TYPE_RESIDENTIEL:
             population_attendue[id(b)] = 0 if (hasattr(b, "en_construction") and b.en_construction) else b.get_population()
 
-    npcs_par_maison = {}
-    for npc in list(npcs):
-        cle = id(npc.maison)
-        if cle not in npcs_par_maison:
-            npcs_par_maison[cle] = []
-        npcs_par_maison[cle].append(npc)
+
 
     # Supprimer les NPCs dont la maison n'existe plus
     maisons_valides = {id(b) for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL}
@@ -127,6 +122,16 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             # Nettoyer aussi la table d'assignations
             assignations_manuelles.pop(id(npc), None)
             npcs.remove(npc)
+
+    npcs_par_maison = {}
+
+    for npc in npcs:
+        cle = id(npc.maison)
+
+        if cle not in npcs_par_maison:
+            npcs_par_maison[cle] = []
+
+        npcs_par_maison[cle].append(npc)
 
     # Créer / supprimer des NPCs selon la population
     for b in batiments_list:
@@ -150,7 +155,9 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
     # Mettre à jour le pathfinder de tous les NPC (la grille de bâtiments a pu changer)
     for npc in npcs:
         npc.batiments_list = batiments_list
-        npc.pathfinder = PathFinder(batiments_list, taille_case)
+
+        if npc.pathfinder is None:
+            npc.pathfinder = PathFinder(batiments_list, taille_case)
 
 
     bat_by_id = {id(b): b for b in batiments_list}

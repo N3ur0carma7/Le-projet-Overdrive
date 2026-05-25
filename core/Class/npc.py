@@ -265,29 +265,48 @@ class Npc:
             chemin.append((self.monde_x + dx * t, self.monde_y + dy * t))
         chemin[-1] = (dest_x, dest_y)
         return chemin
-    
+
     def _construire_chemin_valide(self, dest_x, dest_y):
-        """Construit un chemin valide vers la destination en utilisant le pathfinder.
-        Retourne None si pas de chemin valide."""
+        if self.batiments_list:
+            self.pathfinder = PathFinder(self.batiments_list, self.taille_case)
+
         if self.pathfinder is None:
             return None
-        
-        # Utiliser le pathfinder pour trouver un chemin
-        chemin = self.pathfinder.find_path(self.monde_x, self.monde_y, dest_x, dest_y)
-        return chemin
-    
+
+        offsets = [
+            (0, 0),
+            (self.taille_case, 0),
+            (-self.taille_case, 0),
+            (0, self.taille_case),
+            (0, -self.taille_case),
+            (self.taille_case, self.taille_case),
+            (-self.taille_case, self.taille_case),
+            (self.taille_case, -self.taille_case),
+            (-self.taille_case, -self.taille_case),
+        ]
+
+        meilleur_chemin = None
+
+        for ox, oy in offsets:
+            chemin = self.pathfinder.find_path(
+                self.monde_x,
+                self.monde_y,
+                dest_x + ox,
+                dest_y + oy
+            )
+
+            if chemin and (meilleur_chemin is None or len(chemin) < len(meilleur_chemin)):
+                meilleur_chemin = chemin
+
+        return meilleur_chemin
+
     def _chemin_vers_travail_existe(self):
-        """Vérifie si un chemin valide existe vers le lieu de travail.
-        Retourne True si un chemin existe, False sinon."""
         if self.lieu_travail is None:
             return False
-        
-        if self.pathfinder is None:
-            # Sans pathfinder, on accepte tous les chemins
-            return True
-        
+
         dest_x, dest_y = self._porte_bas_pixels(self.lieu_travail)
-        chemin = self.pathfinder.find_path(self.monde_x, self.monde_y, dest_x, dest_y)
+        chemin = self._construire_chemin_valide(dest_x, dest_y)
+
         return chemin is not None
 
     def _avancer_vers(self, tx, ty, dt):
