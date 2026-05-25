@@ -151,13 +151,8 @@ def menu_principal(ecran, horloge, FPS):
                     gl.players = []
                     gl.batiments = []
                     gl.indice = 0
-                    t = threading.Thread(target=connection, daemon=True)
-                    t.start()
-                    t.join()
-                    if CLIENT is not None:
-                        return "jeu", True
-                    else :
-                        pass
+                    threading.Thread(target=connection, daemon=True).start()
+                    return "jeu", True
 
                 if boutons[3].clic():
                     return etat_suivant, False
