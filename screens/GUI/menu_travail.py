@@ -27,7 +27,7 @@ C_SCROLL_THB  = (80,  62,  35)
 
 ICONE_TYPE = {
     Batiment.TYPE_MINE:        "Mine Or",
-    Batiment.TYPE_FARM:        "Farm Bouffe",
+    Batiment.TYPE_FARM:        "Ferme",
     Batiment.TYPE_GENERATEUR:  "Generateur Vapeur",
     Batiment.TYPE_RESIDENTIEL: "Maison",
     Batiment.TYPE_TOURELLE:    "Tourelle",

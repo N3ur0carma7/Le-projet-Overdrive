@@ -1,4 +1,4 @@
-﻿import pygame
+import pygame
 import math
 import sys
 from core.Class.batiments import Batiment
@@ -29,9 +29,9 @@ TYPE_LABELS = {
     Batiment.TYPE_MINE:        "MINE",
     Batiment.TYPE_FARM:        "FERME",
     Batiment.TYPE_TOURELLE:    "TOURELLE",
-    Batiment.TYPE_CENTRALE_VAPEUR: "CENTRALE VAPEUR",
-    Batiment.TYPE_CENTRALE_ARGENT: "CENTRALE ARGENT",
-    Batiment.TYPE_CENTRALE_NOURRITURE: "CENTRALE NOURRITURE",
+    Batiment.TYPE_CENTRALE_VAPEUR: "FOURNAISE",
+    Batiment.TYPE_CENTRALE_ARGENT: "COMPTOIR",
+    Batiment.TYPE_CENTRALE_NOURRITURE: "CUISINE",
     Batiment.TYPE_STOCKAGE_NOURRITURE: "STOCKAGE NOURRITURE",
     Batiment.TYPE_STOCKAGE_ARGENT: "STOCKAGE ARGENT",
     Batiment.TYPE_STOCKAGE_VAPEUR: "STOCKAGE VAPEUR"

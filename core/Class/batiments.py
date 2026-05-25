@@ -2,18 +2,18 @@ import pygame
 from core.Class.skill_levels import get_max_level
 
 class Batiment:
-    TYPE_RESIDENTIEL = "residentiel"
-    TYPE_GENERATEUR  = "generateur"
-    TYPE_MINE        = "mine"
-    TYPE_FARM        = "farm"
-    TYPE_TOURELLE    = "tourelle"
-    TYPE_TILE        = "tile"
-    TYPE_CENTRALE_ARGENT    = "centrale arg"
-    TYPE_CENTRALE_VAPEUR    = "centrale vap"
-    TYPE_CENTRALE_NOURRITURE = "centrale nour"
-    TYPE_STOCKAGE_ARGENT = "stockage arg"
-    TYPE_STOCKAGE_VAPEUR = "stockage vap"
-    TYPE_STOCKAGE_NOURRITURE = "stockage nour"
+    TYPE_RESIDENTIEL = "Residentiel"
+    TYPE_GENERATEUR  = "Generateur"
+    TYPE_MINE        = "Mine"
+    TYPE_FARM        = "Ferme"
+    TYPE_TOURELLE    = "Tourelle"
+    TYPE_TILE        = "Tuile"
+    TYPE_CENTRALE_ARGENT    = "Comptoir"
+    TYPE_CENTRALE_VAPEUR    = "Fournaise"
+    TYPE_CENTRALE_NOURRITURE = "Cuisine"
+    TYPE_STOCKAGE_ARGENT = "Banque"
+    TYPE_STOCKAGE_VAPEUR = "Cuve"
+    TYPE_STOCKAGE_NOURRITURE = "Grenier"
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,

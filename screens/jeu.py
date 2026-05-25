@@ -699,12 +699,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         batiment_selectionne = None
                     continue
 
-                if skill_btn_rect.collidepoint(sx, sy):
+                if not barre_ouverte and skill_btn_rect.collidepoint(sx, sy):
                     from screens.skill_tree import afficher_skill_tree
                     unlocked_skills = afficher_skill_tree(ecran, player, unlocked_skills, Batiment.DATA)
                     continue
 
-                if inventory_btn_rect.collidepoint(sx, sy):
+                if not barre_ouverte and inventory_btn_rect.collidepoint(sx, sy):
                     inventory_ouvert = not inventory_ouvert
                     continue
 

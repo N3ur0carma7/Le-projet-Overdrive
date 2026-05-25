@@ -394,39 +394,46 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     if btn_batiments_rect is not None:
         btn_batiments_rect.update(btn_x, btn_y, BTN_SIZE, BTN_SIZE)
 
-    # 7. Bouton skill tree (SKILLS)
-    skill_btn_x = btn_x - BTN_SIZE - BTN_MARGE
-    skill_btn_y = btn_y
-    skill_btn_couleur = (100, 100, 200)
-    pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE),
-                     border_radius=10)
-    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3,
-                     border_radius=10)
+    # 7. Bouton skill tree (SKILLS) - caché si la barre de build est ouverte
+    if not barre_ouverte:
+        skill_btn_x = btn_x - BTN_SIZE - BTN_MARGE
+        skill_btn_y = btn_y
+        skill_btn_couleur = (100, 100, 200)
+        pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE),
+                         border_radius=10)
+        pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3,
+                         border_radius=10)
 
-    skill_label = "SKILLS"
-    skill_lbl_surf = btn_font.render(skill_label, True, (255, 255, 255))
-    skill_lbl_x = skill_btn_x + (BTN_SIZE - skill_lbl_surf.get_width()) // 2
-    skill_lbl_y = skill_btn_y + (BTN_SIZE - skill_lbl_surf.get_height()) // 2
-    ecran.blit(skill_lbl_surf, (skill_lbl_x, skill_lbl_y))
+        skill_label = "SKILLS"
+        skill_lbl_surf = btn_font.render(skill_label, True, (255, 255, 255))
+        skill_lbl_x = skill_btn_x + (BTN_SIZE - skill_lbl_surf.get_width()) // 2
+        skill_lbl_y = skill_btn_y + (BTN_SIZE - skill_lbl_surf.get_height()) // 2
+        ecran.blit(skill_lbl_surf, (skill_lbl_x, skill_lbl_y))
 
-    if skill_btn_rect is not None:
-        skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
-    # 8. Bouton inventaire (INV)
-    inv_btn_x = skill_btn_x - BTN_SIZE - BTN_MARGE
-    inv_btn_y = btn_y
-    inv_btn_couleur = (140, 90, 180)
+        if skill_btn_rect is not None:
+            skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
+    elif skill_btn_rect is not None:
+        skill_btn_rect.update(0, 0, 0, 0)
 
-    pygame.draw.rect(ecran, inv_btn_couleur, pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
-    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
+    # 8. Bouton inventaire (INV) - caché si la barre de build est ouverte
+    if not barre_ouverte:
+        inv_btn_x = btn_x - 2 * (BTN_SIZE + BTN_MARGE)
+        inv_btn_y = btn_y
+        inv_btn_couleur = (140, 90, 180)
 
-    inv_label = "INV"
-    inv_lbl_surf = btn_font.render(inv_label, True, (255, 255, 255))
-    inv_lbl_x = inv_btn_x + (BTN_SIZE - inv_lbl_surf.get_width()) // 2
-    inv_lbl_y = inv_btn_y + (BTN_SIZE - inv_lbl_surf.get_height()) // 2
-    ecran.blit(inv_lbl_surf, (inv_lbl_x, inv_lbl_y))
+        pygame.draw.rect(ecran, inv_btn_couleur, pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
+        pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
 
-    if inventory_btn_rect is not None:
-        inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
+        inv_label = "INV"
+        inv_lbl_surf = btn_font.render(inv_label, True, (255, 255, 255))
+        inv_lbl_x = inv_btn_x + (BTN_SIZE - inv_lbl_surf.get_width()) // 2
+        inv_lbl_y = inv_btn_y + (BTN_SIZE - inv_lbl_surf.get_height()) // 2
+        ecran.blit(inv_lbl_surf, (inv_lbl_x, inv_lbl_y))
+
+        if inventory_btn_rect is not None:
+            inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
+    elif inventory_btn_rect is not None:
+        inventory_btn_rect.update(0, 0, 0, 0)
 
     # 8. Affichage de la notification de sauvegarde (popup dessinée)
     if save_done_timer > 0:
