@@ -444,6 +444,9 @@ class Npc:
         ecran.blit(sprite, (ex - affichage_w // 2, ey - affichage_h))
 
     def dessiner_monde(self, surface, camera_x, camera_y, image=None):
+        if not hasattr(Npc, "walk_right") or not hasattr(Npc, "walk_left"):
+            Npc.load_sprites()
+
         if self.etat == self.ETAT_AU_TRAVAIL:
             return
 

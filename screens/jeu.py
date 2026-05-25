@@ -141,9 +141,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ressources_sol = []
     ressources_respawn = []
 
-    nb_herbe = 1300
-    nb_coffre = 145
-    nb_bois = 1410
+    nb_herbe = 1600
+    nb_coffre = 220
+    nb_bois = 1800
 
     def ajouter_ressources(type_res, quantite):
         for _ in range(quantite):
