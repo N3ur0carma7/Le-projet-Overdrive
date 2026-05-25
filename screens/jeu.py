@@ -960,14 +960,15 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         if players and 0 <= indice < len(players):
-            keys_pressed = pygame.key.get_pressed()
-            keys_dict = {
-                pygame.K_z: keys_pressed[pygame.K_z],
-                pygame.K_q: keys_pressed[pygame.K_q],
-                pygame.K_s: keys_pressed[pygame.K_s],
-                pygame.K_d: keys_pressed[pygame.K_d],
-            }
-            players[indice].update(keys_dict, dt)
+            if not terminal.visible:
+                keys_pressed = pygame.key.get_pressed()
+                keys_dict = {
+                    pygame.K_z: keys_pressed[pygame.K_z],
+                    pygame.K_q: keys_pressed[pygame.K_q],
+                    pygame.K_s: keys_pressed[pygame.K_s],
+                    pygame.K_d: keys_pressed[pygame.K_d],
+                }
+                players[indice].update(keys_dict, dt)
             players[indice].update_anim(dt)
 
             for idx, joueur in enumerate(players):

@@ -1,19 +1,15 @@
-"""
-Ajouter une nouvelle commande :
-    1. Definir une fonction  cmd_xxx(args, player, batiments, **ctx)  -> str (message de retour)
-    2. L'enregistrer dans COMMANDS avec sa description.
-"""
-
 import time
+import random
 
 import pygame
 import re
-import random
+
 
 _HELLO_PATTERN = re.compile(
     r'print\s*\(\s*["\']?\s*hello[\s,_\-]*world["\']?\s*\)',
     re.IGNORECASE
 )
+
 
 def _is_hello_world(raw: str) -> bool:
     if _HELLO_PATTERN.search(raw.strip()):
@@ -22,6 +18,10 @@ def _is_hello_world(raw: str) -> bool:
         return True
     return False
 
+
+# ---------------------------------------------------------------------------
+# Matrix Rain  –  easter egg
+# ---------------------------------------------------------------------------
 
 class MatrixRain:
     CHARS    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&"
@@ -103,12 +103,17 @@ class MatrixRain:
                 except Exception:
                     pass
 
-#commandes du terminal
+
+# ---------------------------------------------------------------------------
+# Commandes
+# ---------------------------------------------------------------------------
+
 def cmd_godlike(args, player, batiments, **ctx):
     player.money  += 10_000
     player.food   += 10_000
     player.vapeur += 10_000
     return "[OK] +10 000 or, nourriture, vapeur"
+
 
 def cmd_give(args, player, batiments, **ctx):
     ressources = {"or": "money", "food": "food", "vapeur": "vapeur",
@@ -125,6 +130,7 @@ def cmd_give(args, player, batiments, **ctx):
     setattr(player, ressources[nom], getattr(player, ressources[nom]) + qte)
     return f"+{qte} {args[0]}"
 
+
 def cmd_set(args, player, batiments, **ctx):
     ressources = {"or": "money", "food": "food", "vapeur": "vapeur",
                   "money": "money", "argent": "money"}
@@ -140,23 +146,28 @@ def cmd_set(args, player, batiments, **ctx):
     setattr(player, ressources[nom], val)
     return f"{args[0]} = {val}"
 
+
 def cmd_status(args, player, batiments, **ctx):
     return (f"HP {player.hp}/{player.hp_max}  |  "
             f"Or {player.money}  |  Food {player.food}  |  Vapeur {player.vapeur}  |  "
             f"Batiments {len(batiments)}")
 
+
 def cmd_heal(args, player, batiments, **ctx):
     player.hp = player.hp_max
     return f"[OK] HP restaures a {player.hp_max}"
 
+
 def cmd_clear(args, player, batiments, **ctx):
     return "__CLEAR__"
+
 
 def cmd_help(args, player, batiments, **ctx):
     lignes = ["Commandes disponibles :"]
     for name, (fn, desc) in sorted(COMMANDS.items()):
         lignes.append(f"  {name:<14} {desc}")
     return "\n".join(lignes)
+
 
 def cmd_spawn(args, player, batiments, **ctx):
     if not args:
@@ -170,6 +181,7 @@ def cmd_spawn(args, player, batiments, **ctx):
         return ctx["spawn_fn"](nom, qte)
     return f"(PVE non encore implemente) spawn {qte}x {nom}"
 
+
 def cmd_event(args, player, batiments, **ctx):
     if not args:
         return "Usage : event <nom>"
@@ -178,24 +190,27 @@ def cmd_event(args, player, batiments, **ctx):
         return ctx["trigger_event_fn"](nom)
     return f"(Events non encore implementes) event '{nom}'"
 
+
 def cmd_trigger_raid(args, player, batiments, **ctx):
     raid_mgr = ctx.get("raid_manager")
     if raid_mgr is None:
         return "Gestionnaire PVE introuvable."
     return raid_mgr.trigger_raid()
 
+
 def cmd_settime(args, player, batiments, **ctx):
     return "Commande 'settime' desactivee : le systeme jour/nuit a ete supprime."
+
 
 def cmd_setweather(args, player, batiments, **ctx):
     from screens.weather import WEATHER_SUNNY, WEATHER_CLOUDY, WEATHER_WINDY, WEATHER_RAIN, WEATHER_STORM
     weather = ctx.get("weather")
     if weather is None:
         return "Gestionnaire meteo introuvable."
-    
+
     if not args:
         return f"Meteo actuelle : {weather.label}  |  Vent {weather.wind_factor:.1f}x"
-    
+
     weathers = {
         "sunny": WEATHER_SUNNY,
         "cloudy": WEATHER_CLOUDY,
@@ -208,25 +223,25 @@ def cmd_setweather(args, player, batiments, **ctx):
         "pluie": WEATHER_RAIN,
         "orage": WEATHER_STORM,
     }
-    
+
     arg = args[0].lower()
     if arg not in weathers:
         opts = ", ".join(sorted(set(weathers.values())))
         return f"Meteo inconnue : '{arg}'.\nOptions : {opts}"
-    
+
     new_weather = weathers[arg]
     from screens.weather import _DURATION, _WIND_FACTOR, _RAIN_DROPS_COUNT
-    
+
     weather.current = new_weather
-    weather._next_timer = 60.0  # 60 secondes avant prochaine transition
+    weather._next_timer = 60.0
     weather._wind_target = _WIND_FACTOR[new_weather]
     nb = _RAIN_DROPS_COUNT[new_weather]
     weather._ensure_drops(nb)
     weather._rain_alpha_tgt = 200.0 if nb > 0 else 0.0
-    
+
     if new_weather != WEATHER_STORM:
         weather._storm_timer = 10.0
-    
+
     return f"[OK] Meteo changee a {weather.label}  |  Vent {weather.wind_factor:.1f}x"
 
 
@@ -245,9 +260,17 @@ COMMANDS: dict[str, tuple] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Terminal  –  style Counter‑Strike : fond gris foncé, texte blanc
+# ---------------------------------------------------------------------------
+
 class Terminal:
 
     HISTORIQUE_MAX = 200
+    BG_COLOR       = (30, 30, 30)
+    TEXT_COLOR     = (220, 220, 220)
+    PROMPT_COLOR   = (255, 255, 255)
+    INPUT_BG       = (20, 20, 20)
 
     def __init__(self, dev_mode: bool = False):
         self.dev_mode        = dev_mode
@@ -257,26 +280,26 @@ class Terminal:
                                 "Tapez 'help' pour la liste des commandes."]
         self.scroll_offset   = 0
         self._font           = None
-        self._matrix_rain    = None
-        self._matrix_pending = False
         self.command_history = []
         self.history_index   = -1
         self._ac_prefix      = None
         self._ac_matches     = []
         self._ac_index       = 0
         self._last_ctx       = {}
+        self._matrix_rain    = None
+        self._matrix_pending = False
 
     def _get_font(self):
         if self._font is None:
             try:
                 self._font = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
             except Exception:
-                self._font = pygame.font.SysFont("monospace", 14)
+                self._font = pygame.font.SysFont("consolas", 14)
         return self._font
 
     def toggle(self):
         if not self.dev_mode:
-            return  # Terminal non accessible hors du mode dev
+            return
         self.visible = not self.visible
         if self.visible:
             self.input_text    = ""
@@ -328,7 +351,7 @@ class Terminal:
                 self._autocomplete(reverse=reverse)
             else:
                 char = event.unicode
-                if char and char.isprintable() and char != "²":
+                if char and char.isprintable() and char != "\xb2":
                     self.input_text += char
                     self.history_index = -1
                     self._ac_prefix = None
@@ -341,7 +364,6 @@ class Terminal:
         if not raw:
             return
 
-        # Add to command history
         self.command_history.append(raw)
         if len(self.command_history) > 100:
             self.command_history.pop(0)
@@ -459,7 +481,6 @@ class Terminal:
             self._matrix_rain    = MatrixRain(W, H)
             self._matrix_pending = False
 
-        # Matrix rain
         if self._matrix_rain is not None:
             self._matrix_rain.update(dt)
             self._matrix_rain.draw(ecran)
@@ -469,20 +490,19 @@ class Terminal:
         if not self.visible:
             return
 
-        font    = self._get_font()
-        term_h  = H // 2
-        line_h  = font.get_linesize()
+        font = self._get_font()
+        term_w = W // 3
+        term_h = H // 2
+        line_h = font.get_linesize()
         padding = 8
         input_h = line_h + padding * 2
 
-        surf = pygame.Surface((W, term_h), pygame.SRCALPHA)
-        surf.fill((10, 10, 10, 210))
-        ecran.blit(surf, (0, 0))
-
-        pygame.draw.line(ecran, (0, 200, 100), (0, term_h), (W, term_h), 2)
+        bg = pygame.Surface((term_w, term_h))
+        bg.fill(self.BG_COLOR)
+        ecran.blit(bg, (0, 0))
 
         zone_hist_h = term_h - input_h - padding
-        lignes_max  = zone_hist_h // line_h
+        lignes_max = zone_hist_h // line_h
 
         hist_visible = self.historique[
             max(0, len(self.historique) - lignes_max - self.scroll_offset)
@@ -491,19 +511,18 @@ class Terminal:
 
         y = padding
         for ligne in hist_visible:
-            couleur  = (0, 230, 120) if ligne.startswith(">") else (200, 200, 200)
-            surf_txt = font.render(ligne, True, couleur)
+            color = self.TEXT_COLOR
+            surf_txt = font.render(ligne, True, color)
             ecran.blit(surf_txt, (padding, y))
             y += line_h
 
         input_y = term_h - input_h
-        pygame.draw.rect(ecran, (30, 30, 30), (0, input_y, W, input_h))
-        pygame.draw.line(ecran, (0, 180, 80), (0, input_y), (W, input_y), 1)
+        pygame.draw.rect(ecran, self.INPUT_BG, (0, input_y, term_w, input_h))
 
-        cursor      = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
-        texte_input = font.render("> " + self.input_text + cursor, True, (0, 255, 140))
+        cursor = "_" if (pygame.time.get_ticks() // 500) % 2 == 0 else " "
+        texte_input = font.render("> " + self.input_text + cursor, True, self.PROMPT_COLOR)
         ecran.blit(texte_input, (padding, input_y + padding))
 
         if self.scroll_offset > 0:
-            ind = font.render(f"{self.scroll_offset} ligne(s) remontees", True, (150, 150, 80))
+            ind = font.render(f"{self.scroll_offset} ligne(s) remontees", True, (150, 150, 150))
             ecran.blit(ind, (W - ind.get_width() - padding, padding))
