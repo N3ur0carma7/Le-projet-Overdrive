@@ -1,7 +1,33 @@
 import pygame
-import core.Class.batiments as Batiment
 import math
 from screens.utils import collision, souris_vers_case, joueur_a_portee
+from core.Class.batiments import Batiment
+
+def charger_spritesheet_construction(path):
+    sheet = pygame.image.load(path).convert_alpha()
+
+    cols = 4
+    rows = 4
+    frame_w = sheet.get_width() // cols
+    frame_h = sheet.get_height() // rows
+
+    frames = []
+
+    for row in range(rows):
+        for col in range(cols):
+            rect = pygame.Rect(
+                col * frame_w,
+                row * frame_h + 32,
+                frame_w,
+                frame_h - 32
+            )
+
+            frame = sheet.subsurface(rect).copy()
+            frame.set_colorkey((0, 0, 0))
+            frames.append(frame)
+
+    return frames
+
 import screens.game_logic as gl
 def corriger_transparence(surface):
     width, height = surface.get_size()
@@ -57,21 +83,78 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
     cache[key] = scaled
     return scaled
 
-def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None):
+def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None, construction_gear=None, ressources_sol=None, images_ressources_sol=None, active_player=None):
     from screens.utils import collision, souris_vers_case, joueur_a_portee
     from core.Class.batiments import Batiment
 
     scaled_cache = {}
-    player = players[gl.indice]
+
+    if ressources_sol is not None and images_ressources_sol is not None:
+        for res in ressources_sol:
+            img = images_ressources_sol[res["type"]]
+
+            if res["type"] == "coffre":
+                taille = int(TAILLE_CASE * 1.6)
+            else:
+                taille = TAILLE_CASE
+
+            img_scaled = pygame.transform.smoothscale(
+                img,
+                (taille, taille)
+            )
+
+            rx = res["x"] * TAILLE_CASE - camera_x + (TAILLE_CASE - taille) / 2
+            ry = res["y"] * TAILLE_CASE - camera_y + (TAILLE_CASE - taille) / 2
+
+            surface_monde.blit(img_scaled, (rx, ry))
+
     for B in batiments:
         footprint_w_px = B.largeur * TAILLE_CASE
         footprint_h_px = B.hauteur * TAILLE_CASE
-        image = _get_scaled_batiment_image(
-            images_batiments, B.type, B.niveau, footprint_w_px, footprint_h_px, scaled_cache, bat_obj=B
-        )
+
+        if hasattr(B, "en_construction") and B.en_construction:
+            B.construction_finie()
+
+            image = pygame.Surface((footprint_w_px, footprint_h_px), pygame.SRCALPHA)
+
+            angle = (pygame.time.get_ticks() * 0.12) % 360
+            gear_size = int(min(footprint_w_px, footprint_h_px) * 0.7)
+
+            gear = pygame.transform.smoothscale(
+                construction_gear,
+                (gear_size, gear_size)
+            )
+
+            gear_rotated = pygame.transform.rotate(gear, angle)
+        else:
+            image = _get_scaled_batiment_image(
+                images_batiments, B.type, B.niveau,
+                footprint_w_px, footprint_h_px,
+                scaled_cache, bat_obj=B
+            )
+            gear_rotated = None
+
         x = B.x * TAILLE_CASE - camera_x + (footprint_w_px - image.get_width()) / 2
         y = B.y * TAILLE_CASE - camera_y + (footprint_h_px - image.get_height()) / 2
+
         surface_monde.blit(image, (x, y))
+
+        if hasattr(B, "en_construction") and B.en_construction and gear_rotated is not None:
+            gx = B.x * TAILLE_CASE - camera_x + (footprint_w_px - gear_rotated.get_width()) / 2
+            gy = B.y * TAILLE_CASE - camera_y + (footprint_h_px - gear_rotated.get_height()) / 2
+
+            surface_monde.blit(gear_rotated, (gx, gy))
+
+        if hasattr(B, "en_construction") and B.en_construction:
+            progression = B.progression_construction()
+
+            barre_w = footprint_w_px
+            barre_h = 6
+            barre_x = B.x * TAILLE_CASE - camera_x
+            barre_y = B.y * TAILLE_CASE - camera_y - 10
+
+            pygame.draw.rect(surface_monde, (40, 40, 40), (barre_x, barre_y, barre_w, barre_h))
+            pygame.draw.rect(surface_monde, (80, 220, 80), (barre_x, barre_y, barre_w * progression, barre_h))
 
     # fantome
     if batiment_selectionne is not None:
@@ -89,17 +172,57 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
             images_batiments, type_batiment, 1, footprint_w_px, footprint_h_px, scaled_cache, bat_obj=test_batiment
         )
         image_fantome = image.copy()
-        if collision(batiments, test_batiment):
+        collision_ressource = False
+
+        if ressources_sol is not None:
+            test_rect = pygame.Rect(
+                test_batiment.x,
+                test_batiment.y,
+                test_batiment.largeur,
+                test_batiment.hauteur
+            )
+
+            for res in ressources_sol:
+                res_rect = pygame.Rect(
+                    res["x"],
+                    res["y"],
+                    1,
+                    1
+                )
+
+                if test_rect.colliderect(res_rect):
+                    collision_ressource = True
+                    break
+
+        tourelle_bloquee = (
+                type_batiment == Batiment.TYPE_TOURELLE
+                and not Batiment.DATA[Batiment.TYPE_TOURELLE].get("unlocked", False)
+        )
+
+        if collision(batiments, test_batiment) or collision_ressource or tourelle_bloquee:
             image_fantome.fill((255, 0, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
-        elif not joueur_a_portee((grid_x, grid_y), player, TAILLE_CASE, distance_max=10, width=test_batiment.largeur, height=test_batiment.hauteur):
-            image_fantome.fill((255, 140, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
+        else:
+            player_for_range = active_player
+            if player_for_range is None:
+                if isinstance(players, (list, tuple)) and players:
+                    player_for_range = players[0]
+                else:
+                    player_for_range = players
+            if player_for_range is not None and not joueur_a_portee((grid_x, grid_y), player_for_range, TAILLE_CASE, distance_max=10, width=test_batiment.largeur, height=test_batiment.hauteur):
+                image_fantome.fill((255, 140, 0, 120), special_flags=pygame.BLEND_RGBA_MULT)
 
         x = grid_x * TAILLE_CASE - camera_x + (footprint_w_px - image.get_width()) / 2
         y = grid_y * TAILLE_CASE - camera_y + (footprint_h_px - image.get_height()) / 2
 
         surface_monde.blit(image_fantome, (x, y))
-    for player in players:
-        player.draw_player(surface_monde, camera_x, camera_y)
+    actual_players = players
+    if actual_players is None:
+        actual_players = []
+    elif not isinstance(actual_players, (list, tuple)):
+        actual_players = [actual_players]
+
+    for player_obj in actual_players:
+        player_obj.draw_player(surface_monde, camera_x, camera_y)
 
 
     for npc in npcs:
@@ -137,6 +260,23 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
         icone = pygame.transform.smoothscale(img_base, (taille_icone, taille_icone))
         ecran.blit(icone, rect)
+        nom = TYPES_BATIMENTS[i]
+        cout = Batiment.DATA[nom][1]["cout"]
+
+        font_small = pygame.font.Font("assets/fonts/Minecraft.ttf", 10)
+
+        texte_nom = font_small.render(nom, True, (255, 255, 255))
+        texte_prix = font_small.render(str(cout) + " or", True, (255, 220, 80))
+
+        ecran.blit(texte_nom, (
+            rect.centerx - texte_nom.get_width() // 2,
+            rect.y - 18
+        ))
+
+        ecran.blit(texte_prix, (
+            rect.centerx - texte_prix.get_width() // 2,
+            rect.bottom + 4
+        ))
 
     # 3. Préparation de la police pour les ressources
     try:
@@ -147,9 +287,12 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     marge_hud = 15
 
     # 4. Récupération de la population via la liste synchronisée
-    from core.Class.batiments import Batiment
     if batiments_list is not None:
-        total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
+        total_villageois = sum(
+            b.get_population()
+            for b in batiments_list
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
     else:
         total_villageois = 0
 

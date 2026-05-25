@@ -24,11 +24,17 @@ from screens.utils import collision, calculer_rects_icones, souris_vers_case, jo
 
 from screens.render import dessiner_monde, dessiner_hud
 import core.pve as pve
+from screens.game_logic import synchroniser_npcs, calculer_production
+from screens.render import dessiner_monde, dessiner_hud, charger_spritesheet_construction
+from core.pve import RaidManager
 
-from screens.GUI.menu_amelioration import afficher_menu_amelioration
+from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
+from screens.ambiance import AmbianceManager
+# from screens.day_night import DayNightCycle  # Logique jour/nuit désactivée
+from screens.weather import WeatherManager
 
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
@@ -95,7 +101,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
         }
     }
-
+    construction_gear = pygame.image.load(
+        "assets/buildings/construction_gear.png"
+    ).convert_alpha()
     # Maintenant que images_batiments existe à 100%, on copie en toute sécurité le dictionnaire d'images
     # pour les niveaux d'amélioration suivants :
     images_batiments[Batiment.TYPE_TOURELLE][2] = {k: v for k, v in images_batiments[Batiment.TYPE_TOURELLE][1].items()}
@@ -112,6 +120,32 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     TAILLE_ICONE = 64
     npcs = []
+
+    ressources_sol = []
+    ressources_respawn = []
+
+    nb_herbe = 180
+    nb_coffre = 25
+    nb_bois = 180
+
+    def ajouter_ressources(type_res, quantite):
+        for _ in range(quantite):
+            x = random.randint(-120, 120)
+            y = random.randint(-120, 120)
+
+            if abs(x - 5) < 8 and abs(y - 5) < 8:
+                continue
+
+            ressources_sol.append({
+                "type": type_res,
+                "x": x,
+                "y": y
+            })
+
+    ajouter_ressources("herbe", nb_herbe)
+    ajouter_ressources("coffre", nb_coffre)
+    ajouter_ressources("bois", nb_bois)
+
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
         update = threading.Thread(target=gl.on_message_recu, args=(TAILLE_CASE,), daemon=True)
@@ -124,12 +158,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
     image_pnj = pygame.image.load("assets/pnj.png").convert_alpha()
+    image_herbe_resource = pygame.image.load("assets/environment/herbe_resource.png").convert_alpha()
+    image_coffre_resource = pygame.image.load("assets/environment/coffre_resource.png").convert_alpha()
+    image_bois_resource = pygame.image.load("assets/environment/bois_resource.png").convert_alpha()
     font_argent = pygame.font.Font("assets/fonts/Minecraft.ttf", 15)
     hud_or_img     = pygame.image.load("assets/icones/argent_icone.png").convert_alpha()
     hud_food_img   = pygame.image.load("assets/icones/nourriture_icone.png").convert_alpha()
     hud_vapeur_img = pygame.image.load("assets/icones/vapeur_icone.png").convert_alpha()
     hud_pop_img = pygame.image.load("assets/pnj.png").convert_alpha()
     save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
+    son_collect = pygame.mixer.Sound("assets/sounds/collect_food.wav")
+    son_coffre = pygame.mixer.Sound("assets/sounds/collect_gold.wav")
+    son_coffre.set_volume(0.7)
+    son_collect.set_volume(0.5)
 
     cloud_manager = CloudManager(
         -4000, 4000,
@@ -137,6 +178,22 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     )
     cloud_manager.load_images()
     cloud_manager.generate_clouds(count=80)
+    ambiance_manager = AmbianceManager()
+
+    # ── Système jour / nuit ──────────────────────────────────
+    # day_night = DayNightCycle(start_phase=0.0)   # Logique jour/nuit désactivée
+
+    # ── Système météo ────────────────────────────────────────
+    weather = WeatherManager()
+
+    # Mémoriser la vitesse de base de chaque nuage pour le vent
+    for cloud in cloud_manager.clouds:
+        cloud._base_speed_x = cloud.speed_x
+
+    # Polices HUD jour/nuit et météo
+    font_clock   = pygame.font.Font("assets/fonts/Minecraft.ttf", 18)
+    font_weather = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
+
 
     is_new_game = not os.path.exists("save/save.json")
     if not dev_mode and os.path.exists("save/save.json"):
@@ -204,8 +261,69 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     batiment_selectionne = None
     unlocked_skills = set()
+    menu_amelioration = None
 
-    terminal = Terminal()
+    terminal = Terminal(dev_mode=dev_mode)
+
+    # Fonction utilitaire : tenter de placer un bâtiment aux coordonnées monde (mx, my)
+    def _essayer_placer_batiment(sx, sy, mx, my):
+        if batiment_selectionne is None:
+            return
+        case_x = int(mx // TAILLE_CASE)
+        case_y = int(my // TAILLE_CASE)
+        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+        nouveau = Batiment(type_batiment, case_x, case_y)
+        grid_x = case_x - (nouveau.largeur // 2)
+        grid_y = case_y - (nouveau.hauteur // 2)
+        nouveau.x = grid_x
+        nouveau.y = grid_y
+        cout = Batiment.DATA[type_batiment][1]["cout"]
+
+        collision_ressource = False
+
+        for res in ressources_sol:
+            res_rect = pygame.Rect(
+                res["x"],
+                res["y"],
+                1,
+                1
+            )
+
+            bat_rect = pygame.Rect(
+                nouveau.x,
+                nouveau.y,
+                nouveau.largeur,
+                nouveau.hauteur
+            )
+
+            if bat_rect.colliderect(res_rect):
+                collision_ressource = True
+                break
+
+        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+        nb_production = sum(
+            1 for b in batiments
+            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+        )
+        production_pleine = (
+            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            and nb_production >= nb_villageois
+        )
+        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+        elif production_pleine:
+            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
+        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
+            players[indice].money -= cout
+            batiments.append(nouveau)
+            sound.son_placement.play()
+            synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+            if client_module.CLIENT is not None and online:
+                send_liste_batiments_client(batiments, client_module.CLIENT)
+        elif collision(batiments, nouveau) or collision_ressource:
+            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+        else:
+            float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
     # PVE
     raid_manager = pve.RaidManager(taille_case=TAILLE_CASE)
@@ -225,6 +343,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     float_msg = FloatingMessageManager()
 
+    loot_popups = []
+
     ZOOM_MIN = 0.3
     ZOOM_MAX = 2.5
     VITESSE_ZOOM = 0.1
@@ -232,6 +352,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     barre_ouverte = False
     SLIDE_SPEED = 400
     slide_offset = HAUTEUR_BARRE
+    mouse_held_placing = False  # True quand le clic gauche est maintenu en mode placement
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
 
@@ -297,8 +418,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     current_playlist_index = 0
                 ambient_delay_timer = 3.0
 
-        acc_argent, acc_food, acc_vapeur = gl.calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, raid_manager=raid_manager)
+        acc_argent, acc_food, acc_vapeur = gl.calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager, day_night=None)
         cloud_manager.update(dt)
+        ambiance_manager.update(dt)
+
+        # ── Mise à jour jour/nuit et météo ──────────────────
+        # day_night.update(dt)  # Logique jour/nuit désactivée
+        weather.update(dt)
+
+        # Adapter la vitesse des nuages au vent
+        for cloud in cloud_manager.clouds:
+            base = getattr(cloud, '_base_speed_x', cloud.speed_x)
+            cloud._base_speed_x = base
+            cloud.speed_x = base * weather.wind_factor
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
@@ -319,9 +451,41 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 game_logic.toggle_fullscreen()
                 continue
 
-            # terminal toggle
-            if event.type == pygame.KEYDOWN and event.unicode == "²":
+            # terminal toggle (mode dev uniquement)
+            if event.type == pygame.KEYDOWN and event.unicode == "²" and dev_mode:
                 terminal.toggle()
+                continue
+
+            if terminal.visible:
+                if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager, "weather": weather}):
+                    continue
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    terminal.toggle()
+                    continue
+                continue
+
+            if menu_amelioration:
+                result = menu_amelioration.handle_event(event)
+                if result == "close":
+                    menu_amelioration = None
+                    continue
+                if result == "supprimer":
+                    batiments.remove(menu_amelioration.batiment)
+                    cashback = 0
+                    for k in range(menu_amelioration.batiment.niveau):
+                        cashback += Batiment.DATA[menu_amelioration.batiment.type][1+k]["cout"]
+                    players[indice].money += cashback
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
+                if result == "upgrade":
+                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    if client_module.CLIENT is not None and online:
+                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                    menu_amelioration = None
+                    continue
                 continue
 
             # assignation manuelle des villageois
@@ -329,7 +493,16 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 afficher_menu_travail(ecran, batiments, npcs, players[indice])
                 continue
 
-            if terminal.handle_event(event, player, batiments, extra_ctx={"raid_manager": raid_manager}):
+            # Sélection rapide de bâtiment avec les touches 1-9
+            if event.type == pygame.KEYDOWN and pygame.K_1 <= event.key <= pygame.K_9:
+                index_touche = event.key - pygame.K_1  # 0-based
+                if index_touche < len(TYPES_BATIMENTS):
+                    if batiment_selectionne == index_touche:
+                        batiment_selectionne = None  # désélectionner si déjà actif
+                        mouse_held_placing = False
+                    else:
+                        batiment_selectionne = index_touche
+                        barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -360,6 +533,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 camera_x = souris_monde_x - sx / zoom
                 camera_y = souris_monde_y - sy / zoom
 
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                mouse_held_placing = False
+
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 if batiment_selectionne is not None:
@@ -379,6 +555,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 # Clic gauche
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if batiment_selectionne is not None:
+                    mouse_held_placing = True  # démarrer le placement continu
+
                 sx, sy = pygame.mouse.get_pos()
 
                 if btn_batiments_rect.collidepoint(sx, sy):
@@ -393,6 +572,75 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     continue
 
                 clic_barre = False
+
+                ressource_cliquee = False
+
+                if not clic_barre and batiment_selectionne is None:
+                    mx = camera_x + sx / zoom
+                    my = camera_y + sy / zoom
+
+                    for res in ressources_sol[:]:
+                        rect_res = pygame.Rect(
+                            res["x"] * TAILLE_CASE,
+                            res["y"] * TAILLE_CASE,
+                            TAILLE_CASE,
+                            TAILLE_CASE
+                        )
+
+                        if rect_res.collidepoint(mx, my):
+                            dist_x = abs(res["x"] - int(player.pos[0] // TAILLE_CASE))
+                            dist_y = abs(res["y"] - int(player.pos[1] // TAILLE_CASE))
+
+                            if max(dist_x, dist_y) > 12:
+                                loot_popups.append({
+                                    "texte": "Trop loin!",
+                                    "icone": None,
+                                    "x": res["x"] * TAILLE_CASE,
+                                    "y": res["y"] * TAILLE_CASE,
+                                    "timer": 1.0,
+                                    "couleur": (255, 80, 80)
+                                })
+                                ressource_cliquee = True
+                                break
+
+                            if res["type"] == "herbe":
+                                gain = random.randint(6, 15)
+                                player.food += gain
+                                son_collect.play()
+
+                            elif res["type"] == "coffre":
+                                gain = random.randint(50, 200)
+                                player.money += gain
+                                son_coffre.play()
+
+                            else:
+                                gain = random.randint(2, 7)
+                                player.food += gain
+                                son_collect.play()
+
+                            if res["type"] in ["herbe", "bois"]:
+                                icone = hud_food_img
+                            else:
+                                icone = hud_or_img
+
+                            loot_popups.append({
+                                "texte": f"+{gain}",
+                                "icone": icone,
+                                "x": res["x"] * TAILLE_CASE,
+                                "y": res["y"] * TAILLE_CASE,
+                                "timer": 1.0,
+                                "couleur": (255, 230, 80)
+                            })
+                            ressources_respawn.append({
+                                "type": res["type"],
+                                "timer": random.uniform(5, 10)
+                            })
+                            ressources_sol.remove(res)
+                            ressource_cliquee = True
+                            break
+
+                if ressource_cliquee:
+                    continue
                 # N'autoriser le clic sur les icones que si la barre est visible
                 if barre_ouverte and slide_offset < HAUTEUR_BARRE:
                     for i, rect in enumerate(rects_icones):
@@ -496,6 +744,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
                         else:
                             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
+                        _essayer_placer_batiment(sx, sy, mx, my)
 
                     else:
                         for B in batiments:
@@ -527,6 +776,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                                 gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
+                                # Ne pas ouvrir le menu d'amélioration pour les tiles (type 'tile')
+                                if getattr(B, "type", None) == Batiment.TYPE_TILE:
+                                    break
+                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
@@ -535,6 +788,15 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         for joueur in players:
             joueur.update(TAILLE_CASE, dt)
             joueur.update_anim(dt)
+
+        # Placement continu quand le clic est maintenu (drag)
+        if mouse_held_placing and batiment_selectionne is not None:
+            sx, sy = pygame.mouse.get_pos()
+            limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
+            if sy < limite_ui:
+                mx = camera_x + sx / zoom
+                my = camera_y + sy / zoom
+                _essayer_placer_batiment(sx, sy, mx, my)
 
 
         # mort
@@ -580,11 +842,25 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         dessiner_grille(surface_monde, camera_x, camera_y, dims, 0, zoom, herbe, TAILLE_CASE)
 
-        cloud_manager.draw(surface_monde, camera_x, camera_y)
+
 
         dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE,
                        batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom,
-                       raid_manager=raid_manager)
+                       raid_manager=raid_manager,
+                       construction_gear=construction_gear,
+                       ressources_sol=ressources_sol,
+                       images_ressources_sol={
+                           "herbe": image_herbe_resource,
+                           "coffre": image_coffre_resource,
+                           "bois": image_bois_resource
+                       },
+                       active_player=player)
+        cloud_manager.draw(surface_monde, camera_x, camera_y)
+        ambiance_manager.draw(surface_monde, camera_x, camera_y)
+
+        # ── Pluie (dans l'espace monde, avant scaling) ───────
+        weather.draw_rain(surface_monde, camera_x, camera_y)
+
 
         if surface_monde_size == (dims[0], dims[1]):
             surface_affichee = surface_monde
@@ -592,6 +868,38 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surface_affichee = pygame.transform.scale(surface_monde, (dims[0], dims[1]))
 
         ecran.blit(surface_affichee, (0, 0))
+
+        # ── Overlays post-scaling ────────────────────────────
+        # day_night.apply(ecran)           # Logique jour/nuit désactivée
+        weather.apply_sky_tint(ecran)    # teinture pluie / orage
+        weather.apply_lightning_flash(ecran)  # flash éclair orage
+
+
+
+        font_loot = pygame.font.Font("assets/fonts/Minecraft.ttf", 16)
+
+        for popup in loot_popups:
+            px = (popup["x"] - camera_x) * zoom
+            py = (popup["y"] - camera_y) * zoom
+
+            texte = font_loot.render(popup["texte"], True, popup["couleur"])
+            ecran.blit(texte, (px, py))
+
+            if popup["icone"] is not None:
+                icone_size = 64
+
+                icone = pygame.transform.smoothscale(
+                    popup["icone"],
+                    (icone_size, icone_size)
+                )
+
+                icone_y = py + (texte.get_height() - icone_size) / 2 - 2
+
+                ecran.blit(
+                    icone,
+                    (px + texte.get_width(), icone_y)
+                )
+
         # Grille (mode placement) dessinée en pixels écran pour éviter les artefacts de scaling.
         if batiment_selectionne is not None:
             hauteur_ui = int(HAUTEUR_BARRE - slide_offset)
@@ -621,6 +929,25 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
+        for popup in loot_popups[:]:
+            popup["y"] -= 30 * dt
+            popup["timer"] -= dt
+            if popup["timer"] <= 0:
+                loot_popups.remove(popup)
+        for respawn in ressources_respawn[:]:
+            respawn["timer"] -= dt
+
+            if respawn["timer"] <= 0:
+                x = random.randint(-120, 120)
+                y = random.randint(-120, 120)
+
+                ressources_sol.append({
+                    "type": respawn["type"],
+                    "x": x,
+                    "y": y
+                })
+
+                ressources_respawn.remove(respawn)
         float_msg.update(dt)
 
         # === MODIFIEZ CET APPEL TOUT À LA FIN DE .\screens\jeu.py ===
@@ -631,6 +958,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         float_msg.draw(ecran)
 
         terminal.draw(ecran, dt)
+        if menu_amelioration:
+            menu_amelioration.draw(ecran)
+
+        # ── HUD jour/nuit et météo ───────────────────────────
+        # day_night.draw_clock(ecran, 15, 15, font_clock)  # Chrono de temps caché
+        # weather.draw_label(ecran, 15, 15 + font_clock.get_height() + 8, font_weather)  # Étiquette météo cachée
 
         pygame.display.flip()
         if raid_manager is not None and indice == 0:

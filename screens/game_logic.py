@@ -1,11 +1,12 @@
 import pygame
 import threading
 import time
-from core.Class.npc import Npc
+from core.Class.npc import Npc, PathFinder
 import multiplayer.client as client_module
 from core.Class.batiments import Batiment
 import core.pve as pve
 import screens.jeu as jeu
+
 
 
 stop_event = threading.Event()
@@ -97,10 +98,16 @@ def draw_players(surface, camera_x, camera_y):
 
 def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
+    # Mettre à jour l'état de construction des bâtiments avant toute logique
+    for b in batiments_list:
+        if hasattr(b, "en_construction") and b.en_construction:
+            b.construction_finie()
+
+    # Calculer la population attendue uniquement pour les maisons finies
     population_attendue = {}
     for b in batiments_list:
         if b.type == Batiment.TYPE_RESIDENTIEL:
-            population_attendue[id(b)] = b.get_population()
+            population_attendue[id(b)] = 0 if (hasattr(b, "en_construction") and b.en_construction) else b.get_population()
 
     npcs_par_maison = {}
     for npc in list(npcs):
@@ -126,7 +133,7 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
         attendus = population_attendue.get(cle, 0)
 
         while len(actuels) < attendus:
-            npc = Npc(b, taille_case, player)
+            npc = Npc(b, taille_case, player, batiments_list)
             npcs.append(npc)
             actuels.append(npc)
 
@@ -136,10 +143,16 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             if npc in npcs:
                 npcs.remove(npc)
 
+    # Mettre à jour le pathfinder de tous les NPC (la grille de bâtiments a pu changer)
+    for npc in npcs:
+        npc.batiments_list = batiments_list
+        npc.pathfinder = PathFinder(batiments_list, taille_case)
+
+
     bat_by_id = {id(b): b for b in batiments_list}
 
     lieux_travail = [b for b in batiments_list
-                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE)]
+                     if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TOURELLE, Batiment.TYPE_TILE)]
 
     npcs_auto = []
     for npc in npcs:
@@ -160,17 +173,38 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             npc.assigner_travail(None)
 
 
-def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, raid_manager=None):
+def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur,
+                         npcs=None, raid_manager=None, day_night=None):
+    """
+    Calcule et applique la production des bâtiments.
+
+    day_night : instance de DayNightCycle (optionnel).
+                Si fourni, la production non-alimentaire est réduite de 40 % la nuit.
+    """
     from core.Class.batiments import Batiment
 
-    total_villageois = sum(b.get_population() for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL)
-
+    total_villageois = sum(
+        b.get_population()
+        for b in batiments_list
+        if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+    )
 
     consommation_food = (total_villageois * 6.0) * delta_time / 60.0
-
     player.food = max(0.0, player.food - consommation_food)
 
     food_ok = player.food > 0
+
+    # Modificateur nuit : -40 % sur la production (sauf nourriture)
+    night_mult = 0.6 if (day_night is not None and day_night.is_night) else 1.0
+
+    # Créer un mapping de bâtiments de production vers nombre de villageois assignés
+    batiments_production_accessibles = set()
+    if npcs is not None:
+        for npc in npcs:
+            # Le bâtiment produit seulement quand le villageois est physiquement au travail
+            if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
+                batiments_production_accessibles.add(id(npc.lieu_travail))
+
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
@@ -178,15 +212,21 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
         rtype = b.get_production_type()
         val = b.get_production() * delta_time / 60.0
 
+        # Si on a des NPCs et ce bâtiment n'est pas accessible, pas de production
+        if npcs is not None and rtype is not None:
+            if id(b) not in batiments_production_accessibles:
+                # Ce bâtiment de production n'est pas accessible
+                continue
+
         if rtype == "nourriture":
+            # La nourriture n'est pas affectée par le cycle jour/nuit
             acc_food += val
         elif not food_ok:
             pass
         elif rtype == "argent":
-            acc_argent += val
-
+            acc_argent += val * night_mult
         elif rtype == "vapeur":
-            acc_vapeur += val
+            acc_vapeur += val * night_mult
 
     gains_argent = int(acc_argent)
     if gains_argent > 0:

@@ -186,7 +186,7 @@ def apply_skill_effect(skill, player, batiments_data):
         set_max_level(skill["building_type"], skill["max_level"])
         batiments_data[skill["building_type"]]["max_level"] = skill["max_level"]
     elif effect == "unlock_new_building":
-        batiments_data[skill["building_type"]] = {"unlocked": True}
+        batiments_data[Batiment.TYPE_TOURELLE]["unlocked"] = True
     elif effect == "boost_production":
         building = batiments_data[skill["building_type"]]
         for key, data in building.items():
