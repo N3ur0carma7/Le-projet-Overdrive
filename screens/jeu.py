@@ -556,6 +556,15 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         barre_ouverte = True  # ouvrir la barre automatiquement
                 continue
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                inventory_ouvert = not inventory_ouvert
+                continue
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                from screens.skill_tree import afficher_skill_tree
+                unlocked_skills = afficher_skill_tree(ecran, player, unlocked_skills, Batiment.DATA)
+                continue
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
                 screenshot = ecran.copy()
@@ -1332,6 +1341,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             for joueur in players:
                 joueur.is_moving = False
                 joueur.anim_state = "idle"
+                gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
     stop_event.set()
     sound.stop_ambient()

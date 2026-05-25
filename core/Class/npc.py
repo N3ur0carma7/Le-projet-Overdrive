@@ -5,146 +5,101 @@ from heapq import heappush, heappop
 
 
 class PathFinder:
-    """
-    Classe pour trouver un chemin valide entre deux points en utilisant A*.
-    Les chemins valides passent par les tiles (TYPE_TILE) ou les bâtiments résidentiels.
-    """
-    
     def __init__(self, batiments, taille_case):
         self.batiments = batiments
         self.taille_case = taille_case
 
-
-        # Construire une grille walkable basée sur les bâtiments
-        # Déterminer les dimensions de la grille
-        self.max_x = 0
-        self.max_y = 0
-        for b in batiments:
-            self.max_x = max(self.max_x, b.x + b.largeur)
-            self.max_y = max(self.max_y, b.y + b.hauteur)
-        
-        # Ajouter une marge de sécurité
-        self.max_x += 10
-        self.max_y += 10
-        
-        # Grille walkable: True = on peut marcher, False = obstacle
-        self.walkable = [[True for _ in range(self.max_x)] for _ in range(self.max_y)]
-        
-        # Marquer les tiles (chemins) et bâtiments résidentiels comme walkable, tout le reste comme non-walkable
-        # Commencer par marquer tout comme non-walkable
-        for y in range(self.max_y):
-            for x in range(self.max_x):
-                self.walkable[y][x] = False
-        
-        # Marquer les tiles, bâtiments résidentiels ET bâtiments de production comme walkable
-        # Les tiles sont le chemin, les bâtiments résidentiels/production sont les sources/destinations
         from core.Class.batiments import Batiment
-        TYPES_WALKABLE = (
-            Batiment.TYPE_TILE,
-            Batiment.TYPE_RESIDENTIEL,
-            Batiment.TYPE_GENERATEUR,
-            Batiment.TYPE_MINE,
-            Batiment.TYPE_FARM,
-            Batiment.TYPE_CENTRALE_ARGENT,
-            Batiment.TYPE_CENTRALE_VAPEUR,
-            Batiment.TYPE_CENTRALE_NOURRITURE,
-        )
+
+        self.tiles = set()
+
         for b in batiments:
-            if b.type in TYPES_WALKABLE:
-                x_start = max(int(b.x), 0)
-                y_start = max(int(b.y), 0)
-                x_end = min(int(b.x + b.largeur), self.max_x)
-                y_end = min(int(b.y + b.hauteur), self.max_y)
+            if b.type == Batiment.TYPE_TILE:
+                for y in range(b.y, b.y + b.hauteur):
+                    for x in range(b.x, b.x + b.largeur):
+                        self.tiles.add((x, y))
 
-                if x_start >= x_end or y_start >= y_end:
-                    continue
+    def _neighbors(self, case):
+        x, y = case
 
-                for y in range(y_start, y_end):
-                    for x in range(x_start, x_end):
-                        self.walkable[y][x] = True
-    
-    def _heuristique(self, pos1, pos2):
-        """Distance Manhattan comme heuristique pour A*."""
-        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
-    
-    def _get_neighbors(self, pos):
-        """Retourne les cases voisines walkable."""
-        x, y = pos
-        neighbors = []
-        # 4-directional movement (haut, bas, gauche, droite)
-        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < self.max_x and 0 <= ny < self.max_y and self.walkable[ny][nx]:
-                neighbors.append((nx, ny))
-        return neighbors
-    
-    def _pixels_to_grid(self, px, py):
-        """Convertir des coordonnées pixels en coordonnées grille."""
-        gx = int(px / self.taille_case)
-        gy = int(py / self.taille_case)
-        gx = max(0, min(gx, self.max_x - 1))
-        gy = max(0, min(gy, self.max_y - 1))
-        return gx, gy
-    
-    def _grid_to_pixels(self, gx, gy):
-        """Convertir des coordonnées grille en centre de case (pixels)."""
-        px = (gx + 0.5) * self.taille_case
-        py = (gy + 0.5) * self.taille_case
-        return px, py
-    
-    def find_path(self, start_px, start_py, end_px, end_py):
-        """
-        Trouve un chemin entre deux points en pixels.
-        Retourne une liste de points (px, py) ou None si pas de chemin.
-        """
-        start_grid = self._pixels_to_grid(start_px, start_py)
-        end_grid = self._pixels_to_grid(end_px, end_py)
-        
-        # Si on peut pas atteindre la destination (elle est non-walkable)
-        if not self.walkable[end_grid[1]][end_grid[0]]:
+        for dx, dy in [
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1)
+        ]:
+            voisin = (x + dx, y + dy)
+
+            if voisin in self.tiles:
+                yield voisin
+
+    def _case_center(self, case):
+        x, y = case
+
+        return (
+            (x + 0.5) * self.taille_case,
+            (y + 0.5) * self.taille_case
+        )
+
+    def cases_autour_batiment(self, batiment):
+        cases = []
+
+        x1 = batiment.x
+        y1 = batiment.y
+        x2 = batiment.x + batiment.largeur - 1
+        y2 = batiment.y + batiment.hauteur - 1
+
+        for x in range(x1, x2 + 1):
+            cases.append((x, y1 - 1))
+            cases.append((x, y2 + 1))
+
+        for y in range(y1, y2 + 1):
+            cases.append((x1 - 1, y))
+            cases.append((x2 + 1, y))
+
+        return [case for case in cases if case in self.tiles]
+
+    def find_path_between_buildings(self, maison, travail):
+        starts = self.cases_autour_batiment(maison)
+        goals = set(self.cases_autour_batiment(travail))
+
+        if not starts or not goals:
             return None
-        
-        # A* pathfinding
-        open_set = []
-        heappush(open_set, (0, start_grid))
+
+        queue = []
         came_from = {}
-        g_score = {start_grid: 0}
-        f_score = {start_grid: self._heuristique(start_grid, end_grid)}
-        
-        closed_set = set()
-        
-        while open_set:
-            _, current = heappop(open_set)
-            
-            if current == end_grid:
-                # Chemin trouvé - reconstruire
-                path = []
-                while current in came_from:
-                    path.append(current)
-                    current = came_from[current]
-                path.append(start_grid)
-                path.reverse()
-                
-                # Convertir en pixels et lisser le chemin
-                pixel_path = [self._grid_to_pixels(gx, gy) for gx, gy in path]
-                return pixel_path
-            
-            closed_set.add(current)
-            
-            for neighbor in self._get_neighbors(current):
-                if neighbor in closed_set:
-                    continue
-                
-                tentative_g = g_score[current] + 1
-                
-                if neighbor not in g_score or tentative_g < g_score[neighbor]:
-                    came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g
-                    f_score[neighbor] = tentative_g + self._heuristique(neighbor, end_grid)
-                    heappush(open_set, (f_score[neighbor], neighbor))
-        
-        # Pas de chemin trouvé
-        return None
+
+        for start in starts:
+            queue.append(start)
+            came_from[start] = None
+
+        goal_found = None
+
+        while queue:
+            current = queue.pop(0)
+
+            if current in goals:
+                goal_found = current
+                break
+
+            for voisin in self._neighbors(current):
+                if voisin not in came_from:
+                    came_from[voisin] = current
+                    queue.append(voisin)
+
+        if goal_found is None:
+            return None
+
+        path_cases = []
+        cur = goal_found
+
+        while cur is not None:
+            path_cases.append(cur)
+            cur = came_from[cur]
+
+        path_cases.reverse()
+
+        return [self._case_center(case) for case in path_cases]
 
 
 class Npc:
@@ -232,10 +187,6 @@ class Npc:
         py = batiment.y * self.taille_case + (batiment.hauteur * self.taille_case) // 2
         return px, py
 
-    def _porte_bas_pixels(self, batiment):
-        px = batiment.x * self.taille_case + (batiment.largeur * self.taille_case) // 2
-        py = (batiment.y + batiment.hauteur) * self.taille_case + self.taille_case // 2
-        return px, py
 
     def _nouvelle_cible_errance(self):
         cx, cy = self._centre_pixels(self.maison)
@@ -266,36 +217,38 @@ class Npc:
         return chemin
 
     def _construire_chemin_valide(self, dest_x, dest_y):
-        if self.batiments_list:
-            self.pathfinder = PathFinder(self.batiments_list, self.taille_case)
-
-        if self.pathfinder is None:
+        if not self.batiments_list:
             return None
 
-        offsets = [
-            (0, 0),
-            (self.taille_case, 0),
-            (-self.taille_case, 0),
-            (0, self.taille_case),
-            (0, -self.taille_case),
-            (self.taille_case, self.taille_case),
-            (-self.taille_case, self.taille_case),
-            (self.taille_case, -self.taille_case),
-            (-self.taille_case, -self.taille_case),
+        self.pathfinder = PathFinder(self.batiments_list, self.taille_case)
+
+        candidats = [
+            (dest_x, dest_y),
+
+            (dest_x + self.taille_case, dest_y),
+            (dest_x - self.taille_case, dest_y),
+            (dest_x, dest_y + self.taille_case),
+            (dest_x, dest_y - self.taille_case),
+
+            (dest_x + self.taille_case, dest_y + self.taille_case),
+            (dest_x - self.taille_case, dest_y + self.taille_case),
+            (dest_x + self.taille_case, dest_y - self.taille_case),
+            (dest_x - self.taille_case, dest_y - self.taille_case),
         ]
 
         meilleur_chemin = None
 
-        for ox, oy in offsets:
+        for cx, cy in candidats:
             chemin = self.pathfinder.find_path(
                 self.monde_x,
                 self.monde_y,
-                dest_x + ox,
-                dest_y + oy
+                cx,
+                cy
             )
 
-            if chemin and (meilleur_chemin is None or len(chemin) < len(meilleur_chemin)):
-                meilleur_chemin = chemin
+            if chemin is not None:
+                if meilleur_chemin is None or len(chemin) < len(meilleur_chemin):
+                    meilleur_chemin = chemin
 
         return meilleur_chemin
 
@@ -304,6 +257,7 @@ class Npc:
             return False
 
         dest_x, dest_y = self._porte_bas_pixels(self.lieu_travail)
+
         chemin = self._construire_chemin_valide(dest_x, dest_y)
 
         return chemin is not None
@@ -352,19 +306,18 @@ class Npc:
             return
 
         self.lieu_travail = batiment
+        self.chemin = []
+
         if batiment is None:
+            self.etat = self.ETAT_ERRANCE
+            self.timer = 3.0
             return
 
-        if self._chemin_vers_travail_existe():
-            dest = self._porte_bas_pixels(batiment)
-            chemin = self._construire_chemin_valide(*dest)
-            if chemin:
-                self.chemin = chemin
-                self.etat = self.ETAT_VERS_TRAVAIL
-                return
-
-        self.etat = self.ETAT_CHEMIN_BLOQUE
-        self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
+        if self.etat == self.ETAT_AU_TRAVAIL or self.etat == self.ETAT_VERS_TRAVAIL:
+            self._rentrer()
+        else:
+            self.etat = self.ETAT_CHEMIN_BLOQUE
+            self.timer = 0.1
 
     def update(self, dt: float = 1/60):
         """Met à jour le NPC.
@@ -382,31 +335,24 @@ class Npc:
             self._update_chemin_bloque(dt)
         self.update_anim(dt)
 
-    def _update_errance(self, dt):
+    def _update_errance_autour_maison(self, dt):
         atteint = self._avancer_vers(self.cible_x, self.cible_y, dt)
+
         if atteint:
             self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
-        self.timer -= dt
-        if self.timer <= 0 and self.lieu_travail is not None:
-            # Vérifier si un chemin valide existe vers le lieu de travail
-            if self._chemin_vers_travail_existe():
-                dest = self._porte_bas_pixels(self.lieu_travail)
-                self.chemin = self._construire_chemin_valide(*dest)
-                if self.chemin:  # Si chemin trouvé
-                    self.etat = self.ETAT_VERS_TRAVAIL
-                else:  # Pas de chemin trouvé
-                    self.etat = self.ETAT_CHEMIN_BLOQUE
-                    self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
-            else:
-                # Pas de chemin valide vers le lieu de travail
-                self.etat = self.ETAT_CHEMIN_BLOQUE
-                self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
+    def _update_errance(self, dt):
+        self._update_errance_autour_maison(dt)
+
+        if self.lieu_travail is not None:
+            self.etat = self.ETAT_CHEMIN_BLOQUE
+            self.timer = 0.1
 
     def _update_vers_travail(self, dt):
         if self.lieu_travail is None:
             self._rentrer()
             return
+
         if self._avancer_chemin(dt):
             self.etat = self.ETAT_AU_TRAVAIL
             self.timer = random.uniform(self.DUREE_TRAVAIL_MIN, self.DUREE_TRAVAIL_MAX)
@@ -415,33 +361,48 @@ class Npc:
         self.timer -= dt
         if self.timer <= 0:
             self._rentrer()
-    
+
     def _update_chemin_bloque(self, dt):
-        """Reste en errance et attend, le lieu de travail reste non-accessible."""
-        # Juste attendre et errer autour de la maison
         self.timer -= dt
-        if self.timer <= 0:
-            # Vérifier à nouveau si un chemin a été créé (par exemple, un nouveau tile)
-            if self._chemin_vers_travail_existe():
-                dest = self._porte_bas_pixels(self.lieu_travail)
-                self.chemin = self._construire_chemin_valide(*dest)
-                if self.chemin:
-                    self.etat = self.ETAT_VERS_TRAVAIL
-                    return
-            # Continuer en errance
+
+        if self.timer > 0:
+            self._update_errance_autour_maison(dt)
+            return
+
+        if self.lieu_travail is None:
             self.etat = self.ETAT_ERRANCE
-            self.timer = random.uniform(self.DUREE_ERRANCE_MIN / 2, self.DUREE_ERRANCE_MAX)
-            self.cible_x, self.cible_y = self._nouvelle_cible_errance()
+            self.timer = 3.0
+            return
+
+        self.pathfinder = PathFinder(self.batiments_list, self.taille_case)
+
+        chemin = self.pathfinder.find_path_between_buildings(
+            self.maison,
+            self.lieu_travail
+        )
+
+        if chemin:
+            self.chemin = chemin
+            self.etat = self.ETAT_VERS_TRAVAIL
+            return
+
+        self.timer = 3.0
+        self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
     def _rentrer(self):
-        dest = self._porte_bas_pixels(self.maison)
-        self.chemin = self._construire_chemin_direct(*dest)  # Toujours en ligne droite pour retour à la maison
+        dest = self._centre_pixels(self.maison)
+        self.chemin = self._construire_chemin_direct(*dest)
         self.etat = self.ETAT_VERS_MAISON
 
     def _update_vers_maison(self, dt):
         if self._avancer_chemin(dt):
-            self.etat = self.ETAT_ERRANCE
-            self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
+            if self.lieu_travail is not None:
+                self.etat = self.ETAT_CHEMIN_BLOQUE
+                self.timer = 0.1
+            else:
+                self.etat = self.ETAT_ERRANCE
+                self.timer = 3.0
+
             self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
     # ------------------------------------------------------------------
@@ -479,7 +440,7 @@ class Npc:
         h = self.TAILLE_AFFICHAGE
         w = h
 
-        sprite = pygame.transform.smoothscale(
+        sprite = pygame.transform.scale(
             sprite,
             (w, h)
         )
