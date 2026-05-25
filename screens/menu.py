@@ -7,7 +7,7 @@ from core.Class.buttons import BoutonImage
 import threading
 import time
 import random
-
+import screens.game_logic as gl
 class Bouton:
     def __init__(self, texte, x, y, w, h):
         self.texte = texte
@@ -97,7 +97,9 @@ def menu_principal(ecran, horloge, FPS):
     while en_cours:
         horloge.tick(FPS)
         W, H = ecran.get_size()
-
+        gl.players = []
+        gl.batiments = []
+        gl.indice = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return etat_suivant, False
@@ -119,6 +121,9 @@ def menu_principal(ecran, horloge, FPS):
                         elif etat_confirmation == "menu":
                             return etat_confirmation, True
                         elif etat_confirmation == "jeu":
+                            gl.players = []
+                            gl.batiments = []
+                            gl.indice = 0
                             lancer_partie()
                             return etat_confirmation, True
                     else:
@@ -126,15 +131,24 @@ def menu_principal(ecran, horloge, FPS):
                         return "jeu", True
                 if boutons[1].clic():
                     if os.path.exists("save/save.json"):
+                        gl.players = []
+                        gl.batiments = []
+                        gl.indice = 0
                         lancer_partie()
                         return "jeu", True
                 if boutons[2].clic():
+                    gl.players = []
+                    gl.batiments = []
+                    gl.indice = 0
                     threading.Thread(target=connection, daemon=True).start()
                     return "jeu", True
 
                 if boutons[3].clic():
                     return etat_suivant, False
                 if boutons[4].clic():
+                    gl.players = []
+                    gl.batiments = []
+                    gl.indice = 0
                     return "jeudev", True
 
         if background_brut is not None:

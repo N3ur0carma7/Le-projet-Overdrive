@@ -79,7 +79,7 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
                         except Exception as e:
                             pass
                         disconnect()
-                        gl.player = []
+                        gl.players = []
                         gl.batiments = []
                         gl.indice = 0
                     return "menu"
