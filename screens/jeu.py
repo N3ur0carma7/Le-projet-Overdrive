@@ -567,14 +567,25 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                # 1. Si un bâtiment est sélectionné pour être posé, on l'annule
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
-                    print("Selection annulee")
+                    mouse_held_placing = False
+                    print("Selection de construction annulee")
 
+                # 2. Si le menu d'amélioration (upgrade) d'un bâtiment est ouvert, on le ferme
+                elif menu_amelioration is not None:
+                    menu_amelioration = None
+                    print("Menu amelioration ferme")
+
+
+                # 4. Si rien n'est ouvert, on déplace le personnage
                 else:
                     sx, sy = pygame.mouse.get_pos()
                     case = souris_vers_case((sx, sy), camera_x, camera_y, zoom, TAILLE_CASE)
-                    limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
+
+                    # Correction ici : utilisation de dims[1] pour éviter de casser le déplacement
+                    limite_ui = dims[1] - (HAUTEUR_BARRE - slide_offset)
                     if sy < limite_ui:
                         if not players[indice].a_star(case, TAILLE_CASE):
                             sx2, sy2 = pygame.mouse.get_pos()

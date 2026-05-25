@@ -363,10 +363,63 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
                     else:
                         en_menu = False
 
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+
+                if event.button == 1:  # Clic gauche
+
                     dragging = False
+
                     last_mouse_pos = event.pos
+
+                    clicked = False
+
+                    for skill in all_skills:
+
+                        cx = skill["screen_pos"][0] + camera_x
+
+                        cy = skill["screen_pos"][1] + camera_y
+
+                        r = skill["radius"]
+
+                        if (mx - cx) ** 2 + (my - cy) ** 2 <= r ** 2:
+                            selected_skill = skill if selected_skill is not skill else None
+
+                            buy_btn_rect = None
+
+                            clicked = True
+
+                            break
+
+                    if selected_skill and buy_btn_rect and buy_btn_rect.collidepoint(mx, my):
+
+                        skill = selected_skill
+
+                        if get_state(skill) == "locked" and player.vapeur >= skill["cost"]:
+                            player.vapeur -= skill["cost"]
+
+                            unlocked_skills.add(skill["id"])
+
+                            apply_skill_effect(skill, player, batiments_data)
+
+                            selected_skill = None
+
+                            buy_btn_rect = None
+
+
+                elif event.button == 3:  # Clic droit
+
+                    if selected_skill is not None:
+
+                        selected_skill = None
+
+                        buy_btn_rect = None
+
+
+                    else:
+
+                        en_menu = False  # Quitter le skill tree
+
 
                     clicked = False
                     for skill in all_skills:
