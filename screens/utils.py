@@ -1,4 +1,5 @@
 import pygame
+from core.Class.batiments import Batiment
 
 def collision(batiments, nouveau):
     for b in batiments:
@@ -15,7 +16,8 @@ def calculer_rects_icones(dims, hauteur_barre, taille_icone, slide_offset=0):
     """
     rects = []
     marge = 20
-    for i in range(6):
+    n = len(Batiment.DATA)
+    for i in range(n):
         rect = pygame.Rect(
             marge + i * (taille_icone + marge),
             dims[1] - hauteur_barre + (hauteur_barre - taille_icone) // 2 + slide_offset,

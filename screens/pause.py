@@ -9,7 +9,7 @@ from multiplayer.client import send_server, DISCONNECT_MESSAGE, CLIENT, disconne
 from core.Class.buttons import BoutonImage
 from core.Class.player import Player
 from core.saves import save_game
-from screens.game_logic import players, indice
+import screens.game_logic as gl
 
 save = pygame.image.load("assets/save_done.png")
 
@@ -72,12 +72,16 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if boutons[0].clic():
                     if online_data and CLIENT is not None:
-                        disconnect()
+
                         try:
                             if client_module.CLIENT is not None:
-                                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
+                                client_module.send_liste_joueurs_client(gl.players, client_module.CLIENT)
                         except Exception as e:
                             pass
+                        disconnect()
+                        gl.player = []
+                        gl.batiments = []
+                        gl.indice = 0
                     return "menu"
                 if boutons[1].clic():
                     if not save_game(buildings, player, online_data):
@@ -95,12 +99,13 @@ def menu_pause(ecran, horloge, FPS, buildings, online_data, player: Player, scre
                     music_btn_changed = True
                 if boutons[2].clic():
                     if online_data and CLIENT is not None:
-                        disconnect()
+
                         try:
                             if client_module.CLIENT is not None:
-                                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
+                                client_module.send_liste_joueurs_client(gl.players, client_module.CLIENT)
                         except Exception as e:
                             pass
+                        disconnect()
                     return False
 
         blurred = pygame.transform.smoothscale(screenshot, (LARGEUR_ECRAN//4, HAUTEUR_ECRAN//4))

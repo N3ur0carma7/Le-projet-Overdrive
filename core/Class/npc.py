@@ -14,7 +14,7 @@ class PathFinder:
         self.batiments = batiments
         self.taille_case = taille_case
 
-        
+
         # Construire une grille walkable basée sur les bâtiments
         # Déterminer les dimensions de la grille
         self.max_x = 0
@@ -43,8 +43,16 @@ class PathFinder:
                           Batiment.TYPE_GENERATEUR, Batiment.TYPE_MINE, Batiment.TYPE_FARM)
         for b in batiments:
             if b.type in TYPES_WALKABLE:
-                for y in range(max(0, b.y), min(b.y + b.hauteur, self.max_y)):
-                    for x in range(max(0, b.x), min(b.x + b.largeur, self.max_x)):
+                x_start = max(int(b.x), 0)
+                y_start = max(int(b.y), 0)
+                x_end = min(int(b.x + b.largeur), self.max_x)
+                y_end = min(int(b.y + b.hauteur), self.max_y)
+
+                if x_start >= x_end or y_start >= y_end:
+                    continue
+
+                for y in range(y_start, y_end):
+                    for x in range(x_start, x_end):
                         self.walkable[y][x] = True
     
     def _heuristique(self, pos1, pos2):

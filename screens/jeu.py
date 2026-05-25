@@ -101,7 +101,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         },
         Batiment.TYPE_TILE: {
             1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
-        }
+        },
+        Batiment.TYPE_CENTRALE_ARGENT: {
+            1: pygame.image.load("assets/buildings/centrale_argent_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_argent_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_CENTRALE_VAPEUR: {
+            1: pygame.image.load("assets/buildings/centrale_vapeur_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_vapeur_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_CENTRALE_NOURRITURE: {
+            1: pygame.image.load("assets/buildings/centrale_nourriture_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_nourriture_lvl2.png").convert_alpha(),
+        },
     }
     construction_gear = pygame.image.load(
         "assets/buildings/construction_gear.png"
@@ -118,6 +130,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_FARM,
         Batiment.TYPE_TOURELLE,
         Batiment.TYPE_TILE,
+        Batiment.TYPE_CENTRALE_ARGENT,
+        Batiment.TYPE_CENTRALE_VAPEUR,
+        Batiment.TYPE_CENTRALE_NOURRITURE,
     ]
 
     TAILLE_ICONE = 64
@@ -399,7 +414,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if indice != gl.indice:
             indice = gl.indice
 
-        prec = (players[indice].pos, players[indice].path)
+        prec = players[indice].pos
 
         """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
@@ -446,7 +461,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         maintenant = pygame.time.get_ticks()
 
         if player.active_effects["heal"] > maintenant:
-            player.hp = min(player.hp_max, player.hp + 3 * dt)
+            player.hp = min(player.hp_max, player.hp + 8 * dt)
+
+        # Régénération passive du joueur (1 PV par seconde)
+        player.hp = min(player.hp_max, player.hp + player.health_regen * dt)
 
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
@@ -463,7 +481,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
-
 
         for event in pygame.event.get():
 
@@ -567,18 +584,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                # 1. Si un bâtiment est sélectionné pour être posé, on l'annule
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
-                    print("Selection annulee")
-
-                else:
-                    sx, sy = pygame.mouse.get_pos()
-                    case = souris_vers_case((sx, sy), camera_x, camera_y, zoom, TAILLE_CASE)
-                    limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
-                    if sy < limite_ui:
-                        if not players[indice].a_star(case, TAILLE_CASE):
-                            sx2, sy2 = pygame.mouse.get_pos()
-                            float_msg.info("Chemin bloque", sx2, sy2 - 30, player_id=indice)
+                    mouse_held_placing = False
+                    print("Selection de construction annulee")
 
 
 
@@ -910,21 +920,32 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                                     break
 
-
-                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
+                                if B.type != "tile":
+                                    menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
 
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
 
-        for joueur in players:
-            joueur.update(TAILLE_CASE, dt)
-            joueur.update_anim(dt)
+        if players and 0 <= indice < len(players):
+            keys_pressed = pygame.key.get_pressed()
+            keys_dict = {
+                pygame.K_z: keys_pressed[pygame.K_z],
+                pygame.K_q: keys_pressed[pygame.K_q],
+                pygame.K_s: keys_pressed[pygame.K_s],
+                pygame.K_d: keys_pressed[pygame.K_d],
+            }
+            players[indice].update(keys_dict, dt)
+            players[indice].update_anim(dt)
+
+            for idx, joueur in enumerate(players):
+                if idx != indice:
+                    joueur.update_anim(dt)
 
         footstep_timer -= dt
 
-        joueur_bouge = len(player.path) > 0
+        joueur_bouge = player.is_moving
 
         if joueur_bouge:
             if footstep_timer <= 0:
@@ -1279,8 +1300,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             raid_manager.leader = True
 
 
-        if player.pos != prec[0] or player.path != prec[1]:
-            print(player)
+        if player.pos != prec:
             try:
                 client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
