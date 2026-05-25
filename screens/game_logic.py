@@ -6,7 +6,7 @@ import multiplayer.client as client_module
 from core.Class.batiments import Batiment
 import core.pve as pve
 import screens.jeu as jeu
-
+import core.Class.batiments as bat
 
 
 stop_event = threading.Event()
