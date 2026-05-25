@@ -448,6 +448,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if player.active_effects["heal"] > maintenant:
             player.hp = min(player.hp_max, player.hp + 8 * dt)
 
+        # Régénération passive du joueur (1 PV par seconde)
+        player.hp = min(player.hp_max, player.hp + player.health_regen * dt)
+
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
 
