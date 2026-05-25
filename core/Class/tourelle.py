@@ -13,7 +13,7 @@ class Tourelle(Batiment):
         self.dernier_tir = 0
 
         self.son_tir = pygame.mixer.Sound("assets/sounds/turret.mp3")
-        self.son_tir.set_volume(0.35)
+        self.son_tir.set_volume(0.15)
 
     def update_attaque(self, liste_ennemis, TAILLE_CASE=40):
         temps_actuel = pygame.time.get_ticks()

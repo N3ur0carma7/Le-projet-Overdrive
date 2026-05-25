@@ -53,8 +53,8 @@ class DamageNumber:
 class RaidManager:
 
     WAVES_PER_RAID   = 4
-    MONSTERS_PER_WAVE_MIN = 2
-    MONSTERS_PER_WAVE_MAX = 4
+    MONSTERS_PER_WAVE_MIN = 5
+    MONSTERS_PER_WAVE_MAX = 10
     SPAWN_DISTANCE_CASES  = 40   # ~40 cases du joueur
     WAVE_DELAY            = 10.0  # secondes entre vagues
     AUTO_RAID_MIN         = 5 * 60.0   # 1 min
