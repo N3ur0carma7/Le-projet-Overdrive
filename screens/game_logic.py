@@ -190,11 +190,12 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
 
     food_ok = player.food > 0
 
-    batiments_production_accessibles = set()
+    batiments_production_accessibles = {}
     if npcs is not None:
         for npc in npcs:
             if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
-                batiments_production_accessibles.add(id(npc.lieu_travail))
+                bid = id(npc.lieu_travail)
+                batiments_production_accessibles[bid] = batiments_production_accessibles.get(bid, 0) + 1
     multiplicateur_nourriture = 1
     multiplicateur_vapeur = 1
     multiplicateur_argent = 1
@@ -206,8 +207,10 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
         val = b.get_production() * delta_time / 60.0
 
         if npcs is not None and rtype is not None:
-            if id(b) not in batiments_production_accessibles:
+            nb = batiments_production_accessibles.get(id(b), 0)
+            if nb == 0:
                 continue
+            val *= (1.0 + 0.05 * (nb - 1))
 
         if rtype == "nourriture":
             acc_food += val * food_mult
