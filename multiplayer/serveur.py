@@ -249,7 +249,6 @@ def handle_message_recieved (msg, addr):
             liste_dicts = data["payload"]
             raid = pve.RaidManager.from_dict(liste_dicts)
             print(f"[RAID] {addr} : {raid}")
-            raid.monsters = handle_monsters(raid.monsters, addr)
             return raid, "raid"
 
     except json.JSONDecodeError:

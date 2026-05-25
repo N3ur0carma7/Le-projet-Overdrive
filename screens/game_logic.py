@@ -61,9 +61,6 @@ def on_message_recu(taille_case=None):
                         batiments = message
                     elif msg_type == "liste_monstres":
                         monsters = message
-                        if jeu.raid_manager is not None and not jeu.raid_manager._raid_active:
-                            jeu.raid_manager.trigger_raid()
-                            jeu.raid_manager.monsters = monsters
 
                     elif msg_type == "liste_joueurs":
                         players = message
@@ -72,6 +69,7 @@ def on_message_recu(taille_case=None):
 
                     elif msg_type == "raid":
                         jeu.raid_manager = message
+                        jeu.raid_manager.leader = False
 
                     messageprec = client_module.result
             time.sleep(0.05)
