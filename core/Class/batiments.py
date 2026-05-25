@@ -230,6 +230,6 @@ class Batiment:
         obj.niveau = d.get("niveau", 1)
 
 
-        obj.largeur = Batiment.DATA[obj.type].get("largeur", Batiment.DEFAULT_FOOTPRINT)
-        obj.hauteur = Batiment.DATA[obj.type].get("hauteur", Batiment.DEFAULT_FOOTPRINT)
+        obj.largeur = Batiment.DATA[obj.type].get("hitbox_l", Batiment.DEFAULT_FOOTPRINT)
+        obj.hauteur = Batiment.DATA[obj.type].get("hitbox_h", Batiment.DEFAULT_FOOTPRINT)
         return obj
