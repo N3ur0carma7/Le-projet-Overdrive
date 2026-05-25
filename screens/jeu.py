@@ -399,7 +399,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if indice != gl.indice:
             indice = gl.indice
 
-        prec = (players[indice].pos, players[indice].path)
+        prec = players[indice].pos
 
         """# Si l'indice joueur change (online) ou si la liste joueurs est mise à jour
         if not players:
@@ -570,15 +570,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
                     print("Selection annulee")
-
-                else:
-                    sx, sy = pygame.mouse.get_pos()
-                    case = souris_vers_case((sx, sy), camera_x, camera_y, zoom, TAILLE_CASE)
-                    limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
-                    if sy < limite_ui:
-                        if not players[indice].a_star(case, TAILLE_CASE):
-                            sx2, sy2 = pygame.mouse.get_pos()
-                            float_msg.info("Chemin bloque", sx2, sy2 - 30, player_id=indice)
 
 
 
@@ -919,12 +910,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         for joueur in players:
-            joueur.update(TAILLE_CASE, dt)
+            keys_pressed = pygame.key.get_pressed()
+            keys_dict = {
+                pygame.K_z: keys_pressed[pygame.K_z],
+                pygame.K_q: keys_pressed[pygame.K_q],
+                pygame.K_s: keys_pressed[pygame.K_s],
+                pygame.K_d: keys_pressed[pygame.K_d],
+            }
+            joueur.update(keys_dict, dt)
             joueur.update_anim(dt)
 
         footstep_timer -= dt
 
-        joueur_bouge = len(player.path) > 0
+        joueur_bouge = player.is_moving
 
         if joueur_bouge:
             if footstep_timer <= 0:
@@ -1279,7 +1277,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             raid_manager.leader = True
 
 
-        if player.pos != prec[0] or player.path != prec[1]:
+        if player.pos != prec:
             print(player)
             try:
                 client_module.send_liste_joueurs_client(players, client_module.CLIENT)

@@ -110,89 +110,43 @@ class Player:
         return damage
 
     # ------------------------------------------------------------------
-    # Pathfinding
-    # ------------------------------------------------------------------
-    def heuristique(self, start, dest):
-        dx = abs(start[0] - dest[0])
-        dy = abs(start[1] - dest[1])
-        d1 = 1.0
-        d2 = math.sqrt(2)
-        # Heuristique "octile" (8 directions) : admissible avec coûts 1 et sqrt(2)
-        return d1 * (dx + dy) + (d2 - 2 * d1) * min(dx, dy)
+    def update(self, keys_pressed, dt=1/60):
+        """
+        Déplace le joueur selon les touches directionnelles ZQSD
+        keys_pressed: dictionnaire {K_z: True/False, K_q: True/False, ...}
+        """
+        # Vecteur de direction
+        dir_x = 0
+        dir_y = 0
 
-    def reconstruire_path(self, came_from, current):
-        chemin = [current]
-        while current in came_from:
-            current = came_from[current]
-            chemin.append(current)
-        chemin.reverse()
-        return chemin
+        # Détection des touches (ZQSD pour les joueurs français)
+        if keys_pressed.get(pygame.K_z, False):  # Haut
+            dir_y = -1
+        if keys_pressed.get(pygame.K_s, False):  # Bas
+            dir_y = 1
+        if keys_pressed.get(pygame.K_q, False):  # Gauche
+            dir_x = -1
+        if keys_pressed.get(pygame.K_d, False):  # Droite
+            dir_x = 1
 
-    def a_star(self, dest, taille_case):
-        start = (int(self.pos[0] // taille_case), int(self.pos[1] // taille_case))
-        open_set   = [start]
-        closed_set = set()
-        came_from  = {}
-        g_score    = {start: 0}
-        f_score    = {start: self.heuristique(start, dest)}
-
-        while open_set:
-            current = min(open_set, key=lambda c: f_score.get(c, float("inf")))
-            if current == dest:
-                self.path = self.reconstruire_path(came_from, current)
-                return True
-            open_set.remove(current)
-            closed_set.add(current)
-            for dx, dy in (
-                (1, 0), (0, 1), (-1, 0), (0, -1),
-                (1, 1), (-1, 1), (-1, -1), (1, -1),
-            ):
-                voisin = (current[0] + dx, current[1] + dy)
-                if voisin in closed_set:
-                    continue
-                step_cost = math.sqrt(2) if (dx != 0 and dy != 0) else 1.0
-                tentative_g = g_score[current] + step_cost
-                if voisin not in open_set:
-                    open_set.append(voisin)
-                elif tentative_g >= g_score.get(voisin, float("inf")):
-                    continue
-                came_from[voisin] = current
-                g_score[voisin]   = tentative_g
-                f_score[voisin]   = tentative_g + self.heuristique(voisin, dest)
-        return False
-
-    # ------------------------------------------------------------------
-    def update(self, taille_case,players, dt=1/60):
-        if not self.path:
+        # Déterminer si le joueur bouge et sa direction
+        if dir_x != 0 or dir_y != 0:
+            # Normaliser le vecteur pour un mouvement cohérent
+            magnitude = math.hypot(dir_x, dir_y)
+            if magnitude > 0:
+                dir_x /= magnitude
+                dir_y /= magnitude
+                
+                # Mettre à jour la direction de l'animation
+                if abs(dir_x) >= abs(dir_y):
+                    self.direction = "right" if dir_x > 0 else "left"
+                
+                # Déplacer le joueur
+                step = self.speed * dt
+                self.pos = (self.pos[0] + dir_x * step, self.pos[1] + dir_y * step)
+                self.is_moving = True
+        else:
             self.is_moving = False
-            return
-
-        next_case = self.path[0]
-        target_x  = next_case[0] * taille_case + taille_case / 2
-        target_y  = next_case[1] * taille_case + taille_case / 2
-        dx = target_x - self.pos[0]
-        dy = target_y - self.pos[1]
-        distance = math.hypot(dx, dy)
-
-        if abs(dx) >= abs(dy):
-            self.direction = "right" if dx > 0 else "left"
-
-        self.is_moving = True
-        step = self.speed * dt
-
-        if distance < step:
-            self.pos = (target_x, target_y)
-            self.path.pop(0)
-            if not self.path:
-                self.is_moving = False
-                self.anim_frame = 0
-                self.anim_timer = 0.0
-            return
-
-
-        dx /= distance
-        dy /= distance
-        self.pos = (self.pos[0] + dx * step, self.pos[1] + dy * step)
 
     # ------------------------------------------------------------------
     def update_anim(self, dt):
