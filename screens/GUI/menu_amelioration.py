@@ -264,7 +264,6 @@ class MenuAmelioration:
         px, py = self.px, self.py
         W, H = self.PANEL_W, self.PANEL_H
 
-        # ========= FOND PANEL =========
         panel = pygame.Rect(px, py, W, H)
 
         draw_rounded_rect(ecran, (24,22,18), panel, 18)
@@ -273,7 +272,6 @@ class MenuAmelioration:
         inner = pygame.Rect(px+8, py+8, W-16, H-16)
         draw_rounded_rect(ecran, CHARBON_CLAIR, inner, 14)
 
-        # ========= TITRE =========
         type_label = TYPE_LABELS.get(
             self.batiment.type,
             self.batiment.type.upper()
@@ -289,7 +287,6 @@ class MenuAmelioration:
             )
         )
 
-        # ========= NIVEAU =========
         level_y = py + 58
         spacing = 34
 
@@ -314,7 +311,6 @@ class MenuAmelioration:
                 2
             )
 
-        # ========= CARD STATS =========
         label,val_act,val_suiv,unite = self._get_stat_info()
 
         card = pygame.Rect(
@@ -399,7 +395,6 @@ class MenuAmelioration:
             )
         )
 
-        # ========= LABEL RESOURCE =========
         txt = self.font_label.render(
             label.upper(),
             True,
@@ -414,7 +409,6 @@ class MenuAmelioration:
             )
         )
 
-        # ========= COUT =========
         cost = self.batiment.get_upgrade_cost()
 
         max_debloque = Batiment.DATA[
@@ -457,7 +451,6 @@ class MenuAmelioration:
             )
         )
 
-        # ========= BOUTONS =========
         if self.btn_ameliorer:
             self.btn_ameliorer.afficher(
                 ecran,
