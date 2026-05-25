@@ -117,6 +117,18 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             1: pygame.image.load("assets/buildings/centrale_nourriture_lvl1.png").convert_alpha(),
             2: pygame.image.load("assets/buildings/centrale_nourriture_lvl2.png").convert_alpha(),
         },
+        Batiment.TYPE_STOCKAGE_ARGENT: {
+            1: pygame.image.load("assets/buildings/stockage_argent_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_argent_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_STOCKAGE_VAPEUR: {
+            1: pygame.image.load("assets/buildings/stockage_vapeur_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_vapeur_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_STOCKAGE_NOURRITURE: {
+            1: pygame.image.load("assets/buildings/stockage_nourriture_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_nourriture_lvl2.png").convert_alpha(),
+        }
     }
     construction_gear = pygame.image.load(
         "assets/buildings/construction_gear.png"
@@ -136,6 +148,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_CENTRALE_ARGENT,
         Batiment.TYPE_CENTRALE_VAPEUR,
         Batiment.TYPE_CENTRALE_NOURRITURE,
+        Batiment.TYPE_STOCKAGE_ARGENT,
+        Batiment.TYPE_STOCKAGE_VAPEUR,
+        Batiment.TYPE_STOCKAGE_NOURRITURE,
     ]
 
     TAILLE_ICONE = 64
@@ -336,12 +351,30 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             b.get_population() for b in batiments
             if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
         )
+        nb_stockage_argent = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_ARGENT and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_money = 3000 + nb_stockage_argent
+        nb_stockage_vapeur = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_VAPEUR and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_vapeur = 100 + nb_stockage_vapeur
+        nb_stockage_nourriture = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_NOURRITURE and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_food = 100 + nb_stockage_nourriture
         nb_production = sum(
             1 for b in batiments
-            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
         )
         production_pleine = (
-            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
             and nb_production >= nb_villageois
         )
         if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
@@ -505,7 +538,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 continue
 
             # terminal toggle (mode dev uniquement)
-            if event.type == pygame.KEYDOWN and event.unicode == "²" and dev_mode:
+            if event.type == pygame.KEYDOWN and event.unicode == "²":
                 terminal.toggle()
                 continue
 
@@ -881,9 +914,63 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                         type_batiment = TYPES_BATIMENTS[batiment_selectionne]
 
-                        if type_batiment == Batiment.TYPE_TILE:
-                            placement_cooldown = 0.03
-                            mouse_held_placing = True
+                        collision_ressource = False
+                        for res in ressources_sol:
+                            res_rect = pygame.Rect(res["x"], res["y"], 1, 1)
+                            bat_rect = pygame.Rect(nouveau.x, nouveau.y, nouveau.largeur, nouveau.hauteur)
+                            if bat_rect.colliderect(res_rect):
+                                collision_ressource = True
+                                break
+
+                        # Limite : nb batiments de production <= nb total de villageois
+                        nb_villageois = sum(
+                            b.get_population() for b in batiments
+                            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        nb_stockage_argent = sum(
+                            b.get_stockage() for  b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_ARGENT and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_money = 3000 + nb_stockage_argent
+                        nb_stockage_vapeur = sum(
+                            b.get_stockage() for b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_VAPEUR and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_vapeur = 100 + nb_stockage_vapeur
+                        nb_stockage_nourriture = sum(
+                            b.get_stockage() for b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_NOURRITURE and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_food = 100 + nb_stockage_nourriture
+                        nb_production = sum(
+                            1 for b in batiments
+                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
+                        )
+                        production_pleine = (
+                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
+                                and nb_production >= nb_villageois
+                        )
+                        print(nb_stockage_argent)
+                        print(nb_stockage_vapeur)
+                        print(nb_stockage_nourriture)
+                        # Portée de pose augmentée
+                        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+                            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+                        elif production_pleine:
+                            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
+                        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
+                            players[indice].money -= cout
+                            batiments.append(nouveau)
+                            sound.son_placement.play()
+                            gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                            if client_module.CLIENT is not None and online:
+                                #print(f"envoi en cours {batiments}")
+                                client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
+                        elif collision(batiments, nouveau) or collision_ressource:
+                            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
                         else:
                             placement_cooldown = 0.15
                             mouse_held_placing = False

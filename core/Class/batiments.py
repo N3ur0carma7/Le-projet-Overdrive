@@ -11,6 +11,9 @@ class Batiment:
     TYPE_CENTRALE_ARGENT    = "centrale arg"
     TYPE_CENTRALE_VAPEUR    = "centrale vap"
     TYPE_CENTRALE_NOURRITURE = "centrale nour"
+    TYPE_STOCKAGE_ARGENT = "stockage arg"
+    TYPE_STOCKAGE_VAPEUR = "stockage vap"
+    TYPE_STOCKAGE_NOURRITURE = "stockage nour"
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,
@@ -60,6 +63,21 @@ class Batiment:
             "hitbox_l": 7, "hitbox_h": 6, "scale_visuel": 0.85,
             1: {"boost": 0.20, "cout": 2000},
             2: {"boost": 0.25, "cout": 3500},
+        },
+        TYPE_STOCKAGE_ARGENT: {
+            "hitbox_l": 6, "hitbox_h": 6, "scale_visuel": 1,
+            1: {"stockage": 500, "cout": 500},
+            2: {"stockage": 1500, "cout": 750},
+        },
+        TYPE_STOCKAGE_VAPEUR: {
+            "hitbox_l": 6, "hitbox_h": 6, "scale_visuel": 1,
+            1: {"stockage": 150, "cout": 500},
+            2: {"stockage": 300, "cout": 750},
+        },
+        TYPE_STOCKAGE_NOURRITURE: {
+            "hitbox_l": 6, "hitbox_h": 6, "scale_visuel": 1,
+            1: {"stockage": 150, "cout": 500},
+            2: {"stockage": 300, "cout": 750},
         },
     }
 
@@ -131,6 +149,10 @@ class Batiment:
     def get_population(self):
         stats = self.get_stats()
         return stats.get("population", 0)
+
+    def get_stockage(self):
+        stats = self.get_stats()
+        return stats.get("stockage", 0)
 
     def get_upgrade_cost(self):
         """Returns the cost to reach the next level, or None if at cap or max."""

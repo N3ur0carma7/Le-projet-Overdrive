@@ -34,9 +34,9 @@ ANIM_FPS = {
 class Player:
     _sheets: dict = {}   # {name: pygame.Surface}
 
-    MAX_MONEY = 300000
-    MAX_FOOD = 30000
-    MAX_VAPEUR = 100000
+    MAX_MONEY = 3000
+    MAX_FOOD = 100
+    MAX_VAPEUR = 100
     START_MONEY  = 1500
     START_FOOD   = 100
     START_VAPEUR = 40
