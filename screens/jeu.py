@@ -60,7 +60,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     # S'assurer qu'un joueur existe avant tout accès à players[indice]
     if not players:
-        Npc.load_sprites()
+        Player.load_sprites()
         p = Player()
         p.pos = _pos_centre_case(5, 5)
         players.append(p)
@@ -1319,6 +1319,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
                 pass
+        else :
+            for joueur in players:
+                joueur.is_moving = False
+                joueur.anim_state = "idle"
 
     stop_event.set()
     sound.stop_ambient()

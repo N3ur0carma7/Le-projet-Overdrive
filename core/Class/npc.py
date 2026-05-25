@@ -39,8 +39,16 @@ class PathFinder:
         # Marquer les tiles, bâtiments résidentiels ET bâtiments de production comme walkable
         # Les tiles sont le chemin, les bâtiments résidentiels/production sont les sources/destinations
         from core.Class.batiments import Batiment
-        TYPES_WALKABLE = (Batiment.TYPE_TILE, Batiment.TYPE_RESIDENTIEL,
-                          Batiment.TYPE_GENERATEUR, Batiment.TYPE_MINE, Batiment.TYPE_FARM)
+        TYPES_WALKABLE = (
+            Batiment.TYPE_TILE,
+            Batiment.TYPE_RESIDENTIEL,
+            Batiment.TYPE_GENERATEUR,
+            Batiment.TYPE_MINE,
+            Batiment.TYPE_FARM,
+            Batiment.TYPE_CENTRALE_ARGENT,
+            Batiment.TYPE_CENTRALE_VAPEUR,
+            Batiment.TYPE_CENTRALE_NOURRITURE,
+        )
         for b in batiments:
             if b.type in TYPES_WALKABLE:
                 x_start = max(int(b.x), 0)
@@ -169,8 +177,8 @@ class Npc:
     ETAT_CHEMIN_BLOQUE = "chemin_bloque"  # Pas de chemin vers le travail
 
     # Durées en secondes (avant : en frames @ 60fps)
-    DUREE_TRAVAIL_MIN = 8.0
-    DUREE_TRAVAIL_MAX = 20.0
+    DUREE_TRAVAIL_MIN = 30.0
+    DUREE_TRAVAIL_MAX = 60.0
     DUREE_ERRANCE_MIN = 5.0
     DUREE_ERRANCE_MAX = 15.0
 
@@ -221,6 +229,12 @@ class Npc:
         py = batiment.y * self.taille_case + (batiment.hauteur * self.taille_case) // 2
         return px, py
 
+    def _porte_bas_pixels(self, batiment):
+        """Retourne le point d'entrée bas-centre d'un bâtiment en pixels monde."""
+        px = batiment.x * self.taille_case + (batiment.largeur * self.taille_case) // 2
+        py = batiment.y * self.taille_case + batiment.hauteur * self.taille_case - max(1, self.taille_case * 0.1)
+        return px, py
+
     def _nouvelle_cible_errance(self):
         cx, cy = self._centre_pixels(self.maison)
         angle = random.uniform(0, 2 * math.pi)
@@ -269,7 +283,7 @@ class Npc:
             # Sans pathfinder, on accepte tous les chemins
             return True
         
-        dest_x, dest_y = self._centre_pixels(self.lieu_travail)
+        dest_x, dest_y = self._porte_bas_pixels(self.lieu_travail)
         chemin = self.pathfinder.find_path(self.monde_x, self.monde_y, dest_x, dest_y)
         return chemin is not None
 
@@ -313,7 +327,23 @@ class Npc:
     # ------------------------------------------------------------------
 
     def assigner_travail(self, batiment):
+        if self.lieu_travail is batiment:
+            return
+
         self.lieu_travail = batiment
+        if batiment is None:
+            return
+
+        if self._chemin_vers_travail_existe():
+            dest = self._porte_bas_pixels(batiment)
+            chemin = self._construire_chemin_valide(*dest)
+            if chemin:
+                self.chemin = chemin
+                self.etat = self.ETAT_VERS_TRAVAIL
+                return
+
+        self.etat = self.ETAT_CHEMIN_BLOQUE
+        self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
 
     def update(self, dt: float = 1/60):
         """Met à jour le NPC.
@@ -340,7 +370,7 @@ class Npc:
         if self.timer <= 0 and self.lieu_travail is not None:
             # Vérifier si un chemin valide existe vers le lieu de travail
             if self._chemin_vers_travail_existe():
-                dest = self._centre_pixels(self.lieu_travail)
+                dest = self._porte_bas_pixels(self.lieu_travail)
                 self.chemin = self._construire_chemin_valide(*dest)
                 if self.chemin:  # Si chemin trouvé
                     self.etat = self.ETAT_VERS_TRAVAIL
@@ -372,7 +402,7 @@ class Npc:
         if self.timer <= 0:
             # Vérifier à nouveau si un chemin a été créé (par exemple, un nouveau tile)
             if self._chemin_vers_travail_existe():
-                dest = self._centre_pixels(self.lieu_travail)
+                dest = self._porte_bas_pixels(self.lieu_travail)
                 self.chemin = self._construire_chemin_valide(*dest)
                 if self.chemin:
                     self.etat = self.ETAT_VERS_TRAVAIL
@@ -383,7 +413,7 @@ class Npc:
             self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
     def _rentrer(self):
-        dest = self._centre_pixels(self.maison)
+        dest = self._porte_bas_pixels(self.maison)
         self.chemin = self._construire_chemin_direct(*dest)  # Toujours en ligne droite pour retour à la maison
         self.etat = self.ETAT_VERS_MAISON
 

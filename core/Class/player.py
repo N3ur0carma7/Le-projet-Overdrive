@@ -34,9 +34,9 @@ ANIM_FPS = {
 class Player:
     _sheets: dict = {}   # {name: pygame.Surface}
 
-    MAX_MONEY = 3000
-    MAX_FOOD = 300
-    MAX_VAPEUR = 100
+    MAX_MONEY = 300000
+    MAX_FOOD = 30000
+    MAX_VAPEUR = 100000
     START_MONEY  = 1500
     START_FOOD   = 100
     START_VAPEUR = 40
@@ -216,6 +216,10 @@ class Player:
             "food": self.food, "vapeur": self.vapeur,
             "pos": self.pos, "path": self.path,
             "speed": self.speed, "size": self.size,
+            "anim_state": self.anim_state,
+            "anim_frame": self.anim_frame,
+            "direction": self.direction,
+            "is_moving": self.is_moving
         }
 
     @classmethod
@@ -235,4 +239,8 @@ class Player:
         obj.path         = d.get("path",           [])
         obj.speed        = d.get("speed",         420)
         obj.size         = d.get("size",           40)
+        obj.anim_state = d.get("anim_state", "idle")
+        obj.anim_frame = d.get("anim_frame", 0)
+        obj.direction = d.get("direction", "right")
+        obj.is_moving = d.get("is_moving", False)
         return obj
