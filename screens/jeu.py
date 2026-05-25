@@ -4,13 +4,12 @@ import os
 import threading
 from multiplayer.serveur import *
 import multiplayer.client as client_module
-from multiplayer.client import send_list_client, receive_loop, send_batiment_client, send_liste_batiments_client, \
-    send_liste_joueurs_client, CLIENT, send_str_client, is_connected
+
 from core.Class.batiments import *
 import time
 import random
 from screens.environment import CloudManager
-from screens.game_logic import stop_event, on_message_recu, new_player, draw_players
+
 from screens.render import corriger_transparence
 import screens.game_logic as gl
 
@@ -22,6 +21,9 @@ from core.saves import load_save
 from screens.tutorial import run_tutorial
 from screens.terminal import Terminal
 from screens.utils import collision, calculer_rects_icones, souris_vers_case, joueur_a_portee, dessiner_grille, dessiner_grille_overlay, dessiner_grille_overlay_monde, dessiner_grille_overlay_ecran
+
+from screens.render import dessiner_monde, dessiner_hud
+import core.pve as pve
 from screens.game_logic import synchroniser_npcs, calculer_production
 from screens.render import dessiner_monde, dessiner_hud, charger_spritesheet_construction
 from core.pve import RaidManager
@@ -37,8 +39,9 @@ from screens.weather import WeatherManager
 surface_monde, camera_x, camera_y = None, None, None
 TAILLE_CASE = None
 batiments = []
+raid_manager = None
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments
+    global batiments, raid_manager
     global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100
@@ -145,7 +148,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     if not dev_mode and client_module.CLIENT != None:
         time.sleep(1)
-        update = threading.Thread(target=on_message_recu, args=(TAILLE_CASE,), daemon=True)
+        update = threading.Thread(target=gl.on_message_recu, args=(TAILLE_CASE,), daemon=True)
         update.start()
         time.sleep(1)
 
@@ -216,7 +219,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     player = players[indice]
 
-    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+    gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
     # Camera et zoom
     camera_x = player.pos[0] - dims[0] / 2
@@ -323,13 +326,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
     # PVE
-    raid_manager = RaidManager(taille_case=TAILLE_CASE)
+    raid_manager = pve.RaidManager(taille_case=TAILLE_CASE)
 
     def _log_raid_start(n):
         terminal._log(f"[RAID] RAID #{n} en approche ! Defendez-vous !")
 
     def _log_wave(wave, nb):
-        terminal._log(f"  [VAGUE] Vague {wave}/{RaidManager.WAVES_PER_RAID} - {nb} monstre(s) spawne(s)")
+        terminal._log(f"  [VAGUE] Vague {wave}/{pve.RaidManager.WAVES_PER_RAID} - {nb} monstre(s) spawne(s)")
 
     def _log_raid_end():
         terminal._log("[OK] Raid termine. Vous avez survecu !")
@@ -415,7 +418,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     current_playlist_index = 0
                 ambient_delay_timer = 3.0
 
-        acc_argent, acc_food, acc_vapeur = calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager, day_night=None)
+        acc_argent, acc_food, acc_vapeur = gl.calculer_production(batiments, players[indice], dt, acc_argent, acc_food, acc_vapeur, npcs=npcs, raid_manager=raid_manager, day_night=None)
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
 
@@ -701,6 +704,46 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     my = camera_y + sy / zoom
 
                     if batiment_selectionne is not None:
+                        case_x = int(mx // TAILLE_CASE)
+                        case_y = int(my // TAILLE_CASE)
+
+                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+                        nouveau = Batiment(type_batiment, case_x, case_y)
+                        grid_x = case_x - (nouveau.largeur // 2)
+                        grid_y = case_y - (nouveau.hauteur // 2)
+                        nouveau.x = grid_x
+                        nouveau.y = grid_y
+
+                        cout = Batiment.DATA[type_batiment][1]["cout"]
+
+                        # Limite : nb batiments de production <= nb total de villageois
+                        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+                        nb_production = sum(
+                            1 for b in batiments
+                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                        )
+                        production_pleine = (
+                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                                and nb_production >= nb_villageois
+                        )
+
+                        # Portée de pose augmentée
+                        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
+                            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+                        elif production_pleine:
+                            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
+                        elif not collision(batiments, nouveau) and players[indice].money >= cout:
+                            players[indice].money -= cout
+                            batiments.append(nouveau)
+                            sound.son_placement.play()
+                            gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                            if client_module.CLIENT is not None and online:
+                                print(f"envoi en cours {batiments}")
+                                client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
+                        elif collision(batiments, nouveau):
+                            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
+                        else:
+                            float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
                         _essayer_placer_batiment(sx, sy, mx, my)
 
                     else:
@@ -717,6 +760,22 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
                                     break
+                                resultat = afficher_menu_amelioration(ecran, B, sx, players[indice])
+
+                                if resultat == "supprimer":
+                                    batiments.remove(B)
+                                    cashback = 0
+                                    for k in range(B.niveau):
+                                        cashback += Batiment.DATA[B.type][1+k]["cout"]
+                                    players[indice].money += cashback
+                                    if client_module.CLIENT is not None and online:
+                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
+                                elif resultat == "upgrade":
+                                    if client_module.CLIENT is not None and online:
+                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
+
+                                gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+
                                 # Ne pas ouvrir le menu d'amélioration pour les tiles (type 'tile')
                                 if getattr(B, "type", None) == Batiment.TYPE_TILE:
                                     break
@@ -725,8 +784,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
-        player.update(TAILLE_CASE, dt)
-        player.update_anim(dt)
+
+        for joueur in players:
+            joueur.update(TAILLE_CASE, dt)
+            joueur.update_anim(dt)
 
         # Placement continu quand le clic est maintenu (drag)
         if mouse_held_placing and batiment_selectionne is not None:
@@ -849,6 +910,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if raid_manager is not None:
             for m in raid_manager.monsters:
                 if not m.alive:
+
                     continue
                 dist_joueur = ((player.pos[0] - m.x) ** 2 + (player.pos[1] - m.y) ** 2) ** 0.5
                 if dist_joueur > 80:
@@ -904,11 +966,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         # weather.draw_label(ecran, 15, 15 + font_clock.get_height() + 8, font_weather)  # Étiquette météo cachée
 
         pygame.display.flip()
+        if raid_manager is not None and indice == 0:
+            raid_manager.leader = True
+
 
         if player.pos != prec[0] or player.path != prec[1]:
             print(player)
             try:
-                send_liste_joueurs_client(players, client_module.CLIENT)
+                client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
                 pass
 

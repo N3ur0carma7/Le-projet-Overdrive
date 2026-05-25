@@ -6,9 +6,11 @@ import ast
 from importlib.metadata import pass_none
 
 from core.Class.batiments import *
+from core.Class.monster import Monster
 from core.Class.player import *
 import screens.jeu as jeu
-from screens.game_logic import players, batiments
+import core.pve as pve
+import screens.game_logic as gl
 FORMAT = "utf-8"
 HEADER = 64
 PORT = 5050
@@ -67,6 +69,27 @@ def pos(client):
         send_float_server(float(number_connected), clients[i])
     send_int_server(number_connected - 1, client)
 
+monsters = []
+monster_director = None
+def handle_monsters(liste_monsters, client):
+    global monsters, monster_director
+    if monster_director is None:
+        monster_director = client
+    if len(liste_monsters) > len(monsters):
+        if monster_director == client:
+            monsters = liste_monsters
+    elif len(liste_monsters) < len(monsters):
+            monsters = liste_monsters
+    for Client in clients.keys():
+        if clients[Client] != client:
+            try :
+                send_liste_monstres(monsters, clients[Client])
+            except:
+                pass
+    return monsters
+
+
+
 
 def handle_client(client, addr):
     global clients
@@ -74,16 +97,17 @@ def handle_client(client, addr):
     send_dict_server({"server": "hello client"}, client)
     if number_connected > 1:
         for sujet2 in clients.keys():
-            if batiments != []:
-                payload = [b.to_dict() for b in batiments]  # message = liste de Batiment
+            if gl.batiments != []:
+                payload = [b.to_dict() for b in gl.batiments]  # message = liste de Batiment
                 data = json.dumps({"type": "liste_batiments", "payload": payload})
                 send_client(data, clients[sujet2])
     if jeu.TAILLE_CASE is not None:
         player = Player()
         player.pos = (jeu.TAILLE_CASE / 2, jeu.TAILLE_CASE / 2)
-        players.append(player)
+        gl.players.append(player)
+
     for sujet in clients.keys():
-        payload = [p.to_dict() for p in players]
+        payload = [p.to_dict() for p in gl.players]
         payload[0]["pos"] = list(payload[0]["pos"])
         for j in range(len(payload[0]["path"])):
             payload[0]["path"][j] = list(payload[0]["path"][j])
@@ -136,6 +160,15 @@ def handle_client(client, addr):
                                     payload[0]["path"][j] = list(payload[0]["path"][j])
                                 data = json.dumps({"type": "liste_joueurs", "payload": payload})
                                 send_client(data, clients[i])
+                            elif type == "liste_monstres":
+                                payload = [b.to_dict() for b in message]  # message = liste de Batiment
+                                data = json.dumps({"type": "liste_monstres", "payload": payload})
+                                send_client(data, clients[i])
+
+                            elif  type == "raid":
+                                payload = json.dumps({"type": "raid", "payload": message.to_dict()})
+                                send_client(payload, clients[i])
+
 
         except Exception as e:
             pass
@@ -205,6 +238,19 @@ def handle_message_recieved (msg, addr):
             plays = [Player.from_dict(d) for d in liste_dicts]
             print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
+        elif msg_type == "liste_monstres":
+            liste_dicts = data["payload"]  # liste de dicts
+            monstre = [Monster.from_dict(d) for d in liste_dicts]
+            print(f"[LISTE MONSTRE] {addr} : {[str(b) for b in monstre]}")
+            handle_monsters(monstre, addr)
+            return monstre, "liste_monstres"
+
+        elif msg_type == "raid":
+            liste_dicts = data["payload"]
+            raid = pve.RaidManager.from_dict(liste_dicts)
+            print(f"[RAID] {addr} : {raid}")
+            return raid, "raid"
+
     except json.JSONDecodeError:
         print(f"[ERROR] {addr} : {msg}")
         return ""
@@ -214,13 +260,16 @@ def disconnect (client):
     print(f"[STOP] client disconnected")
     print(clients_indice[client])
     i = clients_indice[client]
-    players.pop(clients_indice[client])
+    gl.players.pop(clients_indice[client])
     for client in clients_indice:
         clients_indice[client] -= 1 if clients_indice[client] > i else 0
     for client in clients_indice:
-        send_int_server(clients_indice[client], client)
+        try:
+            send_int_server(clients_indice[client], client)
+        except:
+            pass
     for sujet in clients.keys():
-        payload = [p.to_dict() for p in players]
+        payload = [p.to_dict() for p in gl.players]
         payload[0]["pos"] = list(payload[0]["pos"])
         for j in range(len(payload[0]["path"])):
             payload[0]["path"][j] = list(payload[0]["path"][j])
@@ -283,11 +332,24 @@ def send_batiment_server(batiment, client):
     data = json.dumps({"type": "batiment", "payload": payload})
     send_client(data, client)
 
+def send_liste_monstres (liste_monstres, client):
+    payload = [j.to_dict() for j in liste_monstres]
+    data = json.dumps({"type": "liste_monstres", "payload": payload})
+    send_client(data, client)
+
+def send_raid_server(raid_server, client):
+    payload = raid_server.to_dict()
+    data = json.dumps({"type": "raid", "payload": payload})
+    send_client(data, client)
+
+
 stop_event = threading.Event()
 
 def stop_server():
     global STOPSEARCH
-    stop_event.set()   # signale à tous les threads de s'arrêter
+    stop_event.set() # signale à tous les threads de s'arrêter
+    for client in clients:
+        clients[client].close()
     SERVER.close()     # débloque server.accept()
     for client in clients.values():
         client.close()

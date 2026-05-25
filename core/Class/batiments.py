@@ -210,6 +210,7 @@ class Batiment:
     def __str__(self):
         return f"{self.type} (niveau {self.niveau})"
 
+#----------------------------------------------------------------
     # pour convertir pour le serveur
     # PAS TOUCHE !!!
     # SINON AU BUCHER !!!!
