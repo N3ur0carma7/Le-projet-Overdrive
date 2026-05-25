@@ -177,8 +177,8 @@ class Npc:
     ETAT_CHEMIN_BLOQUE = "chemin_bloque"  # Pas de chemin vers le travail
 
     # Durées en secondes (avant : en frames @ 60fps)
-    DUREE_TRAVAIL_MIN = 8.0
-    DUREE_TRAVAIL_MAX = 20.0
+    DUREE_TRAVAIL_MIN = 30.0
+    DUREE_TRAVAIL_MAX = 60.0
     DUREE_ERRANCE_MIN = 5.0
     DUREE_ERRANCE_MAX = 15.0
 
