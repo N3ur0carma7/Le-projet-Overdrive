@@ -570,9 +570,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                # 1. Si un bâtiment est sélectionné pour être posé, on l'annule
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
-                    print("Selection annulee")
+                    mouse_held_placing = False
+                    print("Selection de construction annulee")
 
 
 
