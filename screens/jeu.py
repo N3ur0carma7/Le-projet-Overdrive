@@ -1319,6 +1319,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
                 pass
+        else :
+            for joueur in players:
+                joueur.ismoving = False
+                joueur.anim_state = "idle"
 
     stop_event.set()
     sound.stop_ambient()
