@@ -169,6 +169,7 @@ def handle_message_client(msg, client):
             plays = [Player.from_dict(d) for d in liste_dicts]
             print(f"[LISTE JOUEURS] reçue : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
+
         elif msg_type == "raid":
             liste_dicts = data["payload"]
             raid = RaidManager.from_dict(liste_dicts)
@@ -299,6 +300,7 @@ def send_liste_monstres_client(liste_monstres, client):
     payload = [b.to_dict() for b in liste_monstres]
     data = json.dumps({"type": "liste_monstres", "payload": payload})
     send_server(data, client)
+
 def send_raid_client(raid, client):
     payload = raid.to_dict()
     data = json.dumps({"type": "raid", "payload": payload})

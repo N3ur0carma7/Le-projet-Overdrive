@@ -165,7 +165,8 @@ def handle_client(client, addr):
                                 send_client(data, clients[i])
 
                             elif  type == "raid":
-                                send_raid_server(message.to_dict(), clients[i])
+                                payload = json.dumps({"type": "raid", "payload": message})
+                                send_client(payload, clients[i])
 
 
         except Exception as e:
