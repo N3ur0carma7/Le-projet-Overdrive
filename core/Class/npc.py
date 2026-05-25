@@ -103,7 +103,6 @@ class PathFinder:
 
 
 class Npc:
-    # Classe pour les villageois avec cycle de vie
     @staticmethod
     def load_sprites():
         if hasattr(Npc, 'walk_right'):
@@ -131,17 +130,16 @@ class Npc:
     ETAT_VERS_TRAVAIL = "vers_travail"
     ETAT_AU_TRAVAIL   = "au_travail"
     ETAT_VERS_MAISON  = "vers_maison"
-    ETAT_CHEMIN_BLOQUE = "chemin_bloque"  # Pas de chemin vers le travail
+    ETAT_CHEMIN_BLOQUE = "chemin_bloque"
 
-    # Durées en secondes (avant : en frames @ 60fps)
     DUREE_TRAVAIL_MIN = 30.0
     DUREE_TRAVAIL_MAX = 60.0
     DUREE_ERRANCE_MIN = 5.0
     DUREE_ERRANCE_MAX = 15.0
 
-    VITESSE          = 72.0  # pixels monde / seconde (1.2 px/frame * 60 fps)
-    RAYON_ERRANCE    = 80    # rayon errance autour de la maison en pixels monde
-    TAILLE_AFFICHAGE = 64    # hauteur sprite en pixels écran (fixe)
+    VITESSE          = 72.0
+    RAYON_ERRANCE    = 80
+    TAILLE_AFFICHAGE = 64
 
     def __init__(self, batiment, taille_case=225, player=None, batiments_list=None):
         Npc.load_sprites()
@@ -150,7 +148,6 @@ class Npc:
         self.player = player
         self.batiments_list = batiments_list or []
         
-        # Pathfinder pour calculer les chemins valides
         self.pathfinder = PathFinder(self.batiments_list, taille_case) if self.batiments_list else None
 
         self.lieu_travail = None
@@ -160,29 +157,22 @@ class Npc:
         self.anim_timer = 0
         self.direction = "right"
 
-        # Spawn au centre de la maison (en pixels)
         cx, cy = self._centre_pixels(batiment)
         angle = random.uniform(0, 2 * math.pi)
         dist  = random.uniform(0, self.RAYON_ERRANCE * 0.3)
         self.monde_x = cx + math.cos(angle) * dist
         self.monde_y = cy + math.sin(angle) * dist
 
-        # Chemin courant : liste de (px, py) monde
         self.chemin = []
-        self.index_chemin = 0  # Pour tracker la position dans le chemin
+        self.index_chemin = 0
 
-        # timer en secondes
         self.timer = random.uniform(self.DUREE_ERRANCE_MIN / 2, self.DUREE_ERRANCE_MAX)
 
-        # Première cible d'errance
         self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
-    # ------------------------------------------------------------------
-    # Helpers coordonnées
-    # ------------------------------------------------------------------
+
 
     def _centre_pixels(self, batiment):
-        """Retourne le centre d'un bâtiment en pixels monde."""
         px = batiment.x * self.taille_case + (batiment.largeur * self.taille_case) // 2
         py = batiment.y * self.taille_case + (batiment.hauteur * self.taille_case) // 2
         return px, py
@@ -194,20 +184,16 @@ class Npc:
         dist  = random.uniform(20, self.RAYON_ERRANCE)
         return cx + math.cos(angle) * dist, cy + math.sin(angle) * dist
 
-    # ------------------------------------------------------------------
-    # Déplacement et Pathfinding
-    # ------------------------------------------------------------------
+
 
     def _construire_chemin_direct(self, dest_x, dest_y):
-        """Chemin en ligne droite vers la destination, découpé en waypoints.
-        Utilisé pour l'errance locale autour de la maison."""
+
         dx = dest_x - self.monde_x
         dy = dest_y - self.monde_y
         dist = math.hypot(dx, dy)
         if dist < 1:
             return [(dest_x, dest_y)]
 
-        # Un waypoint tous les ~taille_case pixels pour animation fluide
         nb = max(1, int(dist // self.taille_case))
         chemin = []
         for i in range(1, nb + 1):
@@ -263,7 +249,6 @@ class Npc:
         return chemin is not None
 
     def _avancer_vers(self, tx, ty, dt):
-        """Avance en ligne directe vers (tx, ty). Retourne True si atteint."""
         dx = tx - self.monde_x
         dy = ty - self.monde_y
         dist = math.hypot(dx, dy)
@@ -288,7 +273,6 @@ class Npc:
             self.anim_frame = (self.anim_frame + 1) % 6
 
     def _avancer_chemin(self, dt):
-        """Suit le chemin waypoint par waypoint. Retourne True si arrivé."""
         if not self.chemin:
             return True
         atteint = self._avancer_vers(*self.chemin[0], dt)
@@ -297,9 +281,6 @@ class Npc:
         return len(self.chemin) == 0
 
 
-    # ------------------------------------------------------------------
-    # Machine à états
-    # ------------------------------------------------------------------
 
     def assigner_travail(self, batiment):
         if self.lieu_travail is batiment:
@@ -320,9 +301,7 @@ class Npc:
             self.timer = 0.1
 
     def update(self, dt: float = 1/60):
-        """Met à jour le NPC.
-        dt : delta time en secondes (indépendant des FPS).
-        """
+
         if self.etat == self.ETAT_ERRANCE:
             self._update_errance(dt)
         elif self.etat == self.ETAT_VERS_TRAVAIL:
@@ -405,9 +384,7 @@ class Npc:
 
             self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
-    # ------------------------------------------------------------------
-    # Rendu
-    # ------------------------------------------------------------------
+
 
     def ecran_pos(self, camera_x, camera_y, zoom):
         ex = (self.monde_x - camera_x) * zoom

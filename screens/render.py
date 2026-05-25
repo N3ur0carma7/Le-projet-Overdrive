@@ -290,13 +290,11 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
                  taille_icone, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
                  save_done_img, save_done_timer, barre_ouverte=True, slide_offset=0, btn_batiments_rect=None,
                  skill_btn_rect=None, inventory_btn_rect=None, raid_manager=None, batiments_list=None):
-    # 1. Dessin de la barre du bas
     if slide_offset < hauteur_barre:
         barre_surf = pygame.Surface((dims[0], hauteur_barre), pygame.SRCALPHA)
         barre_surf.fill((30, 30, 30, 210))
         ecran.blit(barre_surf, (0, dims[1] - hauteur_barre + slide_offset))
 
-    # 2. Dessin des icônes de construction dans la barre
     for i, rect in enumerate(rects_icones):
         couleur = (200, 200, 80) if i == batiment_selectionne else (100, 100, 100)
         pygame.draw.rect(ecran, couleur, rect.inflate(8, 8))
@@ -326,7 +324,6 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
             rect.bottom + 4
         ))
 
-    # 3. Préparation de la police pour les ressources
     try:
         font_ressources = pygame.font.Font("assets/fonts/Minecraft.ttf", 22)
     except Exception:
@@ -334,7 +331,6 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
     marge_hud = 15
 
-    # 4. Récupération de la population via la liste synchronisée
     if batiments_list is not None:
         total_villageois = sum(
             b.get_population()
@@ -374,8 +370,8 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         ty = marge_hud + (32 - text_height) // 2
 
         ecran.blit(texte, (tx, ty))
-    # 6. Bouton toggle barre bâtiments (BUILD / CLOSE)
     BTN_SIZE = 70
+
     BTN_MARGE = 12
     btn_x = dims[0] - BTN_SIZE - BTN_MARGE
     btn_y = dims[1] - BTN_SIZE - BTN_MARGE
@@ -394,48 +390,38 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     if btn_batiments_rect is not None:
         btn_batiments_rect.update(btn_x, btn_y, BTN_SIZE, BTN_SIZE)
 
-    # 7. Bouton skill tree (SKILLS) - caché si la barre de build est ouverte
-    if not barre_ouverte:
-        skill_btn_x = btn_x - BTN_SIZE - BTN_MARGE
-        skill_btn_y = btn_y
-        skill_btn_couleur = (100, 100, 200)
-        pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE),
-                         border_radius=10)
-        pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3,
-                         border_radius=10)
+    skill_btn_x = btn_x - BTN_SIZE - BTN_MARGE
+    skill_btn_y = btn_y
+    skill_btn_couleur = (100, 100, 200)
+    pygame.draw.rect(ecran, skill_btn_couleur, pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE),
+                     border_radius=10)
+    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE), 3,
+                     border_radius=10)
 
-        skill_label = "SKILLS"
-        skill_lbl_surf = btn_font.render(skill_label, True, (255, 255, 255))
-        skill_lbl_x = skill_btn_x + (BTN_SIZE - skill_lbl_surf.get_width()) // 2
-        skill_lbl_y = skill_btn_y + (BTN_SIZE - skill_lbl_surf.get_height()) // 2
-        ecran.blit(skill_lbl_surf, (skill_lbl_x, skill_lbl_y))
+    skill_label = "SKILLS"
+    skill_lbl_surf = btn_font.render(skill_label, True, (255, 255, 255))
+    skill_lbl_x = skill_btn_x + (BTN_SIZE - skill_lbl_surf.get_width()) // 2
+    skill_lbl_y = skill_btn_y + (BTN_SIZE - skill_lbl_surf.get_height()) // 2
+    ecran.blit(skill_lbl_surf, (skill_lbl_x, skill_lbl_y))
 
-        if skill_btn_rect is not None:
-            skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
-    elif skill_btn_rect is not None:
-        skill_btn_rect.update(0, 0, 0, 0)
+    if skill_btn_rect is not None:
+        skill_btn_rect.update(skill_btn_x, skill_btn_y, BTN_SIZE, BTN_SIZE)
+    inv_btn_x = skill_btn_x - BTN_SIZE - BTN_MARGE
+    inv_btn_y = btn_y
+    inv_btn_couleur = (140, 90, 180)
 
-    # 8. Bouton inventaire (INV) - caché si la barre de build est ouverte
-    if not barre_ouverte:
-        inv_btn_x = btn_x - 2 * (BTN_SIZE + BTN_MARGE)
-        inv_btn_y = btn_y
-        inv_btn_couleur = (140, 90, 180)
+    pygame.draw.rect(ecran, inv_btn_couleur, pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
+    pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
 
-        pygame.draw.rect(ecran, inv_btn_couleur, pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), border_radius=10)
-        pygame.draw.rect(ecran, (220, 220, 180), pygame.Rect(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE), 3, border_radius=10)
+    inv_label = "INV"
+    inv_lbl_surf = btn_font.render(inv_label, True, (255, 255, 255))
+    inv_lbl_x = inv_btn_x + (BTN_SIZE - inv_lbl_surf.get_width()) // 2
+    inv_lbl_y = inv_btn_y + (BTN_SIZE - inv_lbl_surf.get_height()) // 2
+    ecran.blit(inv_lbl_surf, (inv_lbl_x, inv_lbl_y))
 
-        inv_label = "INV"
-        inv_lbl_surf = btn_font.render(inv_label, True, (255, 255, 255))
-        inv_lbl_x = inv_btn_x + (BTN_SIZE - inv_lbl_surf.get_width()) // 2
-        inv_lbl_y = inv_btn_y + (BTN_SIZE - inv_lbl_surf.get_height()) // 2
-        ecran.blit(inv_lbl_surf, (inv_lbl_x, inv_lbl_y))
+    if inventory_btn_rect is not None:
+        inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
 
-        if inventory_btn_rect is not None:
-            inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
-    elif inventory_btn_rect is not None:
-        inventory_btn_rect.update(0, 0, 0, 0)
-
-    # 8. Affichage de la notification de sauvegarde (popup dessinée)
     if save_done_timer > 0:
         popup_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
         popup_text = "Partie sauvegardee !"
@@ -448,12 +434,9 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         popup_bg = pygame.Surface((popup_w, popup_h), pygame.SRCALPHA)
         popup_bg.fill((20, 20, 20, 210))
         ecran.blit(popup_bg, (popup_x, popup_y))
-        # Bordure verte
         pygame.draw.rect(ecran, (80, 200, 100), (popup_x, popup_y, popup_w, popup_h), 2, border_radius=4)
-        # Texte
         ecran.blit(text_surf, (popup_x + padding_x, popup_y + padding_y))
 
-    # 9. Barre de vie du joueur
     hp_bar_w = 200
     hp_bar_h = 14
     hp_bar_x = 12
@@ -468,7 +451,6 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     hp_txt = font_argent.render(f"HP {int(player.hp)}/{player.hp_max}", True, (255, 255, 255))
     ecran.blit(hp_txt, (hp_bar_x + 4, hp_bar_y - hp_txt.get_height() - 2))
 
-    # 10. Indicateur de raid
     if raid_manager is not None and not raid_manager._raid_active:
         time_left = int(raid_manager.time_to_next_raid)
         minutes = time_left // 60

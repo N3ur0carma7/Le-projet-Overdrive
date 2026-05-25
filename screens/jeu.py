@@ -33,7 +33,6 @@ from screens.GUI.menu_travail import afficher_menu_travail
 import core.sounds as sound
 from screens.floating_messages import FloatingMessageManager
 from screens.ambiance import AmbianceManager
-# from screens.day_night import DayNightCycle  # Logique jour/nuit désactivée
 from screens.weather import WeatherManager
 
 surface_monde, camera_x, camera_y = None, None, None
@@ -58,7 +57,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     def _pos_centre_case(cx: int, cy: int):
         return ((cx + 0.5) * TAILLE_CASE, (cy + 0.5) * TAILLE_CASE)
 
-    # S'assurer qu'un joueur existe avant tout accès à players[indice]
     if not players:
         Player.load_sprites()
         p = Player()
@@ -133,8 +131,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     construction_gear = pygame.image.load(
         "assets/buildings/construction_gear.png"
     ).convert_alpha()
-    # Maintenant que images_batiments existe à 100%, on copie en toute sécurité le dictionnaire d'images
-    # pour les niveaux d'amélioration suivants :
     images_batiments[Batiment.TYPE_TOURELLE][2] = {k: v for k, v in images_batiments[Batiment.TYPE_TOURELLE][1].items()}
     images_batiments[Batiment.TYPE_TOURELLE][3] = {k: v for k, v in images_batiments[Batiment.TYPE_TOURELLE][1].items()}
 
@@ -222,17 +218,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     cloud_manager.generate_clouds(count=200)
     ambiance_manager = AmbianceManager()
 
-    # ── Système jour / nuit ──────────────────────────────────
-    # day_night = DayNightCycle(start_phase=0.0)   # Logique jour/nuit désactivée
-
-    # ── Système météo ────────────────────────────────────────
     weather = WeatherManager()
 
-    # Mémoriser la vitesse de base de chaque nuage pour le vent
     for cloud in cloud_manager.clouds:
         cloud._base_speed_x = cloud.speed_x
 
-    # Polices HUD jour/nuit et météo
     font_clock   = pygame.font.Font("assets/fonts/Minecraft.ttf", 18)
     font_weather = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
 
@@ -277,7 +267,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             surf_tuto = pygame.Surface(
                 (math.ceil(largeur_vue), math.ceil(hauteur_vue))
             ).convert()
-            # Sol steampunk + grille fine
             couleur_sol = (58, 44, 32)
             couleur_grille = (92, 72, 44)
             epaisseur = 2
@@ -308,7 +297,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     terminal = Terminal(dev_mode=dev_mode)
 
-    # Fonction utilitaire : tenter de placer un bâtiment aux coordonnées monde (mx, my)
     def _essayer_placer_batiment(sx, sy, mx, my):
         if batiment_selectionne is None:
             return
@@ -393,7 +381,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         else:
             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
 
-    # PVE
     raid_manager = pve.RaidManager(taille_case=TAILLE_CASE)
 
     def _log_raid_start(n):
@@ -420,7 +407,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     barre_ouverte = False
     SLIDE_SPEED = 400
     slide_offset = HAUTEUR_BARRE
-    mouse_held_placing = False  # True quand le clic gauche est maintenu en mode placement
+    mouse_held_placing = False
     btn_batiments_rect = pygame.Rect(0, 0, 60, 60)
     skill_btn_rect = pygame.Rect(0, 0, 60, 60)
 
@@ -437,7 +424,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     acc_vapeur   = 0.0
     save_done_timer = 0.0
     attack_cooldown = 0.0
-    ATTACK_COOLDOWN_MAX = 0.6  # secondes entre chaque attaque
+    ATTACK_COOLDOWN_MAX = 0.6
 
     ambient_playlist = list(range(len(sound.ambient_musics)))
     random.shuffle(ambient_playlist)
@@ -445,7 +432,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     ambient_delay_timer = 0.0
 
     surface_monde = None
-    surface_monde_size = None  # (w, h) en px monde (avant scaling écran)
+    surface_monde_size = None
     footstep_timer = 0.0
     touches_secretes = []
     placement_cooldown = 0.0
@@ -467,7 +454,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         player = players[indice]
-        # animation d'ouverture/fermeture de la barre de batiments
         cible_offset = 0 if barre_ouverte else HAUTEUR_BARRE
         if slide_offset < cible_offset:
             slide_offset = min(cible_offset, slide_offset + SLIDE_SPEED * dt)
@@ -503,17 +489,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         if player.active_effects["heal"] > maintenant:
             player.hp = min(player.hp_max, player.hp + 8 * dt)
 
-        # Régénération passive du joueur (1 PV par seconde)
         player.hp = min(player.hp_max, player.hp + player.health_regen * dt)
 
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
 
-        # ── Mise à jour jour/nuit et météo ──────────────────
-        # day_night.update(dt)  # Logique jour/nuit désactivée
         weather.update(dt)
 
-        # Adapter la vitesse des nuages au vent
         for cloud in cloud_manager.clouds:
             base = getattr(cloud, '_base_speed_x', cloud.speed_x)
             cloud._base_speed_x = base
@@ -609,7 +591,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 else:
                     etat_pause = menu_pause(ecran, horloge, FPS, batiments, online, unlocked_skills, players[indice], screenshot)
                 if etat_pause == "jeu_save_done":
-                    save_done_timer = 1.5  # show for 1.5 seconds
+                    save_done_timer = 1.5
                 elif not etat_pause:
                     stop_event.set()
                     return False
@@ -633,7 +615,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
             #clic droit
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                # 1. Si un bâtiment est sélectionné pour être posé, on l'annule
                 if batiment_selectionne is not None:
                     batiment_selectionne = None
                     mouse_held_placing = False
@@ -689,7 +670,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     if potion_utilisee:
                         continue
                 if batiment_selectionne is not None:
-                    mouse_held_placing = True  # démarrer le placement continu
+                    mouse_held_placing = True
 
                 sx, sy = pygame.mouse.get_pos()
 
@@ -699,12 +680,12 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         batiment_selectionne = None
                     continue
 
-                if not barre_ouverte and skill_btn_rect.collidepoint(sx, sy):
+                if skill_btn_rect.collidepoint(sx, sy):
                     from screens.skill_tree import afficher_skill_tree
                     unlocked_skills = afficher_skill_tree(ecran, player, unlocked_skills, Batiment.DATA)
                     continue
 
-                if not barre_ouverte and inventory_btn_rect.collidepoint(sx, sy):
+                if inventory_btn_rect.collidepoint(sx, sy):
                     inventory_ouvert = not inventory_ouvert
                     continue
 
@@ -847,7 +828,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                 if ressource_cliquee:
                     continue
-                # N'autoriser le clic sur les icones que si la barre est visible
                 if barre_ouverte and slide_offset < HAUTEUR_BARRE:
                     for i, rect in enumerate(rects_icones):
                         if rect.collidepoint(sx, sy):
@@ -856,7 +836,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             break
 
 
-                # attaque
                 monster_clicked = False
                 if not clic_barre and raid_manager is not None and attack_cooldown <= 0.0:
                     world_sx = camera_x + sx / zoom
@@ -864,12 +843,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     for m in raid_manager.monsters:
                         if not m.alive:
                             continue
-                        # Calcul de la distance joueur-monstre
                         dist_joueur = ((player.pos[0] - m.x) ** 2 + (player.pos[1] - m.y) ** 2) ** 0.5
-                        PORTEE_ATTAQUE_JOUEUR = 80  # px — réduit pour le hand_cannon (corps à corps)
+                        PORTEE_ATTAQUE_JOUEUR = 80
                         if dist_joueur > PORTEE_ATTAQUE_JOUEUR:
                             continue
-                        # Rect en coordonnées écran
                         m_screen_rect = m.get_screen_rect(camera_x, camera_y)
                         zoomed_rect = pygame.Rect(
                             int(m_screen_rect.x * zoom),
@@ -877,17 +854,13 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             int(m_screen_rect.width * zoom),
                             int(m_screen_rect.height * zoom),
                         )
-                        # Agrandir la hitbox pour faciliter le clic
                         zoomed_rect.inflate_ip(12, 12)
                         if zoomed_rect.collidepoint(sx, sy):
-                            # Déclencher l'animation d'attaque
                             player.trigger_attack_anim()
-                            # Orienter le joueur vers le monstre
                             if m.x < player.pos[0]:
                                 player.direction = "left"
                             else:
                                 player.direction = "right"
-                            # Calcul des dégâts avec critique
                             import random as _rnd
                             dmg = player.raw_damage
                             is_crit = _rnd.randint(1, 100) <= player.crit_chance
@@ -895,7 +868,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 dmg = int(dmg * (1 + player.crit_damage / 100))
                             m.take_damage(dmg)
                             attack_cooldown = ATTACK_COOLDOWN_MAX
-                            # Afficher le chiffre de dégâts
                             from core.pve import DamageNumber
                             raid_manager.damage_numbers.append(
                                 DamageNumber(m.x, m.y - 20, dmg, is_crit)
@@ -903,7 +875,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             monster_clicked = True
 
 
-                # Placement du bâtiment sur la grille
                 limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
                 if not clic_barre and not monster_clicked and sy < limite_ui:
                     mx = camera_x + sx / zoom
@@ -942,7 +913,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
 
                                 break
-                #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
 
 
@@ -974,7 +944,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             son_footstep.stop()
             footstep_timer = 0
 
-        # Placement continu quand le clic est maintenu (drag)
         if placement_cooldown <= 0 and mouse_held_placing and batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
             limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
@@ -993,17 +962,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     placement_cooldown = 0.15
 
 
-        # mort
         if player.hp <= 0:
             from screens.game_over import afficher_game_over
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             result = afficher_game_over(ecran, player)
             if result == "restart":
-                # --- Pénalité : perte de 30% des ressources ---
                 player.money  = max(0, int(player.money  * 0.70))
                 player.food   = max(0, int(player.food   * 0.70))
                 player.vapeur = max(0, int(player.vapeur * 0.70))
-                # Réinitialiser le joueur et le raid
                 player.hp = player.hp_max
                 player.path = []
                 player.pos = _pos_centre_case(5, 5)
@@ -1011,7 +977,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 raid_manager.damage_numbers.clear()
                 raid_manager._raid_active = False
                 raid_manager._auto_timer = 30.0
-                # Message informatif
                 W2, H2 = dims[0] // 2, dims[1] // 2
                 float_msg.warning("-30% de ressources perdues !", W2, H2 - 40)
                 continue
@@ -1055,7 +1020,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         cloud_manager.draw(surface_monde, camera_x, camera_y)
         ambiance_manager.draw(surface_monde, camera_x, camera_y)
 
-        # ── Pluie (dans l'espace monde, avant scaling) ───────
         weather.draw_rain(surface_monde, camera_x, camera_y)
 
 
@@ -1102,7 +1066,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     (px + texte.get_width(), icone_y)
                 )
 
-        # Grille (mode placement) dessinée en pixels écran pour éviter les artefacts de scaling.
         if batiment_selectionne is not None:
             hauteur_ui = int(HAUTEUR_BARRE - slide_offset)
             dessiner_grille_overlay_ecran(ecran, camera_x, camera_y, dims, hauteur_ui, zoom, TAILLE_CASE)
@@ -1180,7 +1143,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             )
 
             ecran.blit(texte, (20, dims[1] - 180 + i * 22))
-        # === MODIFIEZ CET APPEL TOUT À LA FIN DE .\screens\jeu.py ===
         dessiner_hud(ecran, dims, HAUTEUR_BARRE, rects_icones, batiment_selectionne, images_batiments, TYPES_BATIMENTS,
                      TAILLE_ICONE, player, font_argent, hud_or_img, hud_food_img, hud_vapeur_img, hud_pop_img,
                      save_done_img, save_done_timer, barre_ouverte, int(slide_offset), btn_batiments_rect,
@@ -1321,10 +1283,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                         fond.blit(q_txt, (q_x, q_y))
             ecran.blit(fond, (inv_x, inv_y))
-
-        # ── HUD jour/nuit et météo ───────────────────────────
-        # day_night.draw_clock(ecran, 15, 15, font_clock)  # Chrono de temps caché
-        # weather.draw_label(ecran, 15, 15 + font_clock.get_height() + 8, font_weather)  # Étiquette météo cachée
 
         pygame.display.flip()
         if raid_manager is not None and indice == 0:

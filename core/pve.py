@@ -7,11 +7,10 @@ from core.Class.monster import Monster
 import multiplayer.client as client_module
 
 
-TAILLE_CASE_DEFAULT = 64   # fallback si non transmis
+TAILLE_CASE_DEFAULT = 64
 import screens.game_logic as gl
 
 class DamageNumber:
-    #Chiffre de dégâts flottant affiché à l'écran.
     DURATION = 1.0   # secondes
 
     def __init__(self, x: float, y: float, amount: int, is_crit: bool = False):
@@ -55,10 +54,10 @@ class RaidManager:
     WAVES_PER_RAID   = 4
     MONSTERS_PER_WAVE_MIN = 5
     MONSTERS_PER_WAVE_MAX = 10
-    SPAWN_DISTANCE_CASES  = 40   # ~40 cases du joueur
-    WAVE_DELAY            = 10.0  # secondes entre vagues
-    AUTO_RAID_MIN         = 5 * 60.0   # 1 min
-    AUTO_RAID_MAX         = 10 * 60.0   # 2 min
+    SPAWN_DISTANCE_CASES  = 40
+    WAVE_DELAY            = 10.0
+    AUTO_RAID_MIN         = 5 * 60.0
+    AUTO_RAID_MAX         = 10 * 60.0
 
     def __init__(self, taille_case: int = TAILLE_CASE_DEFAULT):
         self.taille_case    = taille_case
@@ -66,12 +65,11 @@ class RaidManager:
         self.damage_numbers: list = []
         self.leader = False
         self._raid_active   = False
-        self._wave_index    = 0          # vague en cours
-        self._wave_timer    = 0.0        # temps restant avant prochaine vague
+        self._wave_index    = 0
+        self._wave_timer    = 0.0
         self._auto_timer    = self._random_auto_delay()
-        self._raid_count    = 0          # nombre de raids déclenchés
+        self._raid_count    = 0
 
-        # Callbacks optionnels pour log terminal
         self.on_raid_start: callable = None   # fn(raid_num)
         self.on_wave_spawn: callable = None   # fn(wave_num, nb)
         self.on_raid_end:   callable = None   # fn()
@@ -88,17 +86,14 @@ class RaidManager:
         return f"RAID #{self._raid_count} DECLENCHE ! Preparez-vous..."
 
     def update(self, players: list, dt: float):
-        # Timer automatique
         if not self._raid_active:
             self._auto_timer -= dt
             if self._auto_timer <= 0:
                 self._start_raid()
         old_monsters = self.monsters
-        # Mise à jour des monstres vivants
         for m in self.monsters:
             m.update(players, dt)
 
-        # Nettoyer les monstres morts
 
         self.monsters = [m for m in self.monsters if m.alive]
 
@@ -107,19 +102,16 @@ class RaidManager:
                 client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
             except Exception as e:
                 print(e)
-        # Mise à jour des chiffres de dégâts
         for dn in self.damage_numbers:
             dn.update(dt)
         self.damage_numbers = [dn for dn in self.damage_numbers if dn.alive]
 
-        # Gestion des vagues actives
         if self._raid_active:
             self._wave_timer -= dt
             if self._wave_timer <= 0:
                 if self._wave_index < self.WAVES_PER_RAID and self.leader == True:
                     self._spawn_wave(players)
                 else:
-                    # Toutes les vagues lancées ; attendre fin des monstres
                     if not self.monsters:
                         self._end_raid()
 
@@ -159,7 +151,6 @@ class RaidManager:
             client_module.send_raid_client(self, client_module.CLIENT)
         except Exception as e:
             print(e)
-        # Délai avant la prochaine vague
         self._wave_timer = self.WAVE_DELAY
 
     def _end_raid(self):
@@ -176,7 +167,6 @@ class RaidManager:
     def _random_auto_delay() -> float:
         return random.uniform(RaidManager.AUTO_RAID_MIN, RaidManager.AUTO_RAID_MAX)
 
-    #----------------------------------------------------------------------------------------------------------------
     def to_dict(self):
         return {
             "taille_case": self.taille_case,

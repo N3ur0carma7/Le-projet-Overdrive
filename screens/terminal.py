@@ -19,9 +19,7 @@ def _is_hello_world(raw: str) -> bool:
     return False
 
 
-# ---------------------------------------------------------------------------
-# Matrix Rain  –  easter egg
-# ---------------------------------------------------------------------------
+
 
 class MatrixRain:
     CHARS    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&"
@@ -104,9 +102,6 @@ class MatrixRain:
                     pass
 
 
-# ---------------------------------------------------------------------------
-# Commandes
-# ---------------------------------------------------------------------------
 
 def cmd_godlike(args, player, batiments, **ctx):
     player.money  += 10_000
@@ -260,9 +255,7 @@ COMMANDS: dict[str, tuple] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Terminal  –  style Counter‑Strike : fond gris foncé, texte blanc
-# ---------------------------------------------------------------------------
+
 
 class Terminal:
 

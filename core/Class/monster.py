@@ -3,24 +3,14 @@ import pygame
 import random
 
 
-# ──────────────────────────────────────────────
-#  Taille d'affichage du Woodcutter
-#  Chaque frame source fait 48×48 px.
-#  Modifie MONSTER_SCALE pour changer la taille :
-#    1.0 → 48×48 px  (taille originale)
-#    2.0 → 96×96 px  (plus grand)
-#    0.5 → 24×24 px  (plus petit)
-MONSTER_SCALE = 1.5
-# ──────────────────────────────────────────────
 
-FRAME_SIZE = 48   # taille d'une frame dans les spritesheets (ne pas modifier)
+MONSTER_SCALE = 1.5
+
+FRAME_SIZE = 48
 
 
 def _load_spritesheet(path: str, nb_frames: int, scale: float) -> list:
-    """
-    Découpe un spritesheet horizontal en liste de Surfaces pygame.
-    Redimensionne selon `scale`.
-    """
+
     sheet = pygame.image.load(path).convert_alpha()
     frames = []
     target_w = int(FRAME_SIZE * scale)
@@ -35,10 +25,7 @@ def _load_spritesheet(path: str, nb_frames: int, scale: float) -> list:
 
 
 class Monster:
-    """
-    Monstre PVE utilisant le sprite Woodcutter.
-    Animations : walk (déplacement) et attack1 (attaque).
-    """
+
 
     SPEED           = 80
     HP_MAX          = 30
@@ -74,7 +61,6 @@ class Monster:
         flash.fill((255, 255, 255, 160))
         cls._hit_flash = flash
 
-    # ── Taille logique utilisée pour le hit-rect et la barre de vie
     @property
     def SIZE(self):
         return int(FRAME_SIZE * MONSTER_SCALE)
@@ -110,7 +96,6 @@ class Monster:
         self._attack_timer    = max(0.0, self._attack_timer - dt)
         self._hit_flash_timer = max(0.0, self._hit_flash_timer - dt)
 
-        # Trouver la cible la plus proche
         target    = None
         best_dist = float("inf")
         for p in players:
@@ -135,7 +120,6 @@ class Monster:
         if dx != 0:
             self._facing_left = dx < 0
 
-        # Gestion de l'animation d'attaque en cours
         if self._is_attacking:
             self._attack_anim_timer -= dt
             if not self._attack_damage_applied:
@@ -148,7 +132,6 @@ class Monster:
                 self._attack_damage_applied = False
                 self._anim_frame = 0
 
-        # Décision : attaquer ou marcher
         if dist <= self.ATTACK_RANGE:
             self._is_moving = False
             if self._attack_timer <= 0.0:
@@ -207,7 +190,6 @@ class Monster:
         if sx > sw + margin or sx < -margin or sy > sh + margin or sy < -margin:
             return
 
-        # Choisir la bonne liste de frames
         if self._is_attacking:
             frames = self._attack_frames
         elif self._is_moving:
@@ -218,7 +200,6 @@ class Monster:
         frame_idx = min(self._anim_frame, len(frames) - 1)
         sprite = frames[frame_idx]
 
-        # Retourner si le monstre va à gauche
         if self._facing_left:
             sprite = pygame.transform.flip(sprite, True, False)
 
@@ -228,14 +209,12 @@ class Monster:
 
         surface.blit(sprite, (draw_x, draw_y))
 
-        # Flash blanc si coup reçu
         if self._hit_flash_timer > 0:
             flash = self._hit_flash
             if self._facing_left:
                 flash = pygame.transform.flip(flash, True, False)
             surface.blit(flash, (draw_x, draw_y), special_flags=pygame.BLEND_RGBA_MULT)
 
-        # Barre de vie
         bar_w    = self.SIZE
         bar_h    = 4
         hp_ratio = max(0.0, self.hp / self.HP_MAX)
@@ -253,7 +232,6 @@ class Monster:
         pygame.draw.rect(surface, (180, 180, 180), (bar_x, bar_y, bar_w, bar_h), 1)
 
 
-# ──────────────────────────────────────────────
 #  PAS TOUCHE !!!!!!!!
 
     def to_dict(self):

@@ -11,9 +11,7 @@ def collision(batiments, nouveau):
     return False
 
 def calculer_rects_icones(dims, hauteur_barre, taille_icone, slide_offset=0):
-    """
-    slide_offset : décalage vertical vers le bas (0 = visible, hauteur_barre = caché).
-    """
+
     rects = []
     marge = 20
     n = len(Batiment.DATA)
@@ -34,11 +32,7 @@ def souris_vers_case(pos, camera_x, camera_y, zoom, taille_case):
     return int(mx // taille_case), int(my // taille_case)
 
 def joueur_a_portee(case, player, taille_case, distance_max=2, width=1, height=1):
-    """
-    case: (x, y) en coordonnées grille.
-    width/height: footprint de la cible en cases (permet 3x3, etc.).
-    Vérifie la distance jusqu'à la case la plus proche dans le rectangle cible.
-    """
+
     joueur_case_x = int(player.pos[0] // taille_case)
     joueur_case_y = int(player.pos[1] // taille_case)
 
@@ -102,11 +96,7 @@ def dessiner_grille_overlay(surface, camera_x, camera_y, dims, hauteur_barre, zo
         pygame.draw.line(surface, couleur_grille, (0, screen_y), (dims[0], screen_y), epaisseur)
 
 def dessiner_grille_overlay_ecran(ecran, camera_x, camera_y, dims, hauteur_ui, zoom, taille_case):
-    """
-    Dessine la grille directement en pixels écran (après scaling du monde).
-    Ça évite les artefacts quand on scale une grille fine à des zooms non entiers.
-    hauteur_ui: hauteur (en px écran) occupée par l'UI en bas (on ne dessine pas dessus).
-    """
+
     couleur_grille = (150, 120, 84)
     epaisseur = 1
 
@@ -136,10 +126,7 @@ def dessiner_grille_overlay_ecran(ecran, camera_x, camera_y, dims, hauteur_ui, z
 
 
 def dessiner_grille_overlay_monde(surface_monde, camera_x, camera_y, taille_case):
-    """
-    Variante "monde" (sans zoom) : dessine la grille directement sur surface_monde
-    pour qu'elle passe derrière le joueur / les sprites.
-    """
+
     couleur_grille = (150, 120, 84)
     epaisseur = 1
 

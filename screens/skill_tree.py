@@ -18,7 +18,7 @@ SKILLS_DATA = {
                 "prerequisites": [],
                 "effect": "unlock_new_building",
                 "building_type": "tower",
-                "pos": (0.75, 0.40),  # RIGHT branch root
+                "pos": (0.75, 0.40),
                 "large": True,
             }
         ]
@@ -38,7 +38,7 @@ SKILLS_DATA = {
                 "effect": "unlock_building_upgrade",
                 "building_type": Batiment.TYPE_RESIDENTIEL,
                 "max_level": 2,
-                "pos": (0.35, 0.40),  # LEFT root
+                "pos": (0.35, 0.40),
                 "large": True,
             },
 
@@ -225,7 +225,7 @@ SKILLS_DATA = {
                 "effect": "player_stat",
                 "stat": "hp_max",
                 "value": 50,
-                "pos": (0.50, 0.65),  # CENTER DOWN
+                "pos": (0.50, 0.65),
                 "large": True,
             },
             {
@@ -450,7 +450,7 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
 
-                if event.button == 1:  # Clic gauche
+                if event.button == 1:
 
                     dragging = False
 
@@ -491,7 +491,7 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
                             buy_btn_rect = None
 
 
-                elif event.button == 3:  # Clic droit
+                elif event.button == 3:
 
                     if selected_skill is not None:
 
@@ -502,7 +502,7 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
 
                     else:
 
-                        en_menu = False  # Quitter le skill tree
+                        en_menu = False
 
 
                     clicked = False

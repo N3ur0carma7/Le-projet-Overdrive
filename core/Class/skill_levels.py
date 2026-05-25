@@ -1,6 +1,4 @@
-# Shared module — no game imports, no circular dependency.
-# Stores the current max level cap per building type.
-# skill_tree.py writes here; batiments.py reads here.
+
 
 MAX_LEVELS = {
     "residentiel": 1,

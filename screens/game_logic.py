@@ -35,7 +35,6 @@ def marquer_assignation_manuelle(npc, batiment):
 def effacer_toutes_assignations():
     assignations_manuelles.clear()
 
-# ──────────────────────────────────────────────────────────────
 
 def toggle_fullscreen():
     global _fullscreen
@@ -101,12 +100,10 @@ def draw_players(surface, camera_x, camera_y):
 
 def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
-    # Mettre à jour l'état de construction des bâtiments avant toute logique
     for b in batiments_list:
         if hasattr(b, "en_construction") and b.en_construction:
             b.construction_finie()
 
-    # Calculer la population attendue uniquement pour les maisons finies
     population_attendue = {}
     for b in batiments_list:
         if b.type == Batiment.TYPE_RESIDENTIEL:
@@ -114,7 +111,6 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
 
 
-    # Supprimer les NPCs dont la maison n'existe plus
     maisons_valides = {id(b) for b in batiments_list if b.type == Batiment.TYPE_RESIDENTIEL}
     for npc in list(npcs):
         if id(npc.maison) not in maisons_valides:
@@ -132,7 +128,6 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 
         npcs_par_maison[cle].append(npc)
 
-    # Créer / supprimer des NPCs selon la population
     for b in batiments_list:
         if b.type != Batiment.TYPE_RESIDENTIEL:
             continue
@@ -151,7 +146,6 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
             if npc in npcs:
                 npcs.remove(npc)
 
-    # Mettre à jour le pathfinder de tous les NPC (la grille de bâtiments a pu changer)
     for npc in npcs:
         npc.batiments_list = batiments_list
 
@@ -196,7 +190,6 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
 
     food_ok = player.food > 0
 
-    # Créer un mapping de bâtiments de production vers nombre de villageois assignés
     batiments_production_accessibles = set()
     if npcs is not None:
         for npc in npcs:
@@ -204,7 +197,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
                 batiments_production_accessibles.add(id(npc.lieu_travail))
     multiplicateur_nourriture = 1
     multiplicateur_vapeur = 1
-    multiplicateur_argent = 1 # Application des multiplicateurs
+    multiplicateur_argent = 1
     for b in batiments_list:
         if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None and not b.en_construction:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
@@ -236,7 +229,6 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     acc_vapeur *= multiplicateur_vapeur
     acc_food *= multiplicateur_nourriture
 
-    # 3. Application des gains accumulés
     gains_argent = ceil(acc_argent)
     if gains_argent > 0:
         if player.money > player.max_money:

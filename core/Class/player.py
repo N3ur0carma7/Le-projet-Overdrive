@@ -3,16 +3,12 @@ import pygame
 import multiplayer.client as client_module
 
 
-# ---------------------------------------------------------------------------
-# Spritesheets player
-# Chaque frame fait 48px de large x 48px de haut.
-# Les images sont des bandes horizontales de frames.
-# ---------------------------------------------------------------------------
 
-FRAME_W = 48   # largeur d'une frame
-FRAME_H = 48   # hauteur d'une frame
 
-# Nombre de frames par animation (width / 48)
+FRAME_W = 48
+FRAME_H = 48
+
+
 ANIM_FRAMES = {
     "idle":         4,   # 192 / 48
     "run":          6,   # 288 / 48
@@ -21,7 +17,6 @@ ANIM_FRAMES = {
     "death":        6,   # 288 / 48
 }
 
-# FPS par animation
 ANIM_FPS = {
     "idle":        8,
     "run":        10,
@@ -50,7 +45,6 @@ class Player:
                 f"assets/player_sprites/{name}.png"
             ).convert_alpha()
 
-    # ------------------------------------------------------------------
     def __init__(self):
         self.hp_max       = 100
         self.hp           = 100
@@ -82,17 +76,17 @@ class Player:
             "heal": 0
         }
 
-        self.speed = 420   # px/s
+        self.speed = 420
         self.size  = 40
 
         # Animation
-        self.direction  = "right"   # "right" | "left"
+        self.direction  = "right"
         self.anim_state = "idle"
         self.anim_frame = 0
         self.anim_timer = 0.0
         self.is_moving  = False
 
-        # Attaque
+
         self._attack_anim_active   = False
         self._attack_anim_timer    = 0.0
         self._attack_anim_duration = ANIM_FRAMES["hand_cannon"] / ANIM_FPS["hand_cannon"]
@@ -101,7 +95,6 @@ class Player:
 
     # ------------------------------------------------------------------
     def trigger_attack_anim(self):
-        """Declenche l'animation hand_cannon pour un cycle complet."""
         self._attack_anim_active = True
         self._attack_anim_timer  = self._attack_anim_duration
         self.anim_state  = "hand_cannon"
@@ -117,15 +110,10 @@ class Player:
 
     # ------------------------------------------------------------------
     def update(self, keys_pressed, dt=1/60):
-        """
-        Déplace le joueur selon les touches directionnelles ZQSD
-        keys_pressed: dictionnaire {K_z: True/False, K_q: True/False, ...}
-        """
-        # Vecteur de direction
+
         dir_x = 0
         dir_y = 0
 
-        # Détection des touches (ZQSD pour les joueurs français)
         if keys_pressed.get(pygame.K_z, False):  # Haut
             dir_y = -1
         if keys_pressed.get(pygame.K_s, False):  # Bas
@@ -135,26 +123,22 @@ class Player:
         if keys_pressed.get(pygame.K_d, False):  # Droite
             dir_x = 1
 
-        # Déterminer si le joueur bouge et sa direction
         if dir_x != 0 or dir_y != 0:
-            # Normaliser le vecteur pour un mouvement cohérent
             magnitude = math.hypot(dir_x, dir_y)
             if magnitude > 0:
                 dir_x /= magnitude
                 dir_y /= magnitude
                 
-                # Mettre à jour la direction de l'animation
                 if abs(dir_x) >= abs(dir_y):
                     self.direction = "right" if dir_x > 0 else "left"
                 
-                # Déplacer le joueur
                 step = self.speed * dt
                 self.pos = (self.pos[0] + dir_x * step, self.pos[1] + dir_y * step)
                 self.is_moving = True
         else:
             self.is_moving = False
 
-    # ------------------------------------------------------------------
+
     def update_anim(self, dt):
         if self._attack_anim_active:
             self._attack_anim_timer -= dt
@@ -179,14 +163,12 @@ class Player:
             self.anim_frame = (self.anim_frame + 1) % nb_frames
         self.anim_state = state
 
-    # ------------------------------------------------------------------
     def draw_player(self, surface, camera_x, camera_y):
         Player.load_sprites()
 
         sheet = Player._sheets[self.anim_state]
         frame = min(self.anim_frame, ANIM_FRAMES[self.anim_state] - 1)
 
-        # Rect source : chaque frame fait FRAME_W x FRAME_H
         src_rect = pygame.Rect(frame * FRAME_W, 0, FRAME_W, FRAME_H)
 
         scale = self.sprite_height / FRAME_H
@@ -205,7 +187,6 @@ class Player:
         surface.blit(scaled, (draw_x, draw_y))
         return True
 
-    # ------------------------------------------------------------------
     # PAS TOUCHE !!!!!!!!
     def to_dict(self):
         return {
