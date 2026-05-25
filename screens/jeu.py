@@ -15,8 +15,8 @@ import screens.game_logic as gl
 
 from core.Class.player import Player
 from core.Class.batiments import Batiment
-from core.Class.npc import Npc
 from core.saves import load_save
+
 
 from screens.tutorial import run_tutorial
 from screens.terminal import Terminal
