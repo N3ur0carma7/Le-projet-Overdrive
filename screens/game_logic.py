@@ -6,11 +6,15 @@ import multiplayer.client as client_module
 from core.Class.batiments import Batiment
 from math import ceil
 
+import core.pve as pve
+import screens.jeu as jeu
+import core.Class.batiments as bat
 
 
 stop_event = threading.Event()
 batiments = []
 players = []
+monsters = []
 indice = 0
 connected = 0
 dt = 0.0
@@ -42,7 +46,7 @@ def toggle_fullscreen():
         pygame.display.set_mode((1280, 720), pygame.RESIZABLE)
 
 def on_message_recu(taille_case=None):
-    global batiments, players, indice, connected
+    global batiments, players, indice, connected, monsters
     messageprec = None
     if client_module.CLIENT is not None:
         from multiplayer.client import send_str_client
@@ -58,12 +62,21 @@ def on_message_recu(taille_case=None):
                         indice = message
                     elif msg_type == "liste_batiments":
                         batiments = message
+                        for batiment in batiments:
+                            batiment.en_construction = False
+                    elif msg_type == "liste_monstres":
+                        monsters = message
+
                     elif msg_type == "liste_joueurs":
                         players = message
                         for player in players:
                             player.update_anim(dt)
-                    messageprec = client_module.result
 
+                    elif msg_type == "raid":
+                        jeu.raid_manager = message
+                        jeu.raid_manager.leader = False
+
+                    messageprec = client_module.result
             time.sleep(0.05)
         except (OSError, ConnectionError):
             time.sleep(0.1)
@@ -167,6 +180,12 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
 def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, npcs=None, raid_manager=None):
     from core.Class.batiments import Batiment
 
+    maintenant = pygame.time.get_ticks()
+
+    money_mult = 2 if getattr(player, "active_effects", {}).get("money", 0) > maintenant else 1
+    food_mult = 2 if getattr(player, "active_effects", {}).get("food", 0) > maintenant else 1
+    vapeur_mult = 2 if getattr(player, "active_effects", {}).get("vapeur", 0) > maintenant else 1
+
     total_villageois = sum(
         b.get_population()
         for b in batiments_list
@@ -182,7 +201,6 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     batiments_production_accessibles = set()
     if npcs is not None:
         for npc in npcs:
-            # Le bâtiment produit seulement quand le villageois est physiquement au travail
             if npc.lieu_travail is not None and npc.etat == npc.ETAT_AU_TRAVAIL:
                 batiments_production_accessibles.add(id(npc.lieu_travail))
     multiplicateur_nourriture = 1
@@ -195,20 +213,18 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
         rtype = b.get_production_type()
         val = b.get_production() * delta_time / 60.0
 
-        # Si on a des NPCs et ce bâtiment n'est pas accessible, pas de production
         if npcs is not None and rtype is not None:
             if id(b) not in batiments_production_accessibles:
-                # Ce bâtiment de production n'est pas accessible
                 continue
 
         if rtype == "nourriture":
-            acc_food += val
+            acc_food += val * food_mult
         elif not food_ok:
             pass
         elif rtype == "argent":
-            acc_argent += val
+            acc_argent += val * money_mult
         elif rtype == "vapeur":
-            acc_vapeur += val
+            acc_vapeur += val * vapeur_mult
         elif rtype == "boost":
             if b.type == Batiment.TYPE_CENTRALE_ARGENT:
                 multiplicateur_argent += val

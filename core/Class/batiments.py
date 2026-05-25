@@ -44,7 +44,7 @@ class Batiment:
         },
         TYPE_TILE: {
             "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
-            1: {"cout": 10, "temps_construction": 1200},
+            1: {"cout": 1, "temps_construction": 1200},
         },
         TYPE_CENTRALE_ARGENT: {
             "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
@@ -229,6 +229,7 @@ class Batiment:
     def __str__(self):
         return f"{self.type} (niveau {self.niveau})"
 
+#----------------------------------------------------------------
     # pour convertir pour le serveur
     # PAS TOUCHE !!!
     # SINON AU BUCHER !!!!
@@ -248,6 +249,6 @@ class Batiment:
         obj.niveau = d.get("niveau", 1)
 
 
-        obj.largeur = Batiment.DATA[obj.type].get("largeur", Batiment.DEFAULT_FOOTPRINT)
-        obj.hauteur = Batiment.DATA[obj.type].get("hauteur", Batiment.DEFAULT_FOOTPRINT)
+        obj.largeur = Batiment.DATA[obj.type].get("hitbox_l", Batiment.DEFAULT_FOOTPRINT)
+        obj.hauteur = Batiment.DATA[obj.type].get("hitbox_h", Batiment.DEFAULT_FOOTPRINT)
         return obj

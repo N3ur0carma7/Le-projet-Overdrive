@@ -47,16 +47,17 @@ class Leaf:
 
 class AmbianceManager:
     def __init__(self):
-        self.map_min = -4000
-        self.map_max = 4000
+        self.map_min = -8000
+        self.map_max = 8000
         self.leaf_img = pygame.image.load("assets/environment/leaf.png").convert_alpha()
         self.leaves = [
             Leaf(self.map_min, self.map_max)
-            for _ in range(140)
+            for _ in range(280)
         ]
+
         self.wind_particles = [
             WindParticle(self.map_min, self.map_max)
-            for _ in range(140)
+            for _ in range(280)
         ]
 
     def update(self, dt, camera_x=0, camera_y=0, view_w=1920, view_h=1080):
