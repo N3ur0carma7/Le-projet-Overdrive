@@ -331,7 +331,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 collision_ressource = True
                 break
 
-        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+        nb_villageois = sum(
+            b.get_population() for b in batiments
+            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+        )
         nb_production = sum(
             1 for b in batiments
             if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
@@ -904,7 +907,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                                 break
 
                         # Limite : nb batiments de production <= nb total de villageois
-                        nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
+                        nb_villageois = sum(
+                            b.get_population() for b in batiments
+                            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
+                        )
                         nb_production = sum(
                             1 for b in batiments
                             if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)

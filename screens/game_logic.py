@@ -207,7 +207,7 @@ def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food
     multiplicateur_vapeur = 1
     multiplicateur_argent = 1 # Application des multiplicateurs
     for b in batiments_list:
-        if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None:
+        if b.type == Batiment.TYPE_TOURELLE and raid_manager is not None and not b.en_construction:
             b.update_attaque(raid_manager.monsters, TAILLE_CASE=40)
 
         rtype = b.get_production_type()
