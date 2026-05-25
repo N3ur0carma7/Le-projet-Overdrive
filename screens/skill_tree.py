@@ -11,7 +11,7 @@ SKILLS_DATA = {
         "color": (220, 50, 50),
         "skills": [
             {
-                "id": "new_building_tower",
+                "id": "tourelle_unlock",
                 "name": "Tour de Defense",
                 "description": "Debloque une nouvelle tour de defense.",
                 "cost": 1000,

@@ -295,6 +295,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         case_x = int(mx // TAILLE_CASE)
         case_y = int(my // TAILLE_CASE)
         type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+        if type_batiment == Batiment.TYPE_TOURELLE and "tourelle_unlock" not in unlocked_skills:
+            float_msg.error("Debloquez la tourelle dans l'arbre des competences !", sx, sy - 30, player_id=indice)
+            return
+
         nouveau = Batiment(type_batiment, case_x, case_y)
         grid_x = case_x - (nouveau.largeur // 2)
         grid_y = case_y - (nouveau.hauteur // 2)
@@ -865,6 +869,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                         case_y = int(my // TAILLE_CASE)
 
                         type_batiment = TYPES_BATIMENTS[batiment_selectionne]
+                        if type_batiment == Batiment.TYPE_TOURELLE and "tourelle_unlock" not in unlocked_skills:
+                            float_msg.error("Debloquez la tourelle dans l'arbre des competences !", sx, sy - 30,
+                                            player_id=indice)
+                            continue
                         nouveau = Batiment(type_batiment, case_x, case_y)
                         grid_x = case_x - (nouveau.largeur // 2)
                         grid_y = case_y - (nouveau.hauteur // 2)
