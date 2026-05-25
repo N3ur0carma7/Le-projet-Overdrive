@@ -268,7 +268,6 @@ COMMANDS: dict[str, tuple] = {
     "spawn":        (cmd_spawn,        "spawn <ennemi> [qte]  (PVE)"),
     "event":        (cmd_event,        "event <nom>  (Events)"),
     "trigger_raid": (cmd_trigger_raid, "Declenche un raid PVE immediatement"),
-    "settime":      (cmd_settime,      "settime [0-1|day|night|dawn|dusk]"),
     "setweather":   (cmd_setweather,   "setweather [sunny|cloudy|windy|rain|storm]"),
 }
 
