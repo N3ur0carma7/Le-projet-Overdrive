@@ -164,17 +164,23 @@ def synchroniser_npcs(batiments_list, npcs, player, taille_case):
         if bat_id is not None:
             bat_cible = bat_by_id.get(bat_id)
             if bat_cible is not None:
-                npc.assigner_travail(bat_cible)
+                # Ne réassigner que si ce n'est pas déjà le bon bâtiment,
+                # pour ne pas interrompre le cycle du NPC (AU_TRAVAIL, etc.)
+                if npc.lieu_travail is not bat_cible:
+                    npc.assigner_travail(bat_cible)
                 continue
             else:
                 assignations_manuelles.pop(id(npc), None)
         npcs_auto.append(npc)
 
-    for i, npc in enumerate(npcs_auto):
-        if lieux_travail:
-            npc.assigner_travail(lieux_travail[i % len(lieux_travail)])
-        else:
-            npc.assigner_travail(None)
+    # N'auto-assigner que les villageois sans travail ou dont le lieu n'existe plus
+    npcs_a_assigner = [
+        npc for npc in npcs_auto
+        if npc.lieu_travail is None or id(npc.lieu_travail) not in bat_by_id
+    ]
+    for i, npc in enumerate(npcs_a_assigner):
+        cible = lieux_travail[i % len(lieux_travail)] if lieux_travail else None
+        npc.assigner_travail(cible)
 
 
 def calculer_production(batiments_list, player, delta_time, acc_argent, acc_food, acc_vapeur, npcs=None, raid_manager=None):
