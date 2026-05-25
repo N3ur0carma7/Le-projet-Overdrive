@@ -316,6 +316,8 @@ def connection():
     CLIENT.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     SERVER = search_serv()
     if SERVER == -1:
+        CLIENT.close()
+        CLIENT = None
         return None
     ADDR = (SERVER, PORT)
     try:

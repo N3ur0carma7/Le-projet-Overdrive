@@ -101,7 +101,7 @@ class RaidManager:
             try:
                 client_module.send_liste_monstres_client(self.monsters, client_module.CLIENT)
             except Exception as e:
-                print(e)
+                pass
         for dn in self.damage_numbers:
             dn.update(dt)
         self.damage_numbers = [dn for dn in self.damage_numbers if dn.alive]
@@ -150,7 +150,7 @@ class RaidManager:
         try:
             client_module.send_raid_client(self, client_module.CLIENT)
         except Exception as e:
-            print(e)
+            pass
         self._wave_timer = self.WAVE_DELAY
 
     def _end_raid(self):
