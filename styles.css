@@ -69,7 +69,7 @@ section {
 }
 
 .accueil {
-  background: url("img/placeholder.png") center/cover no-repeat;
+  background: url("img/hero-bg.jpg") center/cover no-repeat;
   height: 75vh;
   padding: 4rem 2rem;
   display: flex;
