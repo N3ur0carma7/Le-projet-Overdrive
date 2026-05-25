@@ -86,6 +86,7 @@ def handle_monsters(liste_monsters, client):
                 send_liste_monstres(monsters, clients[Client])
             except:
                 pass
+    return monsters
 
 
 
@@ -165,7 +166,7 @@ def handle_client(client, addr):
                                 send_client(data, clients[i])
 
                             elif  type == "raid":
-                                payload = json.dumps({"type": "raid", "payload": message})
+                                payload = json.dumps({"type": "raid", "payload": message.to_dict()})
                                 send_client(payload, clients[i])
 
 
@@ -248,6 +249,7 @@ def handle_message_recieved (msg, addr):
             liste_dicts = data["payload"]
             raid = pve.RaidManager.from_dict(liste_dicts)
             print(f"[RAID] {addr} : {raid}")
+            raid.monsters = handle_monsters(raid.monsters, addr)
             return raid, "raid"
 
     except json.JSONDecodeError:
