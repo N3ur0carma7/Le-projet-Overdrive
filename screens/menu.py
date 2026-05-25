@@ -76,9 +76,7 @@ def menu_principal(ecran, horloge, FPS):
 
             BoutonImage(cx, start_y + 4 * BTN_SPACING, BTN_W, BTN_H,
                         btn_path("Quitter", "normal"), btn_path("Quitter", "hover")),
-            # Bouton DEV discret en bas à gauche
-            BoutonImage(10, ecran.get_height() - BTN_H // 2 - 10, BTN_W // 2, BTN_H // 2,
-                        btn_path("DEV", "normal"), btn_path("DEV", "hover")),
+
         ]
 
     boutons = creer_boutons()
@@ -93,7 +91,7 @@ def menu_principal(ecran, horloge, FPS):
     bg_cache_size = None
     bg_scaled = None
     overlay = None
-
+    touches_secretes = []
     while en_cours:
         horloge.tick(FPS)
         W, H = ecran.get_size()
@@ -107,10 +105,26 @@ def menu_principal(ecran, horloge, FPS):
                 LARGEUR_ECRAN, HAUTEUR_ECRAN = event.w, event.h
                 boutons = creer_boutons()
                 overlay = None
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
-                from screens import game_logic
-                game_logic.toggle_fullscreen()
-                continue
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F11:
+                    from screens import game_logic
+                    game_logic.toggle_fullscreen()
+                    continue
+
+                # On capture uniquement les vraies lettres tapées
+                if event.unicode and event.unicode.isalpha():
+                    touches_secretes.append(event.unicode.lower())
+
+                    # On garde seulement les 3 dernières touches en mémoire
+                    if len(touches_secretes) > 3:
+                        touches_secretes.pop(0)
+
+                    # Si le code est complété, on lance direct le jeu dev !
+                    if "".join(touches_secretes) == "dev":
+                        gl.players = []
+                        gl.batiments = []
+                        gl.indice = 0
+                        return "jeudev", True
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if boutons[0].clic():
                     if os.path.exists("save/save.json"):
@@ -145,7 +159,7 @@ def menu_principal(ecran, horloge, FPS):
 
                 if boutons[3].clic():
                     return etat_suivant, False
-                if boutons[4].clic():
+                if boutons[3].clic():
                     gl.players = []
                     gl.batiments = []
                     gl.indice = 0

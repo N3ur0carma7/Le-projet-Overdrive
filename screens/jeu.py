@@ -406,6 +406,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     surface_monde = None
     surface_monde_size = None  # (w, h) en px monde (avant scaling écran)
     footstep_timer = 0.0
+    touches_secretes = []
     while en_cours:
         dt = horloge.tick(FPS) / 1000.0
         save_done_timer = max(0, save_done_timer - dt)
