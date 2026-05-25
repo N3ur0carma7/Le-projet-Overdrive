@@ -283,7 +283,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             return False
 
     batiment_selectionne = None
-    unlocked_skills = set()
+    if dev_mode:
+        from screens.skill_tree import unlock_all_skills
+        unlocked_skills = unlock_all_skills(player, Batiment.DATA)
+    else:
+        unlocked_skills = set()
     menu_amelioration = None
 
     terminal = Terminal(dev_mode=dev_mode)

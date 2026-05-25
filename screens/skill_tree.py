@@ -243,6 +243,25 @@ def apply_skill_effect(skill, player, batiments_data):
         player.has_pet = True
 
 
+def unlock_all_skills(player, batiments_data):
+    unlocked = set()
+    all_skills = []
+    for cat in SKILLS_DATA.values():
+        all_skills.extend(cat["skills"])
+    changed = True
+    while changed:
+        changed = False
+        for skill in all_skills:
+            if skill["id"] in unlocked:
+                continue
+            prereqs = skill.get("prerequisites", [])
+            if all(p in unlocked for p in prereqs):
+                unlocked.add(skill["id"])
+                apply_skill_effect(skill, player, batiments_data)
+                changed = True
+    return unlocked
+
+
 def draw_glow_line(surface, color, start, end, width=3, alpha=180):
     glow_surf = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
     r, g, b = color
