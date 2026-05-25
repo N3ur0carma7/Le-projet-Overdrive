@@ -29,6 +29,12 @@ TYPE_LABELS = {
     Batiment.TYPE_MINE:        "MINE",
     Batiment.TYPE_FARM:        "FERME",
     Batiment.TYPE_TOURELLE:    "TOURELLE",
+    Batiment.TYPE_CENTRALE_VAPEUR: "CENTRALE VAPEUR",
+    Batiment.TYPE_CENTRALE_ARGENT: "CENTRALE ARGENT",
+    Batiment.TYPE_CENTRALE_NOURRITURE: "CENTRALE NOURRITURE",
+    Batiment.TYPE_STOCKAGE_NOURRITURE: "STOCKAGE NOURRITURE",
+    Batiment.TYPE_STOCKAGE_ARGENT: "STOCKAGE ARGENT",
+    Batiment.TYPE_STOCKAGE_VAPEUR: "STOCKAGE VAPEUR"
 }
 
 RESOURCE_LABELS = {
@@ -37,6 +43,12 @@ RESOURCE_LABELS = {
     Batiment.TYPE_MINE:        ("Argent",     "/min"),
     Batiment.TYPE_FARM:        ("Nourriture", "/min"),
     Batiment.TYPE_TOURELLE:    ("Degats",     ""),
+    Batiment.TYPE_CENTRALE_VAPEUR: ("Boost", "%"),
+    Batiment.TYPE_CENTRALE_ARGENT: ("Boost", "%"),
+    Batiment.TYPE_CENTRALE_NOURRITURE: ("Boost", "%"),
+    Batiment.TYPE_STOCKAGE_ARGENT: ("Stockage", " argent"),
+    Batiment.TYPE_STOCKAGE_NOURRITURE: ("Stockage", " nourriture"),
+    Batiment.TYPE_STOCKAGE_VAPEUR: ("Stockage", " vapeur"),
 }
 
 
@@ -199,6 +211,30 @@ class MenuAmelioration:
         elif bt.type == Batiment.TYPE_TOURELLE:
             val_actuelle = bt.get_stats().get("degat", 30)
             val_suivante = (str(Batiment.DATA[bt.type][bt.niveau + 1]["degat"])
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_STOCKAGE_ARGENT:
+            val_actuelle = bt.get_stockage()
+            val_suivante = (str(Batiment.DATA[bt.type][bt.niveau + 1]["stockage"])
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_STOCKAGE_VAPEUR:
+            val_actuelle = bt.get_stockage()
+            val_suivante = (str(Batiment.DATA[bt.type][bt.niveau + 1]["stockage"])
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_STOCKAGE_NOURRITURE:
+            val_actuelle = bt.get_stockage()
+            val_suivante = (str(Batiment.DATA[bt.type][bt.niveau + 1]["stockage"])
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_CENTRALE_VAPEUR:
+            val_actuelle = int(bt.get_production() * 100)
+            val_suivante = (str(int(Batiment.DATA[bt.type][bt.niveau + 1]["boost"] * 100))
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_CENTRALE_ARGENT:
+            val_actuelle = int(bt.get_production() * 100)
+            val_suivante = (str(int(Batiment.DATA[bt.type][bt.niveau + 1]["boost"] * 100))
+                            if has_next_data else "MAX")
+        elif bt.type == Batiment.TYPE_CENTRALE_NOURRITURE:
+            val_actuelle = int(bt.get_production() * 100)
+            val_suivante = (str(int(Batiment.DATA[bt.type][bt.niveau + 1]["boost"] * 100))
                             if has_next_data else "MAX")
         else:
             val_actuelle = bt.get_production()
