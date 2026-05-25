@@ -37,11 +37,13 @@ from screens.ambiance import AmbianceManager
 from screens.weather import WeatherManager
 
 surface_monde, camera_x, camera_y = None, None, None
-TAILLE_CASE = None
+TAILLE_CASE = 40
 batiments = []
 raid_manager = None
+hauteur_ui = 0
+
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments, raid_manager
+    global batiments, raid_manager, hauteur_ui
     global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100

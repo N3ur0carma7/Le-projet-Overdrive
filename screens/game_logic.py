@@ -6,7 +6,7 @@ import multiplayer.client as client_module
 from core.Class.batiments import Batiment
 import core.pve as pve
 import screens.jeu as jeu
-
+import core.Class.batiments as bat
 
 
 stop_event = threading.Event()
@@ -62,6 +62,7 @@ def on_message_recu(taille_case=None):
                         batiments = message
                         for batiment in batiments :
                             batiment.en_construction = False
+                        bat.DEFAULT_FOOTPRINT = 1
                     elif msg_type == "liste_monstres":
                         monsters = message
 
