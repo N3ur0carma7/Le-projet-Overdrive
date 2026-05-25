@@ -1332,6 +1332,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             for joueur in players:
                 joueur.is_moving = False
                 joueur.anim_state = "idle"
+                gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
 
     stop_event.set()
     sound.stop_ambient()

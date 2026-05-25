@@ -390,8 +390,8 @@ class Npc:
         self.cible_x, self.cible_y = self._nouvelle_cible_errance()
 
     def _rentrer(self):
-        dest = self._porte_bas_pixels(self.maison)
-        self.chemin = self._construire_chemin_direct(*dest)  # Toujours en ligne droite pour retour à la maison
+        dest = self._centre_pixels(self.maison)
+        self.chemin = self._construire_chemin_direct(*dest)
         self.etat = self.ETAT_VERS_MAISON
 
     def _update_vers_maison(self, dt):
