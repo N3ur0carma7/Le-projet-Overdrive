@@ -39,8 +39,16 @@ class PathFinder:
         # Marquer les tiles, bâtiments résidentiels ET bâtiments de production comme walkable
         # Les tiles sont le chemin, les bâtiments résidentiels/production sont les sources/destinations
         from core.Class.batiments import Batiment
-        TYPES_WALKABLE = (Batiment.TYPE_TILE, Batiment.TYPE_RESIDENTIEL,
-                          Batiment.TYPE_GENERATEUR, Batiment.TYPE_MINE, Batiment.TYPE_FARM)
+        TYPES_WALKABLE = (
+            Batiment.TYPE_TILE,
+            Batiment.TYPE_RESIDENTIEL,
+            Batiment.TYPE_GENERATEUR,
+            Batiment.TYPE_MINE,
+            Batiment.TYPE_FARM,
+            Batiment.TYPE_CENTRALE_ARGENT,
+            Batiment.TYPE_CENTRALE_VAPEUR,
+            Batiment.TYPE_CENTRALE_NOURRITURE,
+        )
         for b in batiments:
             if b.type in TYPES_WALKABLE:
                 x_start = max(int(b.x), 0)
@@ -313,7 +321,23 @@ class Npc:
     # ------------------------------------------------------------------
 
     def assigner_travail(self, batiment):
+        if self.lieu_travail is batiment:
+            return
+
         self.lieu_travail = batiment
+        if batiment is None:
+            return
+
+        if self._chemin_vers_travail_existe():
+            dest = self._centre_pixels(batiment)
+            chemin = self._construire_chemin_valide(*dest)
+            if chemin:
+                self.chemin = chemin
+                self.etat = self.ETAT_VERS_TRAVAIL
+                return
+
+        self.etat = self.ETAT_CHEMIN_BLOQUE
+        self.timer = random.uniform(self.DUREE_ERRANCE_MIN, self.DUREE_ERRANCE_MAX)
 
     def update(self, dt: float = 1/60):
         """Met à jour le NPC.
