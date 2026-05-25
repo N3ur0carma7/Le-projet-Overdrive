@@ -906,8 +906,8 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                                     break
 
-
-                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
+                                if B.type != "tile":
+                                    menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
 
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
