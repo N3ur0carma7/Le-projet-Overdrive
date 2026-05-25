@@ -22,11 +22,11 @@ from screens.tutorial import run_tutorial
 from screens.terminal import Terminal
 from screens.utils import collision, calculer_rects_icones, souris_vers_case, joueur_a_portee, dessiner_grille, dessiner_grille_overlay, dessiner_grille_overlay_monde, dessiner_grille_overlay_ecran
 
-from screens.render import dessiner_monde, dessiner_hud
+
 import core.pve as pve
-from screens.game_logic import synchroniser_npcs, calculer_production
+
 from screens.render import dessiner_monde, dessiner_hud, charger_spritesheet_construction
-from core.pve import RaidManager
+
 
 from screens.GUI.menu_amelioration import MenuAmelioration
 from screens.GUI.menu_travail import afficher_menu_travail
@@ -317,9 +317,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             players[indice].money -= cout
             batiments.append(nouveau)
             sound.son_placement.play()
-            synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+            gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
             if client_module.CLIENT is not None and online:
-                send_liste_batiments_client(batiments, client_module.CLIENT)
+                client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
         elif collision(batiments, nouveau) or collision_ressource:
             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
         else:
@@ -475,15 +475,15 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     for k in range(menu_amelioration.batiment.niveau):
                         cashback += Batiment.DATA[menu_amelioration.batiment.type][1+k]["cout"]
                     players[indice].money += cashback
-                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
                     if client_module.CLIENT is not None and online:
-                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
                     menu_amelioration = None
                     continue
                 if result == "upgrade":
-                    synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
+                    gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
                     if client_module.CLIENT is not None and online:
-                        send_liste_batiments_client(batiments, client_module.CLIENT)
+                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
                     menu_amelioration = None
                     continue
                 continue
