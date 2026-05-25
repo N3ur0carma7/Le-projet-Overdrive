@@ -185,34 +185,7 @@ def cmd_trigger_raid(args, player, batiments, **ctx):
     return raid_mgr.trigger_raid()
 
 def cmd_settime(args, player, batiments, **ctx):
-    day_night = ctx.get("day_night")
-    if day_night is None:
-        return "Cycle jour/nuit introuvable."
-    if not args:
-        return f"Phase actuelle : {day_night.phase:.2f}  |  {day_night.time_label}"
-    
-    arg = args[0].lower()
-    
-    # Aliases
-    if arg == "day":
-        phase = 0.25
-    elif arg == "night":
-        phase = 0.6
-    elif arg == "dawn":
-        phase = 0.0
-    elif arg == "dusk":
-        phase = 0.45
-    else:
-        try:
-            phase = float(arg)
-            if not (0.0 <= phase < 1.0):
-                return f"Phase doit etre entre 0.0 et 1.0. (0=aube, 0.5=minuit, 1=aube)"
-        except ValueError:
-            return f"Valeur invalide : '{arg}'. Utilisez un nombre [0, 1[ ou day/night/dawn/dusk."
-    
-    # CYCLE_TOTAL = 360 (DAY_DURATION + NIGHT_DURATION = 180 + 180)
-    day_night.time = phase * 360.0
-    return f"[OK] Temps change a phase {phase:.2f}  |  {day_night.time_label}"
+    return "Commande 'settime' desactivee : le systeme jour/nuit a ete supprime."
 
 def cmd_setweather(args, player, batiments, **ctx):
     from screens.weather import WEATHER_SUNNY, WEATHER_CLOUDY, WEATHER_WINDY, WEATHER_RAIN, WEATHER_STORM
