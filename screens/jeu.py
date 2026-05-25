@@ -415,7 +415,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     surface_monde_size = None  # (w, h) en px monde (avant scaling écran)
     footstep_timer = 0.0
     touches_secretes = []
+    placement_cooldown = 0.0
+    dt = 0
     while en_cours:
+        placement_cooldown = max(0, placement_cooldown - dt)
         dt = horloge.tick(FPS) / 1000.0
         save_done_timer = max(0, save_done_timer - dt)
         attack_cooldown = max(0.0, attack_cooldown - dt)
@@ -874,65 +877,16 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                     my = camera_y + sy / zoom
 
                     if batiment_selectionne is not None:
-                        case_x = int(mx // TAILLE_CASE)
-                        case_y = int(my // TAILLE_CASE)
-
-                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
-                        if type_batiment == Batiment.TYPE_TOURELLE and "tourelle_unlock" not in unlocked_skills:
-                            float_msg.error("Debloquez la tourelle dans l'arbre des competences !", sx, sy - 30,
-                                            player_id=indice)
-                            continue
-                        nouveau = Batiment(type_batiment, case_x, case_y)
-                        grid_x = case_x - (nouveau.largeur // 2)
-                        grid_y = case_y - (nouveau.hauteur // 2)
-                        nouveau.x = grid_x
-                        nouveau.y = grid_y
-
-                        cout = Batiment.DATA[type_batiment][1]["cout"]
-
-                        collision_ressource = False
-                        for res in ressources_sol:
-                            res_rect = pygame.Rect(res["x"], res["y"], 1, 1)
-                            bat_rect = pygame.Rect(nouveau.x, nouveau.y, nouveau.largeur, nouveau.hauteur)
-                            if bat_rect.colliderect(res_rect):
-                                collision_ressource = True
-                                break
-
-                        # Limite : nb batiments de production <= nb total de villageois
-                        nb_villageois = sum(
-                            b.get_population() for b in batiments
-                            if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
-                        )
-                        nb_production = sum(
-                            1 for b in batiments
-                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
-                        )
-                        production_pleine = (
-                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
-                                and nb_production >= nb_villageois
-                        )
-
-                        # Portée de pose augmentée
-                        if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
-                            float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
-                        elif production_pleine:
-                            float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
-                        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
-                            players[indice].money -= cout
-                            batiments.append(nouveau)
-                            sound.son_placement.play()
-                            gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
-                            if client_module.CLIENT is not None and online:
-                                #print(f"envoi en cours {batiments}")
-                                client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
-                        elif collision(batiments, nouveau) or collision_ressource:
-                            float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
-                        else:
-                            float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
                         _essayer_placer_batiment(sx, sy, mx, my)
 
+                        type_batiment = TYPES_BATIMENTS[batiment_selectionne]
 
-
+                        if type_batiment == Batiment.TYPE_TILE:
+                            placement_cooldown = 0.03
+                            mouse_held_placing = True
+                        else:
+                            placement_cooldown = 0.15
+                            mouse_held_placing = False
                     else:
                         mx = camera_x + sx / zoom
                         my = camera_y + sy / zoom
@@ -988,7 +942,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             footstep_timer = 0
 
         # Placement continu quand le clic est maintenu (drag)
-        if mouse_held_placing and batiment_selectionne is not None:
+        if placement_cooldown <= 0 and mouse_held_placing and batiment_selectionne is not None:
             sx, sy = pygame.mouse.get_pos()
             limite_ui = HAUTEUR_ECRAN - (HAUTEUR_BARRE - slide_offset)
             if sy < limite_ui:

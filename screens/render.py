@@ -139,8 +139,29 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
 
         surface_monde.blit(image, (x, y))
 
+        if hasattr(B, "en_construction") and B.en_construction and gear_rotated is not None:
+            gx = B.x * TAILLE_CASE - camera_x + (footprint_w_px - gear_rotated.get_width()) / 2
+            gy = B.y * TAILLE_CASE - camera_y + (footprint_h_px - gear_rotated.get_height()) / 2
+
+            surface_monde.blit(gear_rotated, (gx, gy))
+
+        if hasattr(B, "en_construction") and B.en_construction:
+            progression = B.progression_construction()
+
+            barre_w = footprint_w_px
+            barre_h = 6
+            barre_x = B.x * TAILLE_CASE - camera_x
+            barre_y = B.y * TAILLE_CASE - camera_y - 10
+
+            pygame.draw.rect(surface_monde, (40, 40, 40), (barre_x, barre_y, barre_w, barre_h))
+            pygame.draw.rect(surface_monde, (80, 220, 80), (barre_x, barre_y, barre_w * progression, barre_h))
+
+    for B in batiments:
         if B.type == Batiment.TYPE_TOURELLE and getattr(B, "flash_timer", 0) > 0:
             B.flash_timer -= dt
+
+            footprint_w_px = B.largeur * TAILLE_CASE
+            footprint_h_px = B.hauteur * TAILLE_CASE
 
             angle_by_dir = {
                 "E": 0,
@@ -166,8 +187,11 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
                 "SE": (footprint_w_px * 1.02, footprint_h_px * 0.72),
                 "SW": (footprint_w_px * -0.2, footprint_h_px * 0.72),
             }
+
             direction = getattr(B, "direction", "E")
+
             flash_img = images_batiments[Batiment.TYPE_TOURELLE][1]["MUZZLE_FLASH"]
+
             flash = pygame.transform.scale(flash_img, (42, 28))
             flash = pygame.transform.rotate(flash, angle_by_dir.get(direction, 0))
 
@@ -180,24 +204,6 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
                     B.y * TAILLE_CASE - camera_y + oy - flash.get_height() / 2
                 )
             )
-
-        if hasattr(B, "en_construction") and B.en_construction and gear_rotated is not None:
-            gx = B.x * TAILLE_CASE - camera_x + (footprint_w_px - gear_rotated.get_width()) / 2
-            gy = B.y * TAILLE_CASE - camera_y + (footprint_h_px - gear_rotated.get_height()) / 2
-
-            surface_monde.blit(gear_rotated, (gx, gy))
-
-        if hasattr(B, "en_construction") and B.en_construction:
-            progression = B.progression_construction()
-
-            barre_w = footprint_w_px
-            barre_h = 6
-            barre_x = B.x * TAILLE_CASE - camera_x
-            barre_y = B.y * TAILLE_CASE - camera_y - 10
-
-            pygame.draw.rect(surface_monde, (40, 40, 40), (barre_x, barre_y, barre_w, barre_h))
-            pygame.draw.rect(surface_monde, (80, 220, 80), (barre_x, barre_y, barre_w * progression, barre_h))
-
     # fantome
     if batiment_selectionne is not None:
         sx, sy = pygame.mouse.get_pos()
