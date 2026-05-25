@@ -375,7 +375,7 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
         ecran.blit(texte, (tx, ty))
     # 6. Bouton toggle barre bâtiments (BUILD / CLOSE)
-    BTN_SIZE = 80
+    BTN_SIZE = 70
     BTN_MARGE = 12
     btn_x = dims[0] - BTN_SIZE - BTN_MARGE
     btn_y = dims[1] - BTN_SIZE - BTN_MARGE
