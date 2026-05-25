@@ -316,7 +316,7 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
 
         ecran.blit(texte_nom, (
             rect.centerx - texte_nom.get_width() // 2,
-            rect.y - 18
+            rect.y - 18 + (18 - texte_nom.get_height()) // 2
         ))
 
         ecran.blit(texte_prix, (

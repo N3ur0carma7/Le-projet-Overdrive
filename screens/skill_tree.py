@@ -440,6 +440,8 @@ def afficher_skill_tree(ecran, player, unlocked_skills, batiments_data):
                 if event.key == pygame.K_F11:
                     from screens import game_logic
                     game_logic.toggle_fullscreen()
+                elif event.key == pygame.K_a:
+                    en_menu = False
                 elif event.key == pygame.K_ESCAPE:
                     if selected_skill:
                         selected_skill = None
