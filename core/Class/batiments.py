@@ -6,8 +6,11 @@ class Batiment:
     TYPE_GENERATEUR  = "generateur"
     TYPE_MINE        = "mine"
     TYPE_FARM        = "farm"
-    TYPE_TOURELLE = "tourelle"
-    TYPE_TILE = "tile"
+    TYPE_TOURELLE    = "tourelle"
+    TYPE_TILE        = "tile"
+    TYPE_CENTRALE_ARGENT    = "centrale_argent"
+    TYPE_CENTRALE_VAPEUR    = "centrale_vapeur"
+    TYPE_CENTRALE_NOURRITURE = "centrale_nourriture"
     DATA = {
         TYPE_RESIDENTIEL: {
             "hitbox_l": 5, "hitbox_h": 5, "scale_visuel": 1.0,
@@ -42,6 +45,21 @@ class Batiment:
         TYPE_TILE: {
             "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
             1: {"cout": 1, "temps_construction": 1200},
+        },
+        TYPE_CENTRALE_ARGENT: {
+            "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+            1: {"boost": 0.20, "cout": 2000},
+            2: {"boost": 0.25, "cout": 3500},
+        },
+        TYPE_CENTRALE_VAPEUR: {
+                "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+                1: {"boost": 0.20, "cout": 2000},
+                2: {"boost": 0.25, "cout": 3500},
+        },
+        TYPE_CENTRALE_NOURRITURE: {
+            "hitbox_l": 10, "hitbox_h": 10, "scale_visuel": 1,
+            1: {"boost": 0.20, "cout": 2000},
+            2: {"boost": 0.25, "cout": 3500},
         },
     }
 
@@ -85,7 +103,6 @@ class Batiment:
 
         temps = pygame.time.get_ticks() - self.debut_construction
         return min(temps / self.duree_construction, 1)
-
     def get_stats(self):
         return Batiment.DATA[self.type][self.niveau]
 
@@ -99,14 +116,14 @@ class Batiment:
 
     def get_production(self):
         stats = self.get_stats()
-        for key in ("vapeur", "argent", "nourriture", "production"):
+        for key in ("vapeur", "argent", "nourriture", "production", "boost"):
             if key in stats:
                 return stats[key]
         return 0
 
     def get_production_type(self):
         stats = self.get_stats()
-        for key in ("vapeur", "argent", "nourriture"):
+        for key in ("vapeur", "argent", "nourriture", "boost"):
             if key in stats:
                 return key
         return None
@@ -135,7 +152,9 @@ class Batiment:
             self.niveau += 1
 
     def est_max_level(self):
-        if self.niveau >= 3:
+        type = self.type
+        niveau_max = len(Batiment.DATA[type]) - 3
+        if self.niveau >= niveau_max:
             return True
         cap = get_max_level(self.type)
         return self.niveau >= cap

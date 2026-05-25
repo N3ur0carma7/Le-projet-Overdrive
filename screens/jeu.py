@@ -101,7 +101,19 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         },
         Batiment.TYPE_TILE: {
             1: pygame.image.load("assets/buildings/Tile.png").convert_alpha(),
-        }
+        },
+        Batiment.TYPE_CENTRALE_ARGENT: {
+            1: pygame.image.load("assets/buildings/centrale_argent_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_argent_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_CENTRALE_VAPEUR: {
+            1: pygame.image.load("assets/buildings/centrale_vapeur_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_vapeur_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_CENTRALE_NOURRITURE: {
+            1: pygame.image.load("assets/buildings/centrale_nourriture_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/centrale_nourriture_lvl2.png").convert_alpha(),
+        },
     }
     construction_gear = pygame.image.load(
         "assets/buildings/construction_gear.png"
@@ -118,6 +130,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_FARM,
         Batiment.TYPE_TOURELLE,
         Batiment.TYPE_TILE,
+        Batiment.TYPE_CENTRALE_ARGENT,
+        Batiment.TYPE_CENTRALE_VAPEUR,
+        Batiment.TYPE_CENTRALE_NOURRITURE,
     ]
 
     TAILLE_ICONE = 64
@@ -466,7 +481,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         camera_x = player.pos[0] - (dims[0] / zoom) / 2
         camera_y = player.pos[1] - ((dims[1] - HAUTEUR_BARRE) / zoom) / 2
-
 
         for event in pygame.event.get():
 
