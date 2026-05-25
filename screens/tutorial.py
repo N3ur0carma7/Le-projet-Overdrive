@@ -5,12 +5,13 @@ STEPS = [
     "Bienvenue dans Overdrive ! Cette ville est a toi. Construit, developpe et prospere.",
     "Utilise la molette pour zoomer. Clique DROIT pour deplacer ton personnage.",
     "Appuie sur ECHAP pour ouvrir le menu pause et sauvegarder ta partie.",
-    "Les bâtiments de PRODUCTION (mine, ferme, generateur) necessitent des villageois.",
-    "Tu peux assigner des villageois à differents batiments pour faire produire des ressources avec la touche TAB. Plus le niveau du batiment est eleve, plus il peut accueillir de villageois et produire de ressources.",
+    "Les batiments de PRODUCTION (mine, ferme, generateur) necessitent des villageois.",
+    "Tu peux assigner des villageois a differents batiments pour faire produire des ressources avec la touche TAB. Plus le niveau du batiment est eleve, plus il peut accueillir de villageois et produire de ressources.",
     "Reste a portee dans un carre de 2 cases pour placer ou interagir avec un bâtiment.",
     "Ouvre la barre de bâtiments en bas, puis clique GAUCHE sur une icône pour selectionner une construction.",
     "Clique GAUCHE sur le sol pour poser le bâtiment selectionne. Maintiens le clic pour placer plusieurs bâtiments rapidement.",
     "Clique DROIT pour annuler la selection de bâtiment si tu changes d'avis.",
+    "Le monde est recouvert de debrits, tu peux les recolter pour obtenir des ressources de base.",
     "Tes villageois ont besoin d'une MAISON pour vivre. Commence par en construire une !",
     "Bonne chance, aventurier ! Appuie sur ENTREE pour commencer l'aventure.",
 ]
@@ -19,8 +20,8 @@ STEPS = [
 CHAR_DELAY = 0.032
 #tuto
 # Dimensions du panneau overlay
-PANEL_W = 520
-PANEL_H = 220
+PANEL_W = 640
+PANEL_H = 280
 PANEL_PADDING = 28
 
 # Couleurs
@@ -41,21 +42,21 @@ def _get_fonts():
     font_text = None
     for name in candidates:
         try:
-            f = pygame.font.SysFont(name, 17)
+            f = pygame.font.SysFont(name, 22)
             if f is not None:
                 font_text = f
                 break
         except Exception:
             continue
     if font_text is None:
-        font_text = pygame.font.SysFont(None, 17)
+        font_text = pygame.font.SysFont(None, 22)
 
     try:
-        font_hint = pygame.font.Font(font_path, 12)
+        font_hint = pygame.font.Font(font_path, 16)
     except Exception:
-        font_hint = pygame.font.SysFont(None, 12)
+        font_hint = pygame.font.SysFont(None, 16)
 
-    return pygame.font.Font(font_path, 15), font_hint
+    return pygame.font.Font(font_path, 20), font_hint
 
 
 def _wrap_text(text: str, font, max_width: int) -> list[str]:
