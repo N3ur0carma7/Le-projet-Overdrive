@@ -92,7 +92,10 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
             if b.type not in (
                 Batiment.TYPE_RESIDENTIEL,
                 Batiment.TYPE_TOURELLE,
-                Batiment.TYPE_TILE
+                Batiment.TYPE_TILE,
+                Batiment.TYPE_STOCKAGE_NOURRITURE,
+                Batiment.TYPE_STOCKAGE_ARGENT,
+                Batiment.TYPE_CENTRALE_VAPEUR
             )
         ]
 

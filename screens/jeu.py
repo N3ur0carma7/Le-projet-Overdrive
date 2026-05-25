@@ -43,7 +43,7 @@ raid_manager = None
 hauteur_ui = 0
 
 def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False):
-    global batiments, raid_manager, hauteur_ui
+    global batiments, raid_manager, hauteur_ui, nb_stockage_argent, nb_stockage_vapeur, nb_stockage_nourriture, p, b
     global TAILLE_CASE
     global surface_monde, camera_x, camera_y, dt
     HAUTEUR_BARRE = 100
@@ -117,6 +117,18 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             1: pygame.image.load("assets/buildings/centrale_nourriture_lvl1.png").convert_alpha(),
             2: pygame.image.load("assets/buildings/centrale_nourriture_lvl2.png").convert_alpha(),
         },
+        Batiment.TYPE_STOCKAGE_ARGENT: {
+            1: pygame.image.load("assets/buildings/stockage_argent_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_argent_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_STOCKAGE_VAPEUR: {
+            1: pygame.image.load("assets/buildings/stockage_vapeur_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_vapeur_lvl2.png").convert_alpha(),
+        },
+        Batiment.TYPE_STOCKAGE_NOURRITURE: {
+            1: pygame.image.load("assets/buildings/stockage_nourriture_lvl1.png").convert_alpha(),
+            2: pygame.image.load("assets/buildings/stockage_nourriture_lvl2.png").convert_alpha(),
+        }
     }
     construction_gear = pygame.image.load(
         "assets/buildings/construction_gear.png"
@@ -136,6 +148,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         Batiment.TYPE_CENTRALE_ARGENT,
         Batiment.TYPE_CENTRALE_VAPEUR,
         Batiment.TYPE_CENTRALE_NOURRITURE,
+        Batiment.TYPE_STOCKAGE_ARGENT,
+        Batiment.TYPE_STOCKAGE_VAPEUR,
+        Batiment.TYPE_STOCKAGE_NOURRITURE,
     ]
 
     TAILLE_ICONE = 64
@@ -336,12 +351,30 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             b.get_population() for b in batiments
             if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
         )
+        nb_stockage_argent = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_ARGENT and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_money = 3000 + nb_stockage_argent
+        nb_stockage_vapeur = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_VAPEUR and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_vapeur = 100 + nb_stockage_vapeur
+        nb_stockage_nourriture = sum(
+            b.get_stockage() for b in batiments
+            if b.type == Batiment.TYPE_STOCKAGE_NOURRITURE and not (
+                    hasattr(b, "en_construction") and b.en_construction)
+        )
+        p.max_food = 100 + nb_stockage_nourriture
         nb_production = sum(
             1 for b in batiments
-            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
         )
         production_pleine = (
-            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+            type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
             and nb_production >= nb_villageois
         )
         if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
@@ -502,7 +535,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 continue
 
             # terminal toggle (mode dev uniquement)
-            if event.type == pygame.KEYDOWN and event.unicode == "²" and dev_mode:
+            if event.type == pygame.KEYDOWN and event.unicode == "²":
                 terminal.toggle()
                 continue
 
@@ -903,15 +936,35 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             b.get_population() for b in batiments
                             if b.type == Batiment.TYPE_RESIDENTIEL and not (hasattr(b, "en_construction") and b.en_construction)
                         )
+                        nb_stockage_argent = sum(
+                            b.get_stockage() for  b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_ARGENT and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_money = 3000 + nb_stockage_argent
+                        nb_stockage_vapeur = sum(
+                            b.get_stockage() for b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_VAPEUR and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_vapeur = 100 + nb_stockage_vapeur
+                        nb_stockage_nourriture = sum(
+                            b.get_stockage() for b in batiments
+                            if b.type == Batiment.TYPE_STOCKAGE_NOURRITURE and not (
+                                        hasattr(b, "en_construction") and b.en_construction)
+                        )
+                        p.max_food = 100 + nb_stockage_nourriture
                         nb_production = sum(
                             1 for b in batiments
-                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                            if b.type not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
                         )
                         production_pleine = (
-                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE)
+                                type_batiment not in (Batiment.TYPE_RESIDENTIEL, Batiment.TYPE_TILE, Batiment.TYPE_STOCKAGE_ARGENT, Batiment.TYPE_STOCKAGE_VAPEUR, Batiment.TYPE_STOCKAGE_NOURRITURE)
                                 and nb_production >= nb_villageois
                         )
-
+                        print(nb_stockage_argent)
+                        print(nb_stockage_vapeur)
+                        print(nb_stockage_nourriture)
                         # Portée de pose augmentée
                         if not joueur_a_portee((grid_x, grid_y), players[indice], TAILLE_CASE, distance_max=10, width=nouveau.largeur, height=nouveau.hauteur):
                             float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
