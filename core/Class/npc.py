@@ -13,6 +13,7 @@ class PathFinder:
     def __init__(self, batiments, taille_case):
         self.batiments = batiments
         self.taille_case = taille_case
+
         
         # Construire une grille walkable basée sur les bâtiments
         # Déterminer les dimensions de la grille
@@ -42,8 +43,8 @@ class PathFinder:
                           Batiment.TYPE_GENERATEUR, Batiment.TYPE_MINE, Batiment.TYPE_FARM)
         for b in batiments:
             if b.type in TYPES_WALKABLE:
-                for y in range(b.y, min(b.y + b.hauteur, self.max_y)):
-                    for x in range(b.x, min(b.x + b.largeur, self.max_x)):
+                for y in range(max(0, b.y), min(b.y + b.hauteur, self.max_y)):
+                    for x in range(max(0, b.x), min(b.x + b.largeur, self.max_x)):
                         self.walkable[y][x] = True
     
     def _heuristique(self, pos1, pos2):
@@ -132,7 +133,27 @@ class PathFinder:
 
 class Npc:
     # Classe pour les villageois avec cycle de vie
+    @staticmethod
+    def load_sprites():
+        sheet = pygame.image.load(
+            "assets/npc_sprite/walk.png"
+        ).convert_alpha()
 
+        Npc.walk_right = []
+        Npc.walk_left = []
+
+        frame_w = 48
+        frame_h = 48
+
+        for i in range(6):
+            frame = sheet.subsurface(
+                pygame.Rect(i * frame_w, 0, frame_w, frame_h)
+            )
+
+            Npc.walk_right.append(frame)
+
+            flipped = pygame.transform.flip(frame, True, False)
+            Npc.walk_left.append(flipped)
     ETAT_ERRANCE      = "errance"
     ETAT_VERS_TRAVAIL = "vers_travail"
     ETAT_AU_TRAVAIL   = "au_travail"
@@ -160,6 +181,10 @@ class Npc:
 
         self.lieu_travail = None
         self.etat = self.ETAT_ERRANCE
+
+        self.anim_frame = 0
+        self.anim_timer = 0
+        self.direction = "right"
 
         # Spawn au centre de la maison (en pixels)
         cx, cy = self._centre_pixels(batiment)
@@ -252,7 +277,18 @@ class Npc:
             return True
         self.monde_x += dx / dist * step
         self.monde_y += dy / dist * step
+        if dx < 0:
+            self.direction = "left"
+        else:
+            self.direction = "right"
         return False
+
+    def update_anim(self, dt):
+        self.anim_timer += dt
+
+        if self.anim_timer >= 0.12:
+            self.anim_timer = 0
+            self.anim_frame = (self.anim_frame + 1) % 6
 
     def _avancer_chemin(self, dt):
         """Suit le chemin waypoint par waypoint. Retourne True si arrivé."""
@@ -285,6 +321,7 @@ class Npc:
             self._update_vers_maison(dt)
         elif self.etat == self.ETAT_CHEMIN_BLOQUE:
             self._update_chemin_bloque(dt)
+        self.update_anim(dt)
 
     def _update_errance(self, dt):
         atteint = self._avancer_vers(self.cible_x, self.cible_y, dt)
@@ -365,14 +402,27 @@ class Npc:
         sprite = pygame.transform.smoothscale(image, (affichage_w, affichage_h))
         ecran.blit(sprite, (ex - affichage_w // 2, ey - affichage_h))
 
-    def dessiner_monde(self, surface, camera_x, camera_y, image):
-        """Dessin sur surface_monde. Le NPC est invisible quand au travail."""
+    def dessiner_monde(self, surface, camera_x, camera_y, image=None):
         if self.etat == self.ETAT_AU_TRAVAIL:
             return
+
         x = int(self.monde_x - camera_x)
         y = int(self.monde_y - camera_y)
-        orig_w, orig_h = image.get_size()
+
+        if self.direction == "right":
+            sprite = self.walk_right[self.anim_frame]
+        else:
+            sprite = self.walk_left[self.anim_frame]
+
         h = self.TAILLE_AFFICHAGE
-        w = int(orig_w * h / orig_h)
-        sprite = pygame.transform.smoothscale(image, (w, h))
-        surface.blit(sprite, (x - w // 2, y - h))
+        w = h
+
+        sprite = pygame.transform.smoothscale(
+            sprite,
+            (w, h)
+        )
+
+        surface.blit(
+            sprite,
+            (x - w // 2, y - h)
+        )

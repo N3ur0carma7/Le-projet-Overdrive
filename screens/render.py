@@ -94,9 +94,9 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
             img = images_ressources_sol[res["type"]]
 
             if res["type"] == "coffre":
-                taille = int(TAILLE_CASE * 1.6)
+                taille = int(TAILLE_CASE * 1.2)
             else:
-                taille = TAILLE_CASE
+                taille = int(TAILLE_CASE * 0.75)
 
             img_scaled = pygame.transform.smoothscale(
                 img,
@@ -296,12 +296,11 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     else:
         total_villageois = 0
 
-    # Vos 4 ressources alignées
     ressources_hud = [
-        (str(total_villageois), (180, 220, 255), hud_pop_img, 32),  # Villageois
-        (str(int(player.money)), (255, 235, 80), hud_or_img, 64),  # Or
-        (str(int(player.food)), (255, 235, 80), hud_food_img, 64),  # Nourriture
-        (str(int(player.vapeur)), (255, 235, 80), hud_vapeur_img, 64)  # Vapeur
+        (str(total_villageois), (180, 220, 255), hud_pop_img, 52),
+        (str(int(player.money)), (255, 235, 80), hud_or_img, 64),
+        (str(int(player.food)), (255, 235, 80), hud_food_img, 64),
+        (str(int(player.vapeur)), (255, 235, 80), hud_vapeur_img, 64)
     ]
 
     marge_inter_icones = 140
@@ -310,19 +309,16 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         icone_calibree = pygame.transform.smoothscale(img, (taille_icone_custom, taille_icone_custom))
         iw, ih = icone_calibree.get_size()
 
-        # Positionnement X de base depuis la droite
         hud_x = dims[0] - 160 - (len(ressources_hud) - 1 - i) * marge_inter_icones
 
         if i == 0:
             hud_x += 35
+            y_ajuste = marge_hud - 16
+        else:
+            y_ajuste = marge_hud + (32 - taille_icone_custom) // 2
 
-        # Recentrage vertical automatique
-        y_ajuste = marge_hud + (32 - taille_icone_custom) // 2
-
-        # Dessiner l'icône
         ecran.blit(icone_calibree, (hud_x, y_ajuste))
 
-        # Dessiner le nombre juste à côté
         texte = font_ressources.render(valeur, True, couleur)
         tx = hud_x + iw + 6
 
@@ -330,7 +326,6 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
         ty = marge_hud + (32 - text_height) // 2
 
         ecran.blit(texte, (tx, ty))
-
     # 6. Bouton toggle barre bâtiments (BUILD / CLOSE)
     BTN_SIZE = 80
     BTN_MARGE = 12

@@ -91,7 +91,7 @@ class Player:
         self._attack_anim_timer    = 0.0
         self._attack_anim_duration = ANIM_FRAMES["hand_cannon"] / ANIM_FPS["hand_cannon"]
 
-        self.sprite_height = 128
+        self.sprite_height = 64
 
     # ------------------------------------------------------------------
     def trigger_attack_anim(self):
