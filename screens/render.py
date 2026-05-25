@@ -380,9 +380,23 @@ def dessiner_hud(ecran, dims, hauteur_barre, rects_icones, batiment_selectionne,
     if inventory_btn_rect is not None:
         inventory_btn_rect.update(inv_btn_x, inv_btn_y, BTN_SIZE, BTN_SIZE)
 
-    # 8. Affichage de la notification de sauvegarde
+    # 8. Affichage de la notification de sauvegarde (popup dessinée)
     if save_done_timer > 0:
-        ecran.blit(save_done_img, (10, 10))
+        popup_font = pygame.font.Font("assets/fonts/Minecraft.ttf", 14)
+        popup_text = "Partie sauvegardee !"
+        text_surf = popup_font.render(popup_text, True, (255, 255, 200))
+        padding_x, padding_y = 14, 10
+        popup_w = text_surf.get_width() + padding_x * 2
+        popup_h = text_surf.get_height() + padding_y * 2
+        popup_x = (ecran.get_width() - popup_w) // 2   # centré horizontalement
+        popup_y = ecran.get_height() - popup_h - 20     # 20px au-dessus du bord bas        # Fond semi-transparent
+        popup_bg = pygame.Surface((popup_w, popup_h), pygame.SRCALPHA)
+        popup_bg.fill((20, 20, 20, 210))
+        ecran.blit(popup_bg, (popup_x, popup_y))
+        # Bordure verte
+        pygame.draw.rect(ecran, (80, 200, 100), (popup_x, popup_y, popup_w, popup_h), 2, border_radius=4)
+        # Texte
+        ecran.blit(text_surf, (popup_x + padding_x, popup_y + padding_y))
 
     # 9. Barre de vie du joueur
     hp_bar_w = 200

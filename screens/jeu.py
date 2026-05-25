@@ -183,7 +183,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     hud_food_img   = pygame.image.load("assets/icones/nourriture_icone.png").convert_alpha()
     hud_vapeur_img = pygame.image.load("assets/icones/vapeur_icone.png").convert_alpha()
     hud_pop_img = pygame.image.load("assets/pnj.png").convert_alpha()
-    save_done_img = pygame.image.load("assets/save_done.png").convert_alpha()
+    save_done_img = None  # plus utilisé : la popup est dessinée directement dans render.py
     potion_money_img = pygame.image.load("assets/icones/potion_money.png").convert_alpha()
     potion_food_img = pygame.image.load("assets/icones/potion_food.png").convert_alpha()
     potion_vapeur_img = pygame.image.load("assets/icones/potion_vapeur.png").convert_alpha()
