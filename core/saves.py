@@ -1,6 +1,7 @@
 import json
 from core.Class.player import Player
 from core.Class.batiments import Batiment
+from screens.skill_tree import SKILLS_DATA, apply_skill_effect
 
 def save_game(buildings: list, player: Player, online_data, unlocked_skills):
     # Sauvegarde la partie
@@ -36,7 +37,14 @@ def save_game(buildings: list, player: Player, online_data, unlocked_skills):
         return False
 
 
-def load_save(buildings: list, player: Player, unlocked_skills):
+def _find_skill_by_id(skill_id):
+    for cat in SKILLS_DATA.values():
+        for skill in cat["skills"]:
+            if skill["id"] == skill_id:
+                return skill
+    return None
+
+def load_save(buildings: list, player: Player, unlocked_skills, batiments_data):
     # Charge la sauvegarde
     try:
         with open('save/save.json', 'r') as file:
@@ -73,6 +81,9 @@ def load_save(buildings: list, player: Player, unlocked_skills):
             bat.en_construction = False
         for skill in save_data["Skills"]:
             unlocked_skills.append(skill)
+            skill_def = _find_skill_by_id(skill)
+            if skill_def is not None:
+                apply_skill_effect(skill_def, player, batiments_data)
         return True
     except Exception:
         return False

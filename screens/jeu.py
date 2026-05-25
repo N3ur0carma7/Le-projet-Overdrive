@@ -235,7 +235,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
             p.pos = _pos_centre_case(5, 5)
             players[:] = [p]
             indice = 0
-        if not load_save(batiments, players[indice], unlocked_skills):
+        if not load_save(batiments, players[indice], unlocked_skills, Batiment.DATA):
             print("ERREUR CRITIQUE: Lecture du fichier save/save.json")
             return False
     if dev_mode:
