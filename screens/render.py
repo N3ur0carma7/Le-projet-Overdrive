@@ -83,7 +83,7 @@ def _get_scaled_batiment_image(images_batiments, type_batiment, niveau, footprin
     cache[key] = scaled
     return scaled
 
-def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None, construction_gear=None, ressources_sol=None, images_ressources_sol=None, active_player=None):
+def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_y, TAILLE_CASE, batiment_selectionne, TYPES_BATIMENTS, players, npcs, image_pnj, dt, zoom, raid_manager=None, construction_gear=None, ressources_sol=None, images_ressources_sol=None, active_player=None, muzzle_flash_img=None):
     from screens.utils import collision, souris_vers_case, joueur_a_portee
     from core.Class.batiments import Batiment
 
@@ -138,6 +138,48 @@ def dessiner_monde(surface_monde, batiments, images_batiments, camera_x, camera_
         y = B.y * TAILLE_CASE - camera_y + (footprint_h_px - image.get_height()) / 2
 
         surface_monde.blit(image, (x, y))
+
+        if B.type == Batiment.TYPE_TOURELLE and getattr(B, "flash_timer", 0) > 0:
+            B.flash_timer -= dt
+
+            angle_by_dir = {
+                "E": 0,
+                "NE": 45,
+                "N": 90,
+                "NW": 135,
+                "W": 180,
+                "SW": 225,
+                "S": 270,
+                "SE": 315,
+            }
+
+            offset_by_dir = {
+                "E": (footprint_w_px + 6, footprint_h_px * 0.38),
+                "W": (-6, footprint_h_px * 0.38),
+
+                "N": (footprint_w_px * 0.50, -6),
+                "S": (footprint_w_px * 0.50, footprint_h_px + 6),
+
+                "NE": (footprint_w_px * 1.02, footprint_h_px * 0.12),
+                "NW": (footprint_w_px * -0.2, footprint_h_px * 0.12),
+
+                "SE": (footprint_w_px * 1.02, footprint_h_px * 0.72),
+                "SW": (footprint_w_px * -0.2, footprint_h_px * 0.72),
+            }
+            direction = getattr(B, "direction", "E")
+            flash_img = images_batiments[Batiment.TYPE_TOURELLE][1]["MUZZLE_FLASH"]
+            flash = pygame.transform.scale(flash_img, (42, 28))
+            flash = pygame.transform.rotate(flash, angle_by_dir.get(direction, 0))
+
+            ox, oy = offset_by_dir.get(direction, offset_by_dir["E"])
+
+            surface_monde.blit(
+                flash,
+                (
+                    B.x * TAILLE_CASE - camera_x + ox - flash.get_width() / 2,
+                    B.y * TAILLE_CASE - camera_y + oy - flash.get_height() / 2
+                )
+            )
 
         if hasattr(B, "en_construction") and B.en_construction and gear_rotated is not None:
             gx = B.x * TAILLE_CASE - camera_x + (footprint_w_px - gear_rotated.get_width()) / 2

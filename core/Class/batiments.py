@@ -168,7 +168,7 @@ class Batiment:
 
         temps_actuel = pygame.time.get_ticks()
         stats = self.get_stats()
-        degats = stats.get("degat", 30)
+        degats = stats.get("degat", 15)
         cadence_tir = 1.0  # 1 tir par seconde
         portee = 250
 
@@ -215,7 +215,14 @@ class Batiment:
                 self.direction = "E"
 
             if temps_actuel - self.dernier_tir >= cadence_tir * 1000:
-                cible_proche.take_damage(degats)
+                cible_proche.take_damage(15)
+
+                if not hasattr(self, "son_tir"):
+                    self.son_tir = pygame.mixer.Sound("assets/sounds/turret.mp3")
+                    self.son_tir.set_volume(0.35)
+
+                self.son_tir.play()
+                self.flash_timer = 0.08
                 self.dernier_tir = temps_actuel
 
     def collision(self, autre):

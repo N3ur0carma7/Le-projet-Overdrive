@@ -97,6 +97,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 "NW": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_gauche_haut.png").convert_alpha(),
                 "SE": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_droite_bas.png").convert_alpha(),
                 "SW": pygame.image.load("assets/buildings/tourelles_orientation/tourelle_gauche_bas.png").convert_alpha(),
+                "MUZZLE_FLASH": pygame.image.load(
+                    "assets/effects/muzzle_flash.png"
+                ).convert_alpha(),
             }
         },
         Batiment.TYPE_TILE: {
