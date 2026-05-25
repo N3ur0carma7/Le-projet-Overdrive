@@ -225,7 +225,7 @@ class MenuAmelioration:
                             if has_next_data else "MAX")
         else:
             val_actuelle = bt.get_production()
-            prod_key = {"generateur": "vapeur", "mine": "argent", "farm": "nourriture"}.get(bt.type, "production")
+            prod_key = {"Generateur": "vapeur", "Mine": "argent", "Ferme": "nourriture"}.get(bt.type, "production")
             val_suivante = (str(Batiment.DATA[bt.type][bt.niveau + 1].get(prod_key, "?"))
                             if has_next_data else "MAX")
 

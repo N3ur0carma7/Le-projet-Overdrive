@@ -228,15 +228,8 @@ SKILLS_DATA = {
                 "pos": (0.50, 0.65),
                 "large": True,
             },
-            {
-                "id": "pet_unlock",
-                "name": "Animal de Compagnie",
-                "description": "Debloque un animal de compagnie qui aide dans le jeu.",
-                "cost": 300,
-                "prerequisites": ["health_upgrade"],
-                "effect": "unlock_pet",
-                "pos": (0.50, 0.85),
-            },
+
+
         ]
     },
 }
