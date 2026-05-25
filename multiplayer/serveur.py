@@ -260,7 +260,10 @@ def disconnect (client):
     print(f"[STOP] client disconnected")
     print(clients_indice[client])
     i = clients_indice[client]
-    gl.players.pop(clients_indice[client])
+    try:
+        gl.players.pop(clients_indice[client])
+    except:
+        pass
     for client in clients_indice:
         clients_indice[client] -= 1 if clients_indice[client] > i else 0
     for client in clients_indice:
