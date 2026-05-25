@@ -881,6 +881,14 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                         cout = Batiment.DATA[type_batiment][1]["cout"]
 
+                        collision_ressource = False
+                        for res in ressources_sol:
+                            res_rect = pygame.Rect(res["x"], res["y"], 1, 1)
+                            bat_rect = pygame.Rect(nouveau.x, nouveau.y, nouveau.largeur, nouveau.hauteur)
+                            if bat_rect.colliderect(res_rect):
+                                collision_ressource = True
+                                break
+
                         # Limite : nb batiments de production <= nb total de villageois
                         nb_villageois = sum(b.get_population() for b in batiments if b.type == Batiment.TYPE_RESIDENTIEL)
                         nb_production = sum(
@@ -897,7 +905,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
                         elif production_pleine:
                             float_msg.warning("Pas assez de villageois !", sx, sy - 30, player_id=indice)
-                        elif not collision(batiments, nouveau) and players[indice].money >= cout:
+                        elif not collision(batiments, nouveau) and not collision_ressource and players[indice].money >= cout:
                             players[indice].money -= cout
                             batiments.append(nouveau)
                             sound.son_placement.play()
@@ -905,7 +913,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             if client_module.CLIENT is not None and online:
                                 print(f"envoi en cours {batiments}")
                                 client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
-                        elif collision(batiments, nouveau):
+                        elif collision(batiments, nouveau) or collision_ressource:
                             float_msg.error("Emplacement occupe !", sx, sy - 30, player_id=indice)
                         else:
                             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
