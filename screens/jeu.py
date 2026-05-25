@@ -1321,7 +1321,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 pass
         else :
             for joueur in players:
-                joueur.ismoving = False
+                joueur.is_moving = False
                 joueur.anim_state = "idle"
 
     stop_event.set()
