@@ -47,17 +47,17 @@ class Batiment:
             1: {"cout": 1, "temps_construction": 1200},
         },
         TYPE_CENTRALE_ARGENT: {
-            "hitbox_l": 5, "hitbox_h": 6, "scale_visuel": 1.25,
+            "hitbox_l": 6, "hitbox_h": 4, "scale_visuel": 0.85,
             1: {"boost": 0.20, "cout": 2000},
             2: {"boost": 0.25, "cout": 3500},
         },
         TYPE_CENTRALE_VAPEUR: {
-                "hitbox_l": 6, "hitbox_h": 8, "scale_visuel": 1.6,
+                "hitbox_l": 5, "hitbox_h": 6, "scale_visuel": 1.2,
                 1: {"boost": 0.20, "cout": 2000},
                 2: {"boost": 0.25, "cout": 3500},
         },
         TYPE_CENTRALE_NOURRITURE: {
-            "hitbox_l": 7, "hitbox_h": 6, "scale_visuel": 1.45,
+            "hitbox_l": 7, "hitbox_h": 6, "scale_visuel": 0.85,
             1: {"boost": 0.20, "cout": 2000},
             2: {"boost": 0.25, "cout": 3500},
         },
