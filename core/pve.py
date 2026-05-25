@@ -57,8 +57,8 @@ class RaidManager:
     MONSTERS_PER_WAVE_MAX = 4
     SPAWN_DISTANCE_CASES  = 40   # ~40 cases du joueur
     WAVE_DELAY            = 10.0  # secondes entre vagues
-    AUTO_RAID_MIN         = 1 * 60.0   # 10 min
-    AUTO_RAID_MAX         = 2 * 60.0   # 20 min
+    AUTO_RAID_MIN         = 5 * 60.0   # 1 min
+    AUTO_RAID_MAX         = 10 * 60.0   # 2 min
 
     def __init__(self, taille_case: int = TAILLE_CASE_DEFAULT):
         self.taille_case    = taille_case
