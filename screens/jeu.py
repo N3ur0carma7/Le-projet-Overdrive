@@ -446,7 +446,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
         maintenant = pygame.time.get_ticks()
 
         if player.active_effects["heal"] > maintenant:
-            player.hp = min(player.hp_max, player.hp + 8 * dt)
+            player.hp = min(player.hp_max, player.hp + 3 * dt)
 
         cloud_manager.update(dt)
         ambiance_manager.update(dt)
