@@ -104,76 +104,76 @@ def handle_message_client(msg, client):
 
         if msg_type == "list":
             liste = data["payload"]
-            print(f"[LIST] server has send a list: {liste}")
+            #print(f"[LIST] server has send a list: {liste}")
             return liste, "list"
 
         elif msg_type == "dict":
             raw_obj = data["payload"]
             obj = parse_dict_tuple_keys(raw_obj)
-            print(f"[DICT] server has send a ditionary: {obj}")
+            #print(f"[DICT] server has send a ditionary: {obj}")
             return obj, "dict"
 
         elif msg_type == "tuple":
             tup =data["payload"]
-            print(f"[TUPLE] server has send a tuple: {tup}")
+            #print(f"[TUPLE] server has send a tuple: {tup}")
             return tup, "tuple"
 
         elif msg_type == "str":
             stri = data["payload"]
-            print(f"[STR] server has send : {stri}")
+            #print(f"[STR] server has send : {stri}")
             return stri, "str"
 
 
         elif msg_type == "int" :
             ints = data["payload"]
-            print(f"[INT] server has send : {ints}")
+            #print(f"[INT] server has send : {ints}")
             return ints, "int"
 
         elif msg_type == "bool" :
             bools = data["payload"]
-            print(f"[BOOL] server has send : {bools}")
+            #print(f"[BOOL] server has send : {bools}")
             return bools, "bool"
 
         elif msg_type == "float":
             flot = data["payload"]
-            print(f"[FLOAT] server has send : {flot}")
+            #print(f"[FLOAT] server has send : {flot}")
             return flot, "float"
 
         elif msg_type == "batiment":
             b_dict = data["payload"]
             bat = Batiment.from_dict(b_dict)
-            print(f"[BATIMENT] server has send : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
+            #print(f"[BATIMENT] server has send : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
             return bat, "batiment"
 
         elif msg_type == "liste_batiments":
-            print("ok")
+            #print("ok")
             liste_dicts = data["payload"]
             bats = [Batiment.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE BATIMENTS] reçue : {[str(b) for b in bats]}")
+            #print(f"[LISTE BATIMENTS] reçue : {[str(b) for b in bats]}")
             return bats, "liste_batiments"
 
         elif msg_type == "liste_monstres":
-            print("ok")
+            #print("ok")
             liste_dicts = data["payload"]
             montres = [Monster.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE MONSTRES] reçue : {[str(b) for b in montres]}")
+            #print(f"[LISTE MONSTRES] reçue : {[str(b) for b in montres]}")
             return montres, "liste_monstres"
 
         elif msg_type == "liste_joueurs":
-            print("arriver")
+            #print("arriver")
             liste_dicts = data["payload"]
-            print(liste_dicts)
+            #print(liste_dicts)
             liste_dicts[0]["pos"] = tuple(liste_dicts[0]["pos"])
             for i in range (len(liste_dicts[0]["path"])):
                 liste_dicts[0]["path"][i] = tuple(liste_dicts[0]["path"][i])
             plays = [Player.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE JOUEURS] reçue : {[str(b) for b in plays]}")
+            #print(f"[LISTE JOUEURS] reçue : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
 
         elif msg_type == "raid":
             liste_dicts = data["payload"]
             raid = RaidManager.from_dict(liste_dicts)
-            print(f"[RAID] reçu : {raid}")
+            #print(f"[RAID] reçu : {raid}")
             return raid, "raid"
 
         else:

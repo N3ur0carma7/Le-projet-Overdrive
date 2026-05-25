@@ -135,7 +135,7 @@ def handle_client(client, addr):
                                 data = json.dumps({"type": "str", "payload": "bien reÃ§u"})
                                 send_client(data, clients[i])
                                 send_dict_tuple_server(message, clients[i])
-                                print(f"envoyer a {clients[i]}")
+                                #print(f"envoyer a {clients[i]}")
                             elif type == "str":
                                 send_str_server(message, clients[i])
                             elif type == "int":
@@ -184,50 +184,50 @@ def handle_message_recieved (msg, addr):
         msg_type = data.get("type")
         if msg_type == "list":
             liste = data["payload"]
-            print(f"[LIST] {addr} : {liste}")
+            #print(f"[LIST] {addr} : {liste}")
             return liste, msg_type
 
         elif msg_type == "dict":
             raw_dic = data["payload"]
             dic = str_to_tuple_key(raw_dic)
-            print(f"[DICT] {addr} : {dic}")
+            #print(f"[DICT] {addr} : {dic}")
             return dic, msg_type
 
         elif msg_type == "tuple":
             tup = data["payload"]
-            print(f"[TUP] {addr} : {tup}")
+            #print(f"[TUP] {addr} : {tup}")
             return tup, msg_type
 
         elif msg_type == "str" :
             stri = data["payload"]
-            print(f"[STR] {addr} : {stri}")
+            #print(f"[STR] {addr} : {stri}")
             return stri, msg_type
 
         elif msg_type == "int" :
             ints = data["payload"]
-            print(f"[INT] {addr} : {ints}")
+            #print(f"[INT] {addr} : {ints}")
             return ints, msg_type
 
         elif msg_type == "bool" :
             bools = data["payload"]
-            print(f"[BOOL] {addr} : {bools}")
+            #print(f"[BOOL] {addr} : {bools}")
             return bools, msg_type
 
         elif msg_type == "float":
             flot = data["payload"]
-            print(f"[FLOAT] {addr} : {flot}")
+            #print(f"[FLOAT] {addr} : {flot}")
             return flot, msg_type
 
         elif msg_type == "batiment":
             b_dict = data["payload"]
             bat = Batiment.from_dict(b_dict)
-            print(f"[BATIMENT] {addr} : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
+            #print(f"[BATIMENT] {addr} : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
             return bat, msg_type
 
         elif msg_type == "liste_batiments":
             liste_dicts = data["payload"]  # liste de dicts
             bats = [Batiment.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE BATIMENTS] {addr} : {[str(b) for b in bats]}")
+            #print(f"[LISTE BATIMENTS] {addr} : {[str(b) for b in bats]}")
             return bats, "liste_batiments"
         
         elif msg_type == "liste_joueurs":
@@ -236,7 +236,7 @@ def handle_message_recieved (msg, addr):
             for i in range (len(liste_dicts[0]["path"])):
                 liste_dicts[0]["path"][i] = tuple(liste_dicts[0]["path"][i])
             plays = [Player.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
+            #print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
         elif msg_type == "liste_monstres":
             liste_dicts = data["payload"]  # liste de dicts
