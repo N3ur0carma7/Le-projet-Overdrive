@@ -560,6 +560,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                 inventory_ouvert = not inventory_ouvert
                 continue
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_a:
+                from screens.skill_tree import afficher_skill_tree
+                unlocked_skills = afficher_skill_tree(ecran, player, unlocked_skills, Batiment.DATA)
+                continue
+
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 from screens.pause import menu_pause
                 screenshot = ecran.copy()
