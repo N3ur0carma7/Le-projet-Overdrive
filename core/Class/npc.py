@@ -233,9 +233,8 @@ class Npc:
         return px, py
 
     def _porte_bas_pixels(self, batiment):
-        """Retourne le point d'entrée bas-centre d'un bâtiment en pixels monde."""
         px = batiment.x * self.taille_case + (batiment.largeur * self.taille_case) // 2
-        py = batiment.y * self.taille_case + batiment.hauteur * self.taille_case - max(1, self.taille_case * 0.1)
+        py = (batiment.y + batiment.hauteur) * self.taille_case + self.taille_case // 2
         return px, py
 
     def _nouvelle_cible_errance(self):
