@@ -131,7 +131,13 @@ class RaidManager:
             self.on_raid_start(self._raid_count)
 
     def _spawn_wave(self, players: list):
-        nb = random.randint(self.MONSTERS_PER_WAVE_MIN, self.MONSTERS_PER_WAVE_MAX)
+        is_boss_wave = self._wave_index >= self.WAVES_PER_RAID - 2
+
+        if is_boss_wave:
+            nb = 1
+        else:
+            nb = random.randint(self.MONSTERS_PER_WAVE_MIN, self.MONSTERS_PER_WAVE_MAX)
+
         self._wave_index += 1
         spawned = 0
 
@@ -142,7 +148,7 @@ class RaidManager:
                 dist_px = (self.SPAWN_DISTANCE_CASES + random.uniform(-0.5, 0.5)) * self.taille_case
                 mx = player.pos[0] + math.cos(angle) * dist_px
                 my = player.pos[1] + math.sin(angle) * dist_px
-                self.monsters.append(Monster(mx, my))
+                self.monsters.append(Monster(mx, my, boss=is_boss_wave))
                 spawned += 1
 
         if self.on_wave_spawn:

@@ -63,14 +63,17 @@ class Monster:
 
     @property
     def SIZE(self):
-        return int(FRAME_SIZE * MONSTER_SCALE)
+        scale = MONSTER_SCALE * (2 if self.boss else 1)
+        return int(FRAME_SIZE * scale)
 
-    def __init__(self, monde_x: float, monde_y: float):
+    def __init__(self, monde_x: float, monde_y: float, boss: bool = False):
         Monster.load_sprites()
 
+        self.boss = boss
         self.x = monde_x
         self.y = monde_y
-        self.hp = self.HP_MAX
+        self.hp_max = self.HP_MAX * (2 if boss else 1)
+        self.hp = self.hp_max
         self.alive = True
 
         self._attack_timer = 0.0
@@ -200,6 +203,10 @@ class Monster:
         frame_idx = min(self._anim_frame, len(frames) - 1)
         sprite = frames[frame_idx]
 
+        if self.boss:
+            fw, fh = sprite.get_size()
+            sprite = pygame.transform.scale(sprite, (fw * 2, fh * 2))
+
         if self._facing_left:
             sprite = pygame.transform.flip(sprite, True, False)
 
@@ -211,13 +218,16 @@ class Monster:
 
         if self._hit_flash_timer > 0:
             flash = self._hit_flash
+            if self.boss:
+                fw2, fh2 = flash.get_size()
+                flash = pygame.transform.scale(flash, (fw2 * 2, fh2 * 2))
             if self._facing_left:
                 flash = pygame.transform.flip(flash, True, False)
             surface.blit(flash, (draw_x, draw_y), special_flags=pygame.BLEND_RGBA_MULT)
 
         bar_w    = self.SIZE
         bar_h    = 4
-        hp_ratio = max(0.0, self.hp / self.HP_MAX)
+        hp_ratio = max(0.0, self.hp / self.hp_max)
         bar_x    = sx - bar_w // 2
         bar_y    = sy - fh - 7
         pygame.draw.rect(surface, (80, 0, 0),    (bar_x, bar_y, bar_w, bar_h))
@@ -236,6 +246,7 @@ class Monster:
 
     def to_dict(self):
         return {
+            "boss":                   self.boss,
             "x":                      self.x,
             "y":                      self.y,
             "hp":                     self.hp,
@@ -255,8 +266,8 @@ class Monster:
 
     @classmethod
     def from_dict(cls, d):
-        obj = cls(d["x"], d["y"])
-        obj.hp                       = d.get("hp", obj.HP_MAX)
+        obj = cls(d["x"], d["y"], boss=d.get("boss", False))
+        obj.hp                       = d.get("hp", obj.hp_max)
         obj.alive                    = d.get("alive", True)
         obj._attack_timer            = d.get("_attack_timer", 0.0)
         obj._anim_frame              = d.get("_anim_frame", 0)
