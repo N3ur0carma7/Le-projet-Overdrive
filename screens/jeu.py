@@ -746,40 +746,31 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
                             float_msg.warning(f"Pas assez d'or ! (cout : {cout})", sx, sy - 30, player_id=indice)
                         _essayer_placer_batiment(sx, sy, mx, my)
 
+
+
                     else:
+                        mx = camera_x + sx / zoom
+                        my = camera_y + sy / zoom
                         for B in batiments:
-                            rect = B.get_rect_pixel(TAILLE_CASE)
-                            rect.x -= camera_x
-                            rect.y -= camera_y
-                            mx = camera_x + sx / zoom
-                            my = camera_y + sy / zoom
 
                             rect = B.get_rect_pixel(TAILLE_CASE)
 
                             if rect.collidepoint(mx, my):
-                                if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10, width=B.largeur, height=B.hauteur):
-                                    float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
-                                    break
-                                resultat = afficher_menu_amelioration(ecran, B, sx, players[indice])
 
-                                if resultat == "supprimer":
-                                    batiments.remove(B)
-                                    cashback = 0
-                                    for k in range(B.niveau):
-                                        cashback += Batiment.DATA[B.type][1+k]["cout"]
-                                    players[indice].money += cashback
-                                    if client_module.CLIENT is not None and online:
-                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
-                                elif resultat == "upgrade":
-                                    if client_module.CLIENT is not None and online:
-                                        client_module.send_liste_batiments_client(batiments, client_module.CLIENT)
 
-                                gl.synchroniser_npcs(batiments, npcs, players[indice], TAILLE_CASE)
-
-                                # Ne pas ouvrir le menu d'amélioration pour les tiles (type 'tile')
                                 if getattr(B, "type", None) == Batiment.TYPE_TILE:
                                     break
+
+
+                                if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10,
+                                                       width=B.largeur, height=B.hauteur):
+                                    float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
+
+                                    break
+
+
                                 menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
+
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
                 mode_sell = False
