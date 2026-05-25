@@ -1278,7 +1278,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
 
         if player.pos != prec:
-            print(player)
             try:
                 client_module.send_liste_joueurs_client(players, client_module.CLIENT)
             except:
