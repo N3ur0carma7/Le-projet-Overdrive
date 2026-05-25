@@ -14,7 +14,6 @@ if __name__ == "__main__":
 
     fullscreen = False
 
-    # état initial = menu
     en_cours = True
     etat = "menu"
     while en_cours:
@@ -29,11 +28,10 @@ if __name__ == "__main__":
                 pygame.event.post(event)  # remettre l'event dans la file
 
         if etat == "menu":
-            # retourne le prochain état selon le bouton cliqué
             etat, en_cours = menu_principal(ecran, horloge, FPS)
         elif etat == "jeu":
             en_cours = boucle_jeu(ecran, horloge, FPS, True)
-            etat = "menu"  # revenir au menu après jeu
+            etat = "menu" 
         elif etat == "jeudev":
             en_cours = boucle_jeu(ecran, horloge, FPS, False, dev_mode=True)
             etat = "menu"

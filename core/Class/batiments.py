@@ -155,7 +155,6 @@ class Batiment:
         return stats.get("stockage", 0)
 
     def get_upgrade_cost(self):
-        """Returns the cost to reach the next level, or None if at cap or max."""
         if self.niveau >= 3:
             return None
         next_level = self.niveau + 1
@@ -165,7 +164,6 @@ class Batiment:
         return Batiment.DATA[self.type][next_level]["cout"]
 
     def upgrade(self):
-        """Upgrade by one level, respecting the skill-tree cap."""
         if self.niveau >= 3:
             return
         next_level = self.niveau + 1
@@ -258,10 +256,8 @@ class Batiment:
     def __str__(self):
         return f"{self.type} (niveau {self.niveau})"
 
-#----------------------------------------------------------------
-    # pour convertir pour le serveur
+
     # PAS TOUCHE !!!
-    # SINON AU BUCHER !!!!
     def to_dict(self):
         return {
             "type": self.type,

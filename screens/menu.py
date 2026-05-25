@@ -111,15 +111,12 @@ def menu_principal(ecran, horloge, FPS):
                     game_logic.toggle_fullscreen()
                     continue
 
-                # On capture uniquement les vraies lettres tapées
                 if event.unicode and event.unicode.isalpha():
                     touches_secretes.append(event.unicode.lower())
 
-                    # On garde seulement les 3 dernières touches en mémoire
                     if len(touches_secretes) > 3:
                         touches_secretes.pop(0)
 
-                    # Si le code est complété, on lance direct le jeu dev !
                     if "".join(touches_secretes) == "dev":
                         gl.players = []
                         gl.batiments = []

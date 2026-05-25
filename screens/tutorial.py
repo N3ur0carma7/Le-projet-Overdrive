@@ -16,15 +16,12 @@ STEPS = [
     "Bonne chance, aventurier ! Appuie sur ENTREE pour commencer l'aventure.",
 ]
 
-# Duree d'affichage de chaque caractere
 CHAR_DELAY = 0.032
-#tuto
-# Dimensions du panneau overlay
+
 PANEL_W = 640
 PANEL_H = 280
 PANEL_PADDING = 28
 
-# Couleurs
 COL_BG      = (15, 10, 5, 220)
 COL_BORDER  = (180, 130, 50)
 COL_BORDER2 = (220, 170, 70)
@@ -158,7 +155,6 @@ def run_tutorial(ecran, horloge, FPS, draw_background_fn=None):
         if not running:
             break
 
-        # Avancement de l'animation typewriter
         if char_idx < len(current_text):
             acc_time += dt
             while acc_time >= CHAR_DELAY and char_idx < len(current_text):

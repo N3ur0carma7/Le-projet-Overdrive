@@ -5,7 +5,6 @@ from core.Class.batiments import Batiment
 import core.sounds as sound
 
 
-# --- Palette steampunk ---
 CUIVRE          = (184, 115,  51)
 CUIVRE_CLAIR    = (220, 155,  80)
 CUIVRE_SOMBRE   = (120,  70,  20)
@@ -22,7 +21,6 @@ VERT_HOVER      = ( 90, 200, 110)
 BLANC           = (255, 255, 255)
 OR              = (255, 200,  50)
 
-# --- Noms d'affichage par type ---
 TYPE_LABELS = {
     Batiment.TYPE_RESIDENTIEL: "LOGEMENT",
     Batiment.TYPE_GENERATEUR:  "GENERATEUR",
@@ -57,7 +55,6 @@ def draw_rounded_rect(surface, color, rect, radius=8, width=0):
 
 
 def draw_panel_border(surface, rect, color_outer, color_inner, radius=8):
-    """Double-border steampunk frame."""
     outer = rect
     inner = pygame.Rect(rect.x + 3, rect.y + 3, rect.w - 6, rect.h - 6)
     draw_rounded_rect(surface, color_outer, outer, radius, 2)
@@ -65,14 +62,12 @@ def draw_panel_border(surface, rect, color_outer, color_inner, radius=8):
 
 
 def draw_rivet(surface, cx, cy, r=5):
-    """Petit rivet decoratif."""
     pygame.draw.circle(surface, CUIVRE_SOMBRE, (cx, cy), r)
     pygame.draw.circle(surface, CUIVRE_CLAIR,  (cx - 1, cy - 1), r - 2)
     pygame.draw.circle(surface, CUIVRE_SOMBRE, (cx, cy), r, 1)
 
 
 def draw_gear(surface, cx, cy, r_outer, r_inner, n_teeth, color, angle_offset=0):
-    """Engrenage decoratif dessine en blits."""
     pts_outer = []
     pts_inner = []
     for i in range(n_teeth * 2):
@@ -86,7 +81,6 @@ def draw_gear(surface, cx, cy, r_outer, r_inner, n_teeth, color, angle_offset=0)
 
 
 def draw_pipe_horizontal(surface, x, y, w, h, color_body, color_highlight):
-    """Tuyau horizontal decoratif."""
     body = pygame.Rect(x, y, w, h)
     draw_rounded_rect(surface, color_body, body, h // 2)
     highlight = pygame.Rect(x + 4, y + 2, w - 8, max(2, h // 4))
@@ -94,7 +88,6 @@ def draw_pipe_horizontal(surface, x, y, w, h, color_body, color_highlight):
 
 
 def draw_level_pips(surface, x, y, current_level, max_level=3, pip_w=22, pip_h=12, gap=5):
-    """Indicateur de niveau en barres steampunk."""
     for i in range(max_level):
         px = x + i * (pip_w + gap)
         rect = pygame.Rect(px, y, pip_w, pip_h)
@@ -107,7 +100,6 @@ def draw_level_pips(surface, x, y, current_level, max_level=3, pip_w=22, pip_h=1
 
 
 def draw_stat_block(surface, font_title, font_val, label, value, unite, x, y, w, h, accent):
-    """Bloc stat avec cadre et valeur."""
     rect = pygame.Rect(x, y, w, h)
     draw_rounded_rect(surface, CHARBON_CLAIR, rect, 6)
     draw_panel_border(surface, rect, CUIVRE_SOMBRE, FUMEE, 6)
@@ -121,7 +113,6 @@ def draw_stat_block(surface, font_title, font_val, label, value, unite, x, y, w,
 
 
 def draw_arrow(surface, x, cy, color):
-    """Fleche entre les deux stats."""
     pts = [
         (x,      cy - 8),
         (x + 14, cy),
@@ -134,7 +125,6 @@ def draw_arrow(surface, x, cy, color):
 
 
 class BoutonBlit:
-    """Bouton 100% dessine (sans image)."""
     def __init__(self, x, y, w, h, label, color_base, color_hover, color_text=CHARBON, enabled=True):
         self.rect = pygame.Rect(x, y, w, h)
         self.label = label
@@ -171,7 +161,6 @@ class BoutonBlit:
 
 
 class MenuAmelioration:
-    # Taille du panneau
     PANEL_W = 440
     PANEL_H = 280
 
@@ -180,7 +169,7 @@ class MenuAmelioration:
         self.batiment = batiment
         self.player = player
         self.clic_x = clic_x
-        self._t = 0  # temps pour animations
+        self._t = 0
 
         # Polices
         self.font_title  = pygame.font.Font("assets/fonts/Minecraft.ttf", 18)
@@ -196,12 +185,10 @@ class MenuAmelioration:
 
         self._build_buttons()
 
-    # --- Calcul des infos stat ---
     def _get_stat_info(self):
         bt = self.batiment
         label, unite = RESOURCE_LABELS.get(bt.type, ("Production", ""))
 
-        # True max = no more data entries, regardless of skill tree cap
         has_next_data = (bt.niveau + 1) in Batiment.DATA[bt.type]
 
         if bt.type == Batiment.TYPE_RESIDENTIEL:
@@ -256,13 +243,11 @@ class MenuAmelioration:
             and self.player.money >= cost
         )
 
-    # --- Boutons ---
     def _build_buttons(self):
         px, py = self.px, self.py
         W, H = self.PANEL_W, self.PANEL_H
 
         if self.batiment.type == Batiment.TYPE_TILE:
-            # S'il s'agit d'une dalle, le bouton AMELIORER n'existe pas
             self.btn_ameliorer = None
         else:
             can = self._can_upgrade()
@@ -293,7 +278,6 @@ class MenuAmelioration:
             CUIVRE_SOMBRE, ROUGE_DANGER, CHARBON
         )
 
-    # --- Dessin du panneau ---
     def draw(self, ecran):
         self._build_buttons()
 
@@ -371,7 +355,6 @@ class MenuAmelioration:
             2
         )
 
-        # ACTUEL
         actuel = self.font_label.render(
             "ACTUEL",
             True,
@@ -400,7 +383,6 @@ class MenuAmelioration:
             )
         )
 
-        # SUIVANT
         suivant = self.font_label.render(
             "SUIVANT",
             True,
@@ -503,7 +485,6 @@ class MenuAmelioration:
             self.font_btn
         )
 
-    # --- Evenements ---
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             pygame.quit()

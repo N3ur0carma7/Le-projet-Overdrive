@@ -29,7 +29,6 @@ def save_game(buildings: list, player: Player, online_data, unlocked_skills):
             "Online": online_data if online_data is not None else None,
             "Skills": unlocked_skills,
         }
-        # Écriture de la save (indent -> plus lisible)
         with open('save/save.json', 'w') as file:
             json.dump(save_data, file, indent=4)
         return True
@@ -68,10 +67,8 @@ def load_save(buildings: list, player: Player, unlocked_skills):
             "vapeur": 0,
             "heal": 0
         })
-        # Loading buildings data
         for b in save_data["Builds"]:
             buildings.append(Batiment.from_dict(b))
-        # Charger les données en ligne | À FAIRE
         for bat in buildings:
             bat.en_construction = False
         for skill in save_data["Skills"]:

@@ -25,16 +25,13 @@ def search_client():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.settimeout(1.0)
     s.bind(("", 5051))
-    print("[WAITING] the server is waiting for client...")
     while not STOPSEARCH:
         try:
             s_data, s_addr = s.recvfrom(1024)
-            print(f"[FOUND] {s_addr} as been found...")
             s.sendto("searching client...".encode(FORMAT), s_addr)
         except socket.timeout:
             pass
         except Exception as e:
-            print(f"[ERROR] in search_client: {e}")
             break
         time.sleep(0.5)
     s.close()
@@ -93,7 +90,6 @@ def handle_monsters(liste_monsters, client):
 
 def handle_client(client, addr):
     global clients
-    print(f"[NEW CLIENT] {addr} connected\n")
     send_dict_server({"server": "hello client"}, client)
     if number_connected > 1:
         for sujet2 in clients.keys():
@@ -121,7 +117,7 @@ def handle_client(client, addr):
             msg_len = int(msg_len_str)
             msg = client.recv(msg_len).decode(FORMAT)
             if msg == DISCONNECT:
-                break  # ← break au lieu de connected = False
+                break
             else:
                 message, type = handle_message_recieved(msg, addr)
                 if type == "str" and message == "pos":
@@ -184,50 +180,41 @@ def handle_message_recieved (msg, addr):
         msg_type = data.get("type")
         if msg_type == "list":
             liste = data["payload"]
-            #print(f"[LIST] {addr} : {liste}")
             return liste, msg_type
 
         elif msg_type == "dict":
             raw_dic = data["payload"]
             dic = str_to_tuple_key(raw_dic)
-            #print(f"[DICT] {addr} : {dic}")
             return dic, msg_type
 
         elif msg_type == "tuple":
             tup = data["payload"]
-            #print(f"[TUP] {addr} : {tup}")
             return tup, msg_type
 
         elif msg_type == "str" :
             stri = data["payload"]
-            #print(f"[STR] {addr} : {stri}")
             return stri, msg_type
 
         elif msg_type == "int" :
             ints = data["payload"]
-            #print(f"[INT] {addr} : {ints}")
             return ints, msg_type
 
         elif msg_type == "bool" :
             bools = data["payload"]
-            #print(f"[BOOL] {addr} : {bools}")
             return bools, msg_type
 
         elif msg_type == "float":
             flot = data["payload"]
-            #print(f"[FLOAT] {addr} : {flot}")
             return flot, msg_type
 
         elif msg_type == "batiment":
             b_dict = data["payload"]
             bat = Batiment.from_dict(b_dict)
-            #print(f"[BATIMENT] {addr} : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
             return bat, msg_type
 
         elif msg_type == "liste_batiments":
             liste_dicts = data["payload"]  # liste de dicts
             bats = [Batiment.from_dict(d) for d in liste_dicts]
-            #print(f"[LISTE BATIMENTS] {addr} : {[str(b) for b in bats]}")
             return bats, "liste_batiments"
         
         elif msg_type == "liste_joueurs":
@@ -236,29 +223,23 @@ def handle_message_recieved (msg, addr):
             for i in range (len(liste_dicts[0]["path"])):
                 liste_dicts[0]["path"][i] = tuple(liste_dicts[0]["path"][i])
             plays = [Player.from_dict(d) for d in liste_dicts]
-            #print(f"[LISTE JOUEURS] {addr} : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
         elif msg_type == "liste_monstres":
             liste_dicts = data["payload"]  # liste de dicts
             monstre = [Monster.from_dict(d) for d in liste_dicts]
-            print(f"[LISTE MONSTRE] {addr} : {[str(b) for b in monstre]}")
             handle_monsters(monstre, addr)
             return monstre, "liste_monstres"
 
         elif msg_type == "raid":
             liste_dicts = data["payload"]
             raid = pve.RaidManager.from_dict(liste_dicts)
-            print(f"[RAID] {addr} : {raid}")
             return raid, "raid"
 
     except json.JSONDecodeError:
-        print(f"[ERROR] {addr} : {msg}")
         return ""
 
 def disconnect (client):
     global clients, clients_indice
-    print(f"[STOP] client disconnected")
-    print(clients_indice[client])
     i = clients_indice[client]
     try:
         gl.players.pop(clients_indice[client])
@@ -366,7 +347,6 @@ def start(server):
     broadcast_thread = threading.Thread(target=search_client, daemon=True)
     broadcast_thread.start()
     server.listen()
-    print("[READY] the server is ready")
     while not end:
         try:
             client, addr = server.accept()
@@ -375,7 +355,6 @@ def start(server):
         clients[addr] = client
         clients_indice[client] = number_connected
         number_connected = len(clients)
-        print(f"[ACTIVE CLIENTS] {number_connected}\n")
         client_thread = threading.Thread(target=handle_client, args=(client, addr))
         client_thread.daemon =True
         client_thread.start()
@@ -389,10 +368,7 @@ def server_running():
     SERVER = 0
     clients = {}
     stop_event.clear()
-    print("[STARTING] the server is starting...")
     SERVER = connect_client()
     if SERVER == 1:
-        print("[ERROR] already used port")
         return None
     start(SERVER)
-    print("[ENDING] the server is ending...")

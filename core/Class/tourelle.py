@@ -1,6 +1,6 @@
 import math
 import pygame
-from core.Class.batiments import Batiment  # Ajustez le chemin selon votre structure
+from core.Class.batiments import Batiment
 
 
 class Tourelle(Batiment):

@@ -27,17 +27,14 @@ import pygame
 
 
 class BoutonImage:
-    # On ajoute largeur et hauteur dans les paramètres
     def __init__(self, x, y, largeur, hauteur, chemin_image_base, chemin_image_hover, texte=""):
 
-        # Chargement et redimensionnement des images
         img_base_brute = pygame.image.load(chemin_image_base).convert_alpha()
         img_hover_brute = pygame.image.load(chemin_image_hover).convert_alpha()
 
         self.image_base = pygame.transform.scale(img_base_brute, (largeur, hauteur))
         self.image_hover = pygame.transform.scale(img_hover_brute, (largeur, hauteur))
 
-        # 3. Récupération de la nouvelle zone de collision (hitbox)
         self.rect = self.image_base.get_rect()
         self.rect.topleft = (x, y)
 

@@ -1,14 +1,4 @@
-"""
-Système de messages flottants.
-Utilisation :
-    from screens.floating_messages import FloatingMessageManager
-    msg = FloatingMessageManager()
-    msg.add("Trop loin !", x, y)   # message rouge par défaut
-    msg.add("OK !", x, y, color=(80, 255, 80))
-    # dans la boucle :
-    msg.update(dt)
-    msg.draw(ecran)
-"""
+
 
 import pygame
 import math
@@ -61,12 +51,10 @@ class _FloatingMsg:
         else:
             alpha = 255
 
-        # légère oscillation horizontale
         ox = int(math.sin(self.timer * 6) * 2)
 
         txt_surf = f.render(self.text, True, self.color)
 
-        # ombre
         shadow = f.render(self.text, True, (0, 0, 0))
         shadow.set_alpha(int(alpha * 0.6))
         txt_surf.set_alpha(alpha)
@@ -79,7 +67,6 @@ class _FloatingMsg:
 
 
 class FloatingMessageManager:
-    """Gère une liste de messages flottants."""
 
     COLOR_ERROR   = (230,  60,  60)
     COLOR_WARNING = (255, 165,   0)
@@ -91,7 +78,6 @@ class FloatingMessageManager:
 
     def add(self, text: str, x: int, y: int,
             color=None, small: bool = False, player_id: int = None):
-        """Ajoute un message flottant. Si player_id est donné, remplace un message existant pour ce joueur."""
         if color is None:
             color = self.COLOR_ERROR
 

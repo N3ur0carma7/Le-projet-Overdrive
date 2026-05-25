@@ -19,7 +19,6 @@ CLIENT = None
 recv_buffer = b""
 
 def safe_tuple_from_str(key_str):
-    """Convertit '(1, 2)' → (1, 2) de manière sécurisée"""
     if not (isinstance(key_str, str) and key_str.startswith('(') and key_str.endswith(')')):
         return key_str
     try:
@@ -88,7 +87,7 @@ def recv_full_message(sock):
             msg = recv_buffer[HEADER:HEADER + msg_len].decode()
             recv_buffer = recv_buffer[HEADER + msg_len:]
 
-            return msg  # <-- juste la string JSON
+            return msg
 
         return None
 
@@ -104,76 +103,60 @@ def handle_message_client(msg, client):
 
         if msg_type == "list":
             liste = data["payload"]
-            #print(f"[LIST] server has send a list: {liste}")
             return liste, "list"
 
         elif msg_type == "dict":
             raw_obj = data["payload"]
             obj = parse_dict_tuple_keys(raw_obj)
-            #print(f"[DICT] server has send a ditionary: {obj}")
             return obj, "dict"
 
         elif msg_type == "tuple":
             tup =data["payload"]
-            #print(f"[TUPLE] server has send a tuple: {tup}")
             return tup, "tuple"
 
         elif msg_type == "str":
             stri = data["payload"]
-            #print(f"[STR] server has send : {stri}")
             return stri, "str"
 
 
         elif msg_type == "int" :
             ints = data["payload"]
-            #print(f"[INT] server has send : {ints}")
             return ints, "int"
 
         elif msg_type == "bool" :
             bools = data["payload"]
-            #print(f"[BOOL] server has send : {bools}")
             return bools, "bool"
 
         elif msg_type == "float":
             flot = data["payload"]
-            #print(f"[FLOAT] server has send : {flot}")
             return flot, "float"
 
         elif msg_type == "batiment":
             b_dict = data["payload"]
             bat = Batiment.from_dict(b_dict)
-            #print(f"[BATIMENT] server has send : {bat.type} niv={bat.niveau} pos=({bat.x},{bat.y})")
             return bat, "batiment"
 
         elif msg_type == "liste_batiments":
-            #print("ok")
             liste_dicts = data["payload"]
             bats = [Batiment.from_dict(d) for d in liste_dicts]
-            #print(f"[LISTE BATIMENTS] reçue : {[str(b) for b in bats]}")
             return bats, "liste_batiments"
 
         elif msg_type == "liste_monstres":
-            #print("ok")
             liste_dicts = data["payload"]
             montres = [Monster.from_dict(d) for d in liste_dicts]
-            #print(f"[LISTE MONSTRES] reçue : {[str(b) for b in montres]}")
             return montres, "liste_monstres"
 
         elif msg_type == "liste_joueurs":
-            #print("arriver")
             liste_dicts = data["payload"]
-            #print(liste_dicts)
             liste_dicts[0]["pos"] = tuple(liste_dicts[0]["pos"])
             for i in range (len(liste_dicts[0]["path"])):
                 liste_dicts[0]["path"][i] = tuple(liste_dicts[0]["path"][i])
             plays = [Player.from_dict(d) for d in liste_dicts]
-            #print(f"[LISTE JOUEURS] reçue : {[str(b) for b in plays]}")
             return plays, "liste_joueurs"
 
         elif msg_type == "raid":
             liste_dicts = data["payload"]
             raid = RaidManager.from_dict(liste_dicts)
-            #print(f"[RAID] reçu : {raid}")
             return raid, "raid"
 
         else:
@@ -196,7 +179,6 @@ def receive_loop(client):
         try:
             chunk = client.recv(4096)
             if not chunk:
-                print("[DISCONNECTED] serveur déconnecté")
                 is_connected = False
                 recv_buffer = b""
                 break
@@ -282,7 +264,6 @@ def send_batiment_client(batiment, client):
     send_server(data, client)
 
 def send_liste_batiments_client(liste_batiments, client):
-    # transforme chaque Batiment en dict sérialisable
     payload = [b.to_dict() for b in liste_batiments]
     data = json.dumps({"type": "liste_batiments", "payload": payload})
     send_server(data, client)
@@ -335,17 +316,14 @@ def connection():
     CLIENT.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     SERVER = search_serv()
     if SERVER == -1:
-        print("[NOT FOUND] server not found")
         return None
     ADDR = (SERVER, PORT)
     try:
         CLIENT.connect(ADDR)
         is_connected = True
-        print(f"[SERVER] {SERVER} connected")
         thread_loop = threading.Thread(target=receive_loop, args=(CLIENT,), daemon=True)
         thread_loop.start()
     except OSError:
-        print(f"[ERROR] {SERVER} connection failed")
         CLIENT = None
 
 
