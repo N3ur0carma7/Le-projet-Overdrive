@@ -224,21 +224,33 @@ class MenuAmelioration:
     def _build_buttons(self):
         px, py = self.px, self.py
         W, H = self.PANEL_W, self.PANEL_H
-        can = self._can_upgrade()
 
-        self.btn_ameliorer = BoutonBlit(
-            px + 30, py + H - 60, 200, 44,
-            "AMELIORER",
-            VERT_OK if can else FUMEE,
-            VERT_HOVER if can else FUMEE,
-            CHARBON,
-            enabled=can
-        )
-        self.btn_sell = BoutonBlit(
-            px + W - 150, py + H - 60, 120, 44,
-            "VENDRE",
-            ROUGE_DANGER, ROUGE_HOVER, CHARBON
-        )
+        if self.batiment.type == Batiment.TYPE_TILE:
+            # S'il s'agit d'une dalle, le bouton AMELIORER n'existe pas
+            self.btn_ameliorer = None
+        else:
+            can = self._can_upgrade()
+            self.btn_ameliorer = BoutonBlit(
+                px + 30, py + H - 54, 200, 44,
+                "AMELIORER",
+                VERT_OK if can else FUMEE,
+                VERT_HOVER if can else FUMEE,
+                CHARBON,
+                enabled=can
+            )
+        if self.batiment.type == Batiment.TYPE_TILE:
+            self.btn_sell = BoutonBlit(
+                px + W // 2 - 60, py + H - 54, 120, 44,
+                "VENDRE",
+                ROUGE_DANGER, ROUGE_HOVER, CHARBON
+            )
+        else:
+            self.btn_sell = BoutonBlit(
+                px + W - 150, py + H - 54, 120, 44,
+                "VENDRE",
+                ROUGE_DANGER, ROUGE_HOVER, CHARBON
+            )
+
         self.btn_fermer = BoutonBlit(
             px + W - 38, py + 10, 28, 28,
             "X",
@@ -446,10 +458,11 @@ class MenuAmelioration:
         )
 
         # ========= BOUTONS =========
-        self.btn_ameliorer.afficher(
-            ecran,
-            self.font_btn
-        )
+        if self.btn_ameliorer:
+            self.btn_ameliorer.afficher(
+                ecran,
+                self.font_btn
+            )
 
         self.btn_sell.afficher(
             ecran,
@@ -481,7 +494,7 @@ class MenuAmelioration:
             if self.btn_fermer.clic():
                 return "close"
 
-            if self.btn_ameliorer.clic():
+            if self.btn_ameliorer is not None and self.btn_ameliorer.clic():
                 cost = self.batiment.get_upgrade_cost()
                 max_debloque = Batiment.DATA[self.batiment.type].get("max_level", 1)
                 if (self.batiment.construction_finie()

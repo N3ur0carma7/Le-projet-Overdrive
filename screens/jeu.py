@@ -757,11 +757,6 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                             if rect.collidepoint(mx, my):
 
-
-                                if getattr(B, "type", None) == Batiment.TYPE_TILE:
-                                    break
-
-
                                 if not joueur_a_portee((B.x, B.y), players[indice], TAILLE_CASE, distance_max=10,
                                                        width=B.largeur, height=B.hauteur):
                                     float_msg.error("Trop loin ! Rapprochez-vous", sx, sy - 30, player_id=indice)
