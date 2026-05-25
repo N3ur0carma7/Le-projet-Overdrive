@@ -151,6 +151,8 @@ class Npc:
     # Classe pour les villageois avec cycle de vie
     @staticmethod
     def load_sprites():
+        if hasattr(Npc, 'walk_right'):
+            return
         sheet = pygame.image.load(
             "assets/npc_sprite/walk.png"
         ).convert_alpha()
@@ -187,6 +189,7 @@ class Npc:
     TAILLE_AFFICHAGE = 64    # hauteur sprite en pixels écran (fixe)
 
     def __init__(self, batiment, taille_case=225, player=None, batiments_list=None):
+        Npc.load_sprites()
         self.maison = batiment
         self.taille_case = taille_case
         self.player = player
