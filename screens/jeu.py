@@ -413,7 +413,7 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
     loot_popups = []
 
-    ZOOM_MIN = 0.3
+    ZOOM_MIN = 0.6
     ZOOM_MAX = 2.5
     VITESSE_ZOOM = 0.1
 
