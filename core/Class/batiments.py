@@ -41,7 +41,7 @@ class Batiment:
         },
         TYPE_TILE: {
             "hitbox_l": 1, "hitbox_h": 1, "scale_visuel": 1,
-            1: {"cout": 10, "temps_construction": 1200},
+            1: {"cout": 1, "temps_construction": 1200},
         },
     }
 
