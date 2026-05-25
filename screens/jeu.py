@@ -920,8 +920,11 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
                                     break
 
-                                if B.type != "tile":
-                                    menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
+                                if raid_manager is not None and raid_manager._raid_active:
+                                    float_msg.warning("Menu d'amelioration desactive pendant un raid", sx, sy - 30, player_id=indice)
+                                    break
+
+                                menu_amelioration = MenuAmelioration(ecran, B, sx, players[indice])
 
                                 break
                 #Boutton SELL pour vendre les batiments quand c'est selectionné
@@ -994,6 +997,9 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
 
         # PVE update
         raid_manager.update(players, dt)
+
+        if menu_amelioration is not None and raid_manager is not None and raid_manager._raid_active:
+            menu_amelioration = None
 
         ecran.fill((0, 0, 0))
 
