@@ -60,6 +60,8 @@ def on_message_recu(taille_case=None):
                         indice = message
                     elif msg_type == "liste_batiments":
                         batiments = message
+                        for batiment in batiments :
+                            batiment.en_construction = False
                     elif msg_type == "liste_monstres":
                         monsters = message
 
