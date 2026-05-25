@@ -175,10 +175,10 @@ def boucle_jeu(ecran, horloge, FPS, online: bool = False, dev_mode: bool = False
     potion_heal_img = pygame.image.load("assets/icones/potion_heal.png").convert_alpha()
     son_collect = pygame.mixer.Sound("assets/sounds/collect_food.wav")
     son_footstep = pygame.mixer.Sound("assets/sounds/footstep.wav")
-    son_footstep.set_volume(0.75)
+    son_footstep.set_volume(0.6)
     son_coffre = pygame.mixer.Sound("assets/sounds/collect_gold.wav")
-    son_coffre.set_volume(0.7)
-    son_collect.set_volume(0.5)
+    son_coffre.set_volume(0.55)
+    son_collect.set_volume(0.3)
 
     cloud_manager = CloudManager(
         -8000, 8000,

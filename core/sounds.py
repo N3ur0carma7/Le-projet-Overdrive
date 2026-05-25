@@ -4,23 +4,13 @@ pygame.mixer.init()
 
 
 son_placement = pygame.mixer.Sound("assets/sounds/FX/placing_building_1.wav")
-son_placement.set_volume(0.5)
+son_placement.set_volume(1.6)
 
 son_upgrade = pygame.mixer.Sound("assets/sounds/FX/upgrade_building_1.wav")
 son_upgrade.set_volume(0.5)
 
 ambient_musics = [
-    "assets/sounds/ambient/ambient1.mp3",
-    "assets/sounds/ambient/ambient2.mp3",
-    "assets/sounds/ambient/ambient3.mp3",
-    "assets/sounds/ambient/ambient4.mp3",
-    "assets/sounds/ambient/ambient5.mp3",
-    "assets/sounds/ambient/ambient6.mp3",
-    "assets/sounds/ambient/ambient7.mp3",
-    "assets/sounds/ambient/ambient8.mp3",
-    "assets/sounds/ambient/ambient9.mp3",
-    "assets/sounds/ambient/ambient10.mp3",
-    "assets/sounds/ambient/ambient11.mp3"
+    "assets/sounds/ambient/game_ambient.mp3",
 ]
 
 music_enabled = True
