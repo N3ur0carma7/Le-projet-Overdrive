@@ -504,9 +504,13 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                 if btn_fermer_rect.collidepoint(mx, my):
                     en_cours = False
                 elif btn_auto_rect.collidepoint(mx, my):
+                    from screens.game_logic import effacer_toutes_assignations
+                    effacer_toutes_assignations()
                     _auto_assigner(batiments, npcs)
                     npc_selectionne = None
                 elif btn_clear_rect.collidepoint(mx, my):
+                    from screens.game_logic import effacer_toutes_assignations
+                    effacer_toutes_assignations()
                     for n in npcs:
                         n.assigner_travail(None)
                     npc_selectionne = None
@@ -538,7 +542,9 @@ def afficher_menu_travail(ecran, batiments, npcs, player):
                             CARD_H
                         )
                         if card_rect.collidepoint(mx, my):
+                            from screens.game_logic import marquer_assignation_manuelle
                             npc_selectionne.assigner_travail(bat)
+                            marquer_assignation_manuelle(npc_selectionne, bat)
                             npc_selectionne = None
                             break
     return "fermer"
